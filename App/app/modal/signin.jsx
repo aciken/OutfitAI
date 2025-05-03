@@ -56,7 +56,7 @@ export default function Signin() {
   useEffect(() => {
     if(isAuthenticated) {
       console.log("sending to home");
-      router.replace('/home');
+      router.replace('/main/home');
     }
   }, [isAuthenticated]);
 

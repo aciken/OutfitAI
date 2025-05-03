@@ -13,6 +13,8 @@ export default function ModalLayout() {
     >
       <Stack.Screen name="signin" />
       <Stack.Screen name="signup" />
+      <Stack.Screen name="settings" />
+      <Stack.Screen name="preferences" />
     </Stack>
   );
 }
