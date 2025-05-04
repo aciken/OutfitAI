@@ -15,6 +15,10 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
+
+// Create an animated version of FlatList
+const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
 // Import outfit images
 import HoodieImage from '../../assets/outfits/hoodie1.png';
@@ -32,6 +36,7 @@ const CARD_WIDTH = width * 0.7;
 const CARD_SPACING = 16;
 // Define animation configuration values
 const ANIMATION_SPEED = 200;
+const INACTIVE_SCALE = 0.92;
 
 export default function Home() {
   const router = useRouter();
@@ -39,6 +44,8 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   // Add state to track active card index
   const [activeCardIndex, setActiveCardIndex] = useState(0);
+  // Previous active index for tracking changes
+  const [prevActiveIndex, setPrevActiveIndex] = useState(0);
   
   // Updated sample data structure for cards
   const [cards] = useState([
@@ -77,62 +84,68 @@ export default function Home() {
     return true;
   });
 
+  // Reference to the FlatList to programmatically control it
+  const flatListRef = React.useRef();
+
+  // Add scroll offset for more granular animation control
+  const scrollX = React.useRef(new Animated.Value(0)).current;
+  
   // Create viewability config for detecting centered cards
-  const viewabilityConfig = {
-    itemVisiblePercentThreshold: 60,
-    minimumViewTime: 100
-  };
+  const viewabilityConfig = React.useRef({
+    itemVisiblePercentThreshold: 25,
+    minimumViewTime: 0
+  });
   
   // Track which card is in center view
   const onViewableItemsChanged = React.useRef(({ viewableItems }) => {
     if (viewableItems.length > 0) {
-      setActiveCardIndex(viewableItems[0].index);
+      const newIndex = viewableItems[0].index;
+      setActiveCardIndex(newIndex);
     }
   });
 
-  // Reference to the FlatList to programmatically control it
-  const flatListRef = React.useRef();
-
-  // Animation value for card scaling
-  const [cardAnimValues] = useState(() => 
-    cards.map(() => new Animated.Value(0.9))
-  );
-
-  // Handle card becoming active
+  // Handle card becoming active and trigger haptics exactly once per change
   React.useEffect(() => {
-    // Cancel any ongoing animations
-    cards.forEach((_, i) => {
-      Animated.timing(cardAnimValues[i]).stop();
-    });
-    
-    // Animate active card to full size
-    cards.forEach((_, i) => {
-      Animated.timing(cardAnimValues[i], {
-        toValue: i === activeCardIndex ? 1 : 0.9,
-        duration: ANIMATION_SPEED,
-        useNativeDriver: true,
-        easing: Easing.ease
-      }).start();
-    });
-  }, [activeCardIndex]);
+    // Only trigger haptic feedback on real changes, not initial render
+    if (prevActiveIndex !== activeCardIndex) {
+      // Always trigger haptic feedback on card change, regardless of direction
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      setPrevActiveIndex(activeCardIndex);
+    }
+  }, [activeCardIndex, prevActiveIndex]);
 
   const renderCard = ({ item, index }) => {
     let cardContent;
     let cardClasses;
     let cardStyle = {}; // Default empty style object
     
+    // Calculate the input range for this card
+    const inputRange = [
+      (index - 1) * (CARD_WIDTH + CARD_SPACING),
+      index * (CARD_WIDTH + CARD_SPACING),
+      (index + 1) * (CARD_WIDTH + CARD_SPACING)
+    ];
+    
+    // Use scroll position to determine scale and opacity
+    const scale = scrollX.interpolate({
+      inputRange,
+      outputRange: [INACTIVE_SCALE, 1, INACTIVE_SCALE],
+      extrapolate: 'clamp'
+    });
+    
+    const opacity = scrollX.interpolate({
+      inputRange,
+      outputRange: [0.85, 1, 0.85],
+      extrapolate: 'clamp'
+    });
+    
     // Determine if this card is the active/focused one
     const isActive = index === activeCardIndex;
     
     // Apply animation styles
     const animatedStyle = {
-      transform: [
-        { scale: cardAnimValues[index] },
-      ],
-      opacity: cardAnimValues[index].interpolate({
-        inputRange: [0.9, 1],
-        outputRange: [0.7, 1]
-      })
+      transform: [{ scale }],
+      opacity
     };
     
     // Base shared styles
@@ -140,19 +153,21 @@ export default function Home() {
       cardStyle = {
         ...cardStyle,
         shadowColor: '#8A2BE2',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 10,
-        elevation: 10,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.2,
+        shadowRadius: 20,
+        elevation: 16,
+        borderWidth: 1,
+        borderColor: 'rgba(138, 43, 226, 0.15)',
       };
     } else {
       cardStyle = {
         ...cardStyle,
         shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.15,
-        shadowRadius: 5,
-        elevation: 5,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.12,
+        shadowRadius: 8,
+        elevation: 6,
       };
     }
 
@@ -287,7 +302,7 @@ export default function Home() {
         className="absolute inset-0 justify-center items-center"
         style={{ top: 120, bottom: 0, left: 0, right: 0 }}
       >
-        <FlatList
+        <AnimatedFlatList
           ref={flatListRef}
           data={filteredCards}
           renderItem={renderCard}
@@ -301,15 +316,20 @@ export default function Home() {
           }}
           snapToInterval={CARD_WIDTH + CARD_SPACING}
           snapToAlignment="center"
-          decelerationRate={0.8}
+          decelerationRate={0.75}
           onViewableItemsChanged={onViewableItemsChanged.current}
-          viewabilityConfig={viewabilityConfig}
+          viewabilityConfig={viewabilityConfig.current}
           // Smooth scrolling tweaks
           pagingEnabled={false}
           disableIntervalMomentum={true}
           snapToOffsets={filteredCards.map((_, i) => 
             i * (CARD_WIDTH + CARD_SPACING)
           )}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+            { useNativeDriver: true }
+          )}
+          scrollEventThrottle={16}
         />
       </View>
       
