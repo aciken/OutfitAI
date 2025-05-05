@@ -13,6 +13,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useGlobalContext } from '../context/GlobalProvider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LinearGradient } from 'expo-linear-gradient';
 
 // Reusable component for section headers
 const SectionHeader = ({ title }) => (
@@ -24,12 +25,31 @@ const SectionHeader = ({ title }) => (
 // Reusable component for settings options
 const SettingOption = ({ icon, text, onPress }) => (
   <TouchableOpacity 
-    className="flex-row items-center bg-gray-900 p-4 rounded-lg"
+    className="flex-row items-center bg-white p-4 rounded-lg my-1"
+    style={{
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+      elevation: 2,
+      borderWidth: 1,
+      borderColor: 'rgba(0, 0, 0, 0.05)',
+    }}
     onPress={onPress || (() => console.log(`${text} pressed`))}
   >
-    <Ionicons name={icon} size={22} color="#a5b4fc" />
-    <Text className="text-base text-gray-200 ml-4 flex-1">{text}</Text> 
-    <Ionicons name="chevron-forward-outline" size={20} color="#6b7280" />
+    <View style={{ 
+      width: 32, 
+      height: 32, 
+      borderRadius: 16, 
+      backgroundColor: 'rgba(138, 43, 226, 0.1)', 
+      alignItems: 'center', 
+      justifyContent: 'center',
+      marginRight: 12
+    }}>
+      <Ionicons name={icon} size={18} color="#8A2BE2" />
+    </View>
+    <Text className="text-base text-gray-800 flex-1">{text}</Text> 
+    <Ionicons name="chevron-forward-outline" size={18} color="#8A2BE2" />
   </TouchableOpacity>
 );
 
@@ -71,23 +91,33 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-950">
-      <StatusBar barStyle="light-content" />
+    <SafeAreaView className="flex-1 bg-white">
+      <StatusBar barStyle="dark-content" />
 
       {/* Header */}
-      <View className="flex-row items-center justify-between px-4 pt-5 pb-4 border-b border-gray-800">
-        <Text className="text-xl font-bold text-white">Settings</Text>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="close-circle" size={28} color="#6b7280" /> 
+      <View className="flex-row items-center justify-between px-4 pt-5 pb-4 border-b border-gray-100">
+        <Text className="text-xl font-bold text-gray-800">Settings</Text>
+        <TouchableOpacity 
+          onPress={() => router.back()}
+          style={{
+            borderRadius: 18,
+            backgroundColor: 'rgba(138, 43, 226, 0.1)',
+            padding: 8,
+          }}
+        >
+          <Ionicons name="close" size={20} color="#8A2BE2" /> 
         </TouchableOpacity>
       </View>
 
       {/* Content with Sections */}
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
+      <ScrollView 
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}
+        showsVerticalScrollIndicator={false}
+      >
         
         <SectionHeader title="Account" />
         <View className="space-y-2">
-          <SettingOption icon="person-circle-outline" text="Edit Profile" />
+          <SettingOption icon="person-outline" text="Edit Profile" />
           <SettingOption icon="key-outline" text="Change Password" />
         </View>
 
@@ -106,17 +136,22 @@ export default function SettingsScreen() {
           <SettingOption icon="information-circle-outline" text="About" />
         </View>
 
-        {/* Logout Button - Added Spacing and Styling */}
+        {/* Logout Button - Updated Styling */}
         <TouchableOpacity 
-          className="bg-red-900/50 border border-red-700/60 p-4 rounded-lg flex-row items-center justify-center mt-10"
+          className="p-4 rounded-lg flex-row items-center justify-center mt-10"
+          style={{
+            borderWidth: 1,
+            borderColor: 'rgba(239, 68, 68, 0.3)',
+            backgroundColor: 'rgba(239, 68, 68, 0.05)',
+          }}
           onPress={handleLogout}
         >
-          <Ionicons name="log-out-outline" size={22} color="#fca5a5" /> 
-          <Text className="text-base text-red-400 ml-3 font-semibold">Logout</Text>
+          <Ionicons name="log-out-outline" size={18} color="#ef4444" /> 
+          <Text className="text-base text-red-500 ml-3 font-semibold">Logout</Text>
         </TouchableOpacity>
 
         {/* Version Info Footer */}
-        <Text className="text-center text-gray-600 mt-8 text-xs">
+        <Text className="text-center text-gray-400 mt-8 text-xs">
            Version 1.0.0 (Build 1)
         </Text>
       </ScrollView>
