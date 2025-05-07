@@ -10,10 +10,13 @@
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.1.2",
+    "@react-native-masked-view/masked-view": "^0.3.2",
     "axios": "^1.8.4",
     "expo": "~53.0.7",
+    "expo-asset": "^11.1.5",
     "expo-blur": "^14.1.4",
     "expo-constants": "~17.1.5",
+    "expo-haptics": "~14.1.4",
     "expo-linear-gradient": "~14.1.4",
     "expo-linking": "~7.1.4",
     "expo-router": "~5.0.5",
@@ -21,11 +24,11 @@
     "nativewind": "^2.0.11",
     "react": "19.0.0",
     "react-native": "0.79.2",
+    "react-native-background-remover": "^0.3.2",
     "react-native-gesture-handler": "^2.24.0",
     "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "5.4.0",
-    "react-native-screens": "~4.10.0",
-    "expo-haptics": "~14.1.4"
+    "react-native-screens": "~4.10.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

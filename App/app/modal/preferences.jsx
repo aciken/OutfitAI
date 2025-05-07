@@ -9,7 +9,8 @@ import {
   Image,
   StyleSheet,
   Animated,
-  Dimensions
+  Dimensions,
+  TextInput
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -22,6 +23,9 @@ const { width } = Dimensions.get('window');
 export default function Preferences() {
   const router = useRouter();
   const fadeAnim = useState(new Animated.Value(0))[0];
+  
+  // State for master preference toggle - DEFAULT TO FALSE
+  const [preferencesEnabledGlobally, setPreferencesEnabledGlobally] = useState(false);
   
   // Expanded preference settings
   const [preferences, setPreferences] = useState({
@@ -73,10 +77,13 @@ export default function Preferences() {
   // Toggle function for switches with haptic feedback
   const toggleSwitch = (key) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setPreferences(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
+    // Only allow toggle if preferences are globally enabled
+    if (preferencesEnabledGlobally) {
+      setPreferences(prev => ({
+        ...prev,
+        [key]: !prev[key]
+      }));
+    }
   };
 
   // Save preferences and return to previous screen
@@ -107,28 +114,66 @@ export default function Preferences() {
     loadPreferences();
   }, []);
 
+  // Master toggle switch for enabling/disabling all preference selections
+  const MasterToggle = () => (
+    <View 
+      style={[
+        styles.masterToggleContainer,
+        preferencesEnabledGlobally ? styles.masterToggleEnabled : styles.masterToggleDisabled
+      ]}
+    >
+      <View style={styles.masterToggleTextContainer}>
+        <Text 
+          style={[
+            styles.masterToggleLabel,
+            preferencesEnabledGlobally ? styles.masterToggleLabelEnabled : styles.masterToggleLabelDisabled
+          ]}
+        >
+          {preferencesEnabledGlobally ? 'Preference Selection Active' : 'Activate Preference Selection'}
+        </Text>
+        {!preferencesEnabledGlobally && (
+          <Text style={styles.masterToggleHint}>
+            Turn this on to choose your preferences.
+          </Text>
+        )}
+      </View>
+      <Switch
+        trackColor={{ false: "#e0e0e0", true: "rgba(111, 66, 193, 0.4)" }}
+        thumbColor={preferencesEnabledGlobally ? "#6F42C1" : "#f4f3f4"}
+        ios_backgroundColor="#e0e0e0"
+        onValueChange={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          setPreferencesEnabledGlobally(prev => !prev);
+        }}
+        value={preferencesEnabledGlobally}
+      />
+    </View>
+  );
+
   // Category Switch Component
-  const PreferenceSwitch = ({ icon, label, value, onToggle }) => (
+  const PreferenceSwitch = ({ icon, label, value, onToggle, disabled }) => (
     <TouchableOpacity 
       style={styles.preferenceSwitchContainer}
       activeOpacity={0.7}
-      onPress={() => onToggle()}
+      onPress={() => !disabled && onToggle()} // Only toggle if not disabled
+      disabled={disabled} // Disable touchable opacity as well
     >
-      <View style={[styles.iconContainer, value ? styles.activeIconContainer : {}]}>
+      <View style={[styles.iconContainer, value && !disabled ? styles.activeIconContainer : {}, disabled ? styles.disabledIconContainer : {}]}>
         <MaterialCommunityIcons 
           name={icon} 
           size={22} 
-          color={value ? '#fff' : '#666'} 
+          color={disabled ? '#bbb' : (value ? '#fff' : '#666')} 
         />
       </View>
-      <Text style={[styles.switchLabel, value ? styles.activeSwitchLabel : {}]}>{label}</Text>
+      <Text style={[styles.switchLabel, value && !disabled ? styles.activeSwitchLabel : {}, disabled ? styles.disabledSwitchLabel : {}]}>{label}</Text>
       <Switch
         trackColor={{ false: "#e0e0e0", true: "rgba(111, 66, 193, 0.3)" }}
-        thumbColor={value ? "#6F42C1" : "#f4f3f4"}
+        thumbColor={disabled ? "#ccc" : (value ? "#6F42C1" : "#f4f3f4")}
         ios_backgroundColor="#e0e0e0"
-        onValueChange={onToggle}
+        onValueChange={() => !disabled && onToggle()} // Only toggle if not disabled
         value={value}
         style={styles.switch}
+        disabled={disabled} // Disable switch
       />
     </TouchableOpacity>
   );
@@ -204,48 +249,56 @@ export default function Preferences() {
                 label="Casual" 
                 value={preferences.casualOutfits} 
                 onToggle={() => toggleSwitch('casualOutfits')} 
+                disabled={!preferencesEnabledGlobally}
               />
               <PreferenceSwitch 
                 icon="tie" 
                 label="Formal" 
                 value={preferences.formalOutfits} 
                 onToggle={() => toggleSwitch('formalOutfits')} 
+                disabled={!preferencesEnabledGlobally}
               />
               <PreferenceSwitch 
                 icon="run" 
                 label="Sports" 
                 value={preferences.sportswear} 
                 onToggle={() => toggleSwitch('sportswear')} 
+                disabled={!preferencesEnabledGlobally}
               />
               <PreferenceSwitch 
                 icon="snowflake" 
                 label="Winter" 
                 value={preferences.winterOutfits} 
                 onToggle={() => toggleSwitch('winterOutfits')} 
+                disabled={!preferencesEnabledGlobally}
               />
               <PreferenceSwitch 
                 icon="white-balance-sunny" 
                 label="Summer" 
                 value={preferences.summerOutfits} 
                 onToggle={() => toggleSwitch('summerOutfits')} 
+                disabled={!preferencesEnabledGlobally}
               />
               <PreferenceSwitch 
                 icon="umbrella-beach" 
                 label="Beach" 
                 value={preferences.beachWear} 
                 onToggle={() => toggleSwitch('beachWear')} 
+                disabled={!preferencesEnabledGlobally}
               />
               <PreferenceSwitch 
                 icon="party-popper" 
                 label="Party" 
                 value={preferences.partyWear} 
                 onToggle={() => toggleSwitch('partyWear')} 
+                disabled={!preferencesEnabledGlobally}
               />
               <PreferenceSwitch 
                 icon="dumbbell" 
                 label="Workout" 
                 value={preferences.workoutGear} 
                 onToggle={() => toggleSwitch('workoutGear')} 
+                disabled={!preferencesEnabledGlobally}
               />
             </View>
           </View>
@@ -265,30 +318,35 @@ export default function Preferences() {
                 label="Minimalist" 
                 value={preferences.minimalist} 
                 onToggle={() => toggleSwitch('minimalist')} 
+                disabled={!preferencesEnabledGlobally}
               />
               <PreferenceSwitch 
                 icon="home-roof" 
                 label="Vintage" 
                 value={preferences.vintage} 
                 onToggle={() => toggleSwitch('vintage')} 
+                disabled={!preferencesEnabledGlobally}
               />
               <PreferenceSwitch 
                 icon="tennis-ball" 
                 label="Streetwear" 
                 value={preferences.streetwear} 
                 onToggle={() => toggleSwitch('streetwear')} 
+                disabled={!preferencesEnabledGlobally}
               />
               <PreferenceSwitch 
                 icon="flower" 
                 label="Bohemian" 
                 value={preferences.bohemian} 
                 onToggle={() => toggleSwitch('bohemian')} 
+                disabled={!preferencesEnabledGlobally}
               />
               <PreferenceSwitch 
                 icon="hanger" 
                 label="Preppy" 
                 value={preferences.preppy} 
                 onToggle={() => toggleSwitch('preppy')} 
+                disabled={!preferencesEnabledGlobally}
               />
             </View>
             
@@ -300,18 +358,21 @@ export default function Preferences() {
                 label="Dark Colors" 
                 value={preferences.preferDarkColors} 
                 onToggle={() => toggleSwitch('preferDarkColors')} 
+                disabled={!preferencesEnabledGlobally}
               />
               <PreferenceSwitch 
                 icon="brightness-7" 
                 label="Bright Colors" 
                 value={preferences.preferBrightColors} 
                 onToggle={() => toggleSwitch('preferBrightColors')} 
+                disabled={!preferencesEnabledGlobally}
               />
               <PreferenceSwitch 
                 icon="palette-outline" 
                 label="Neutral Tones" 
                 value={preferences.preferNeutralColors} 
                 onToggle={() => toggleSwitch('preferNeutralColors')} 
+                disabled={!preferencesEnabledGlobally}
               />
             </View>
           </View>
@@ -331,24 +392,28 @@ export default function Preferences() {
                 label="Shoes" 
                 value={preferences.showShoes} 
                 onToggle={() => toggleSwitch('showShoes')} 
+                disabled={!preferencesEnabledGlobally}
               />
               <PreferenceSwitch 
                 icon="necklace" 
                 label="Accessories" 
                 value={preferences.showAccessories} 
                 onToggle={() => toggleSwitch('showAccessories')} 
+                disabled={!preferencesEnabledGlobally}
               />
               <PreferenceSwitch 
                 icon="jacket" 
                 label="Jackets" 
                 value={preferences.showJackets} 
                 onToggle={() => toggleSwitch('showJackets')} 
+                disabled={!preferencesEnabledGlobally}
               />
               <PreferenceSwitch 
                 icon="hat-fedora" 
                 label="Hats" 
                 value={preferences.showHats} 
                 onToggle={() => toggleSwitch('showHats')} 
+                disabled={!preferencesEnabledGlobally}
               />
             </View>
           </View>
@@ -368,23 +433,27 @@ export default function Preferences() {
                 label="Enable Notifications" 
                 value={preferences.notificationsEnabled} 
                 onToggle={() => toggleSwitch('notificationsEnabled')} 
+                disabled={!preferencesEnabledGlobally}
               />
               <PreferenceSwitch 
                 icon="calendar-clock" 
                 label="Weekly Style Recap" 
                 value={preferences.weeklyRecap} 
                 onToggle={() => toggleSwitch('weeklyRecap')} 
+                disabled={!preferencesEnabledGlobally}
               />
               <PreferenceSwitch 
                 icon="database" 
                 label="Improve with My Data" 
                 value={preferences.dataCollection} 
                 onToggle={() => toggleSwitch('dataCollection')} 
+                disabled={!preferencesEnabledGlobally}
               />
               
               <TouchableOpacity 
                 style={styles.resetButton}
                 onPress={resetToDefaults}
+                disabled={!preferencesEnabledGlobally}
               >
                 <MaterialCommunityIcons name="refresh" size={20} color="#666" />
                 <Text style={styles.resetButtonText}>Reset to Default Preferences</Text>
@@ -399,228 +468,280 @@ export default function Preferences() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Animated.View style={{ opacity: fadeAnim, flex: 1 }}>
-        {/* Header with back button */}
+    <SafeAreaView style={styles.safeArea}>
+      <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
+        {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity 
-            onPress={() => router.back()}
-            style={styles.backButton}
-            hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
-          >
-            <Ionicons name="chevron-back" size={28} color="#6F42C1" />
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color="#333" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Your Preferences</Text>
-          <TouchableOpacity 
-            onPress={savePreferences}
-            style={styles.saveButton}
-          >
-            <Ionicons name="checkmark" size={28} color="#6F42C1" />
+          <Text style={styles.title}>Preferences</Text>
+          <TouchableOpacity onPress={savePreferences} style={styles.saveButton}>
+            <Text style={styles.saveButtonText}>Save</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Navigation Tabs */}
+        {/* Master Enable Toggle */}
+        <MasterToggle />
+        
+        {/* Tabs - These will be removed */}
         <View style={styles.tabsContainer}>
-          <ScrollView 
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.tabsScrollContent}
-          >
-            <TabButton 
-              title="Outfit Types" 
-              iconName="shirt-outline" 
-              isActive={activeTab === 'outfitTypes'} 
-              onPress={() => setActiveTab('outfitTypes')} 
-            />
-            <TabButton 
-              title="Style" 
-              iconName="color-palette-outline" 
-              isActive={activeTab === 'stylePreferences'} 
-              onPress={() => setActiveTab('stylePreferences')} 
-            />
-            <TabButton 
-              title="Components" 
-              iconName="grid-outline" 
-              isActive={activeTab === 'outfitParts'} 
-              onPress={() => setActiveTab('outfitParts')} 
-            />
-            <TabButton 
-              title="Settings" 
-              iconName="settings-outline" 
-              isActive={activeTab === 'settings'} 
-              onPress={() => setActiveTab('settings')} 
-            />
-          </ScrollView>
+          <TabButton 
+            title="Outfit Types" 
+            iconName="shirt-outline"
+            isActive={activeTab === 'outfitTypes'} 
+            onPress={() => setActiveTab('outfitTypes')} 
+          />
+          <TabButton 
+            title="Styles" 
+            iconName="color-palette-outline"
+            isActive={activeTab === 'stylePreferences'} 
+            onPress={() => setActiveTab('stylePreferences')} 
+          />
+          <TabButton 
+            title="Outfit Parts" 
+            iconName="ellipsis-horizontal-circle-outline"
+            isActive={activeTab === 'outfitParts'} 
+            onPress={() => setActiveTab('outfitParts')} 
+          />
+          {/* Removed Color and Other Settings for brevity, will consolidate all */}
         </View>
-
-        {/* Main Content Area */}
+        
+        {/* Scrollable Content Area for Preferences */}
         <ScrollView 
-          style={styles.scrollView}
-          showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollViewContent}
+          showsVerticalScrollIndicator={false}
         >
-          {renderTabContent()}
+          {renderTabContent()} 
+          {/* This will be replaced by a direct rendering of all filtered preferences */}
         </ScrollView>
+
+        {/* Floating Reset Button */}
+        <TouchableOpacity 
+          style={styles.floatingResetButton}
+          onPress={resetToDefaults}
+          activeOpacity={0.8}
+        >
+          <MaterialCommunityIcons name="backup-restore" size={24} color="#fff" />
+        </TouchableOpacity>
+
       </Animated.View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#F7F7F7', // Light background for the whole screen
+  },
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FB',
+    backgroundColor: '#fff', // Main container background
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 12,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ECECEC', // Softer border color
+    backgroundColor: '#fff', // Header background
   },
   backButton: {
-    padding: 5,
+    padding: 5, // Easier to tap
   },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#333',
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333', // Darker title for better contrast
   },
   saveButton: {
-    padding: 5,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#6F42C1', // Theme color for save
+    borderRadius: 8,
   },
-  tabsContainer: {
-    paddingVertical: 16,
+  saveButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
   },
-  tabsScrollContent: {
-    paddingHorizontal: 16,
-  },
-  tabButton: {
+  masterToggleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    marginRight: 12,
-    borderRadius: 12,
-    backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ECECEC',
+    transitionProperty: 'backgroundColor', // For smooth transition if supported by Animated
+    transitionDuration: '0.3s',
   },
-  activeTabButton: {
-    backgroundColor: '#F0E7FE',
+  masterToggleEnabled: {
+    backgroundColor: '#F0EFFF', // Light purple when enabled
   },
-  tabButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
+  masterToggleDisabled: {
+    backgroundColor: '#F9F9F9', // Default background when disabled
+  },
+  masterToggleTextContainer: {
+    flex: 1,
+    marginRight: 10,
+  },
+  masterToggleLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  masterToggleLabelEnabled: {
+    color: '#6F42C1', // Theme color when enabled
+  },
+  masterToggleLabelDisabled: {
+    color: '#555', // Darker gray when disabled
+  },
+  masterToggleHint: {
+    fontSize: 12,
     color: '#777',
-    marginLeft: 6,
+    marginTop: 3,
   },
-  activeTabButtonText: {
+  searchBarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0F0F0', // Lighter search bar background
+    borderRadius: 10,
+    marginHorizontal: 20,
+    marginTop: 15,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#E0E0E0', // Subtle border for search bar
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    height: 45, // Increased height for better touch target
+    fontSize: 15,
+    color: '#333',
+  },
+  tabsContainer: { // Will be removed
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 10,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ECECEC',
+    paddingHorizontal: 10, // Add some horizontal padding
+  },
+  tabButton: { // Will be removed or repurposed
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12, // Add padding for better touch area
+    borderRadius: 8, // Rounded corners for tabs
+  },
+  activeTabButton: { // Will be removed
+    backgroundColor: 'rgba(111, 66, 193, 0.1)', // Lighter active tab background
+  },
+  tabButtonText: { // Will be removed
+    fontSize: 12,
+    color: '#777',
+    marginTop: 3,
+  },
+  activeTabButtonText: { // Will be removed
     color: '#6F42C1',
     fontWeight: '600',
   },
-  scrollView: {
-    flex: 1,
-  },
   scrollViewContent: {
-    paddingBottom: 40,
+    paddingBottom: 80, // Space for floating button
+    paddingHorizontal: 20, // Horizontal padding for content
+    paddingTop: 10, // Top padding for content
   },
-  tabContent: {
-    marginHorizontal: 16,
+  tabContent: { // Will be adapted for individual sections if kept, or items directly
+    paddingVertical: 10,
   },
-  tabContentTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+  tabContentTitle: { // For section titles if we group them
+    fontSize: 18,
+    fontWeight: '600',
     color: '#333',
-    marginBottom: 8,
+    marginBottom: 5,
   },
-  tabContentDescription: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 24,
-  },
-  preferencesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+  tabContentDescription: { // For section descriptions
+    fontSize: 13,
+    color: '#777',
+    marginBottom: 15,
+    lineHeight: 18,
   },
   preferenceSwitchContainer: {
-    width: '48%',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    backgroundColor: '#fff', // White background for each switch row
+    borderRadius: 10, // Rounded corners for switch rows
+    marginBottom: 10, // Spacing between rows
+    paddingHorizontal: 15, // Padding inside each row
+    // Shadow for a card-like effect
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.08,
     shadowRadius: 2,
     elevation: 2,
   },
   iconContainer: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: '#F0F0F0',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#f0f0f0', // Default icon background
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginRight: 12,
   },
   activeIconContainer: {
-    backgroundColor: '#6F42C1',
+    backgroundColor: '#6F42C1', // Theme color for active icon background
+  },
+  disabledIconContainer: {
+    backgroundColor: '#e0e0e0',
   },
   switchLabel: {
+    flex: 1,
     fontSize: 15,
-    fontWeight: '500',
-    color: '#444',
-    marginBottom: 8,
+    color: '#555', // Slightly darker label color
+    fontWeight: '500', // Medium weight for labels
   },
   activeSwitchLabel: {
-    color: '#333',
+    color: '#6F42C1', // Theme color for active label
+    fontWeight: '600',
+  },
+  disabledSwitchLabel: {
+    color: '#aaa',
   },
   switch: {
-    alignSelf: 'flex-start',
-    transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }],
+    transform: [{ scaleX: 0.9 }, { scaleY: 0.9 }], // Slightly smaller switch
   },
-  colorSection: {
-    marginTop: 20,
+  preferencesGrid: { // Can be used for sections or removed for a single list
+    // Styles for grid if we keep a grid layout for some sections
   },
-  colorSectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 16,
-  },
-  settingsSection: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  resetButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  floatingResetButton: {
+    position: 'absolute',
+    bottom: 30,
+    right: 25,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#E74C3C', // Red color for reset
     justifyContent: 'center',
-    marginTop: 24,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    backgroundColor: '#f9f9f9',
+    alignItems: 'center',
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
-  resetButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#666',
-    marginLeft: 8,
-  },
+  // Add new styles or modify existing ones as needed for the new layout
 }); 

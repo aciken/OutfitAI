@@ -10,7 +10,8 @@ import {
   Image,
   TextInput,
   Animated,
-  Easing
+  Easing,
+  StyleSheet
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -28,6 +29,10 @@ import ShoesImage from '../../assets/outfits/shoes1.png';
 // Import new images
 import DressImage from '../../assets/outfits/dress1.png';
 import HealsImage from '../../assets/outfits/heals1.png';
+// Import new images for outfit 3
+import Jeans2Image from '../../assets/outfits/jeans2.png'; 
+import Shirt2Image from '../../assets/outfits/shirt2.png';
+import Shoes2Image from '../../assets/outfits/shoes2.png';
 
 // Get screen dimensions for responsive sizing
 const { width, height } = Dimensions.get('window');
@@ -63,20 +68,29 @@ export default function Home() {
     {
       id: 'outfit1', 
       type: 'outfit',
-      // Items are now objects with source and desired height
+      // Add labels to items
       items: [
-        { source: HoodieImage, height: 100 }, 
-        { source: PantsImage, height: 100 }, 
-        { source: ShoesImage, height: 80 }
+        { source: HoodieImage, height: 100, label: 'Cozy Hoodie' }, 
+        { source: PantsImage, height: 100, label: 'Casual Pants' }, 
+        { source: ShoesImage, height: 80, label: 'Sneakers' }
       ] 
     },
     {
       id: 'outfit2',
       type: 'outfit',
       items: [
-        { source: DressImage, height: 200 }, // Dress height adjusted
-        { source: HealsImage, height: 150 }  // Heels height adjusted
+        { source: DressImage, height: 200, label: 'Summer Dress' },
+        { source: HealsImage, height: 150, label: 'Stylish Heels' }
       ]
+    },
+    {
+      id: 'outfit3', // New outfit ID
+      type: 'outfit',
+      items: [
+        { source: Shirt2Image, height: 100, label: 'Graphic Tee' },
+        { source: Jeans2Image, height: 100, label: 'Denim Jeans' },
+        { source: Shoes2Image, height: 80, label: 'High Tops' }
+      ] 
     }
   ]);
 
@@ -92,8 +106,9 @@ export default function Home() {
     if (card.type === 'outfit') {
       // Define keywords for each outfit card
       const outfitKeywords = {
-        'outfit1': ['hoodie', 'pants', 'shoes'],
-        'outfit2': ['dress', 'heals']
+        'outfit1': ['hoodie', 'pants', 'shoes', 'cozy', 'casual', 'sneakers'],
+        'outfit2': ['dress', 'heals', 'summer', 'stylish'],
+        'outfit3': ['shirt', 'tee', 'jeans', 'denim', 'shoes', 'tops'] // Added keywords for outfit3
       };
 
       // Check if the query matches any keyword for this specific outfit
@@ -246,8 +261,8 @@ export default function Home() {
         shadowOpacity: 0.2,
         shadowRadius: 20,
         elevation: 16,
-        borderWidth: 1,
-        borderColor: 'rgba(138, 43, 226, 0.15)',
+        borderWidth: 1.5, // Increased border width for active card
+        borderColor: 'rgba(138, 43, 226, 0.25)', // Increased opacity for active border
       };
     } else {
       cardStyle = {
@@ -257,14 +272,22 @@ export default function Home() {
         shadowOpacity: 0.12,
         shadowRadius: 8,
         elevation: 6,
+        borderWidth: 1, 
+        borderColor: 'rgba(0, 0, 0, 0.06)', // Decreased opacity for inactive border
       };
     }
 
     if (item.type === 'create') {
-      cardClasses = "h-[400px] rounded-2xl justify-center items-center bg-gray-50 border border-dashed border-gray-300";
+      cardClasses = "h-[400px] rounded-2xl justify-center items-center bg-gray-50 border border-dashed border-gray-300 overflow-hidden";
       cardContent = (
         <>
-          {/* Custom styled plus icon with gradient background */}
+          {/* Gradient Background for Create Card */}
+          <LinearGradient
+            colors={['rgba(250, 250, 250, 0.8)', 'rgba(245, 245, 245, 0.6)']}
+            style={StyleSheet.absoluteFill}
+          />
+          
+          {/* Custom styled plus icon */}
           <View className="mb-4 rounded-full overflow-hidden" style={{ width: 70, height: 70 }}>
             <LinearGradient
               colors={['#8A2BE2', '#A020F0']}
@@ -286,19 +309,53 @@ export default function Home() {
         </>
       );
     } else if (item.type === 'outfit') {
-      cardClasses = "h-[400px] rounded-2xl justify-center items-center bg-white";
+      cardClasses = "h-[400px] rounded-2xl bg-white overflow-hidden";
       cardContent = (
-        <View className="p-4 justify-center items-center h-full">
-          {/* Map over item objects, using source and height */}
-          {item.items.map((itemData, index) => (
-            <Image 
-              key={`${item.id}-img-${index}`}
-              source={itemData.source}
-              className="rounded-lg my-2"
-              style={{ width: CARD_WIDTH * 0.6, height: itemData.height }} 
-              resizeMode="contain" 
-            />
-          ))}
+        // Container for gradient + items
+        <View className="flex-1 justify-center items-center w-full">
+          {/* Subtle Background Gradient */}
+          <LinearGradient
+            colors={['rgba(255, 255, 255, 0)', 'rgba(245, 240, 255, 0.5)', 'rgba(230, 220, 250, 0.3)']} // Light purple tones
+            style={StyleSheet.absoluteFill}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 1 }}
+          />
+        
+          {/* Item Container */}
+          <View className="p-4 justify-center items-center">
+            {item.items.map((itemData, imgIndex) => {
+              const rotation = imgIndex % 2 === 0 ? '-1.5deg' : '1.5deg';
+              
+              return (
+                // Wrap image and text
+                <View key={`${item.id}-item-${imgIndex}`} className="items-center mb-2">
+                  <Image 
+                    source={itemData.source}
+                    className="rounded-lg" 
+                    style={[
+                      {
+                        width: CARD_WIDTH * 0.6, // Slightly reduced width to make space for label
+                        height: itemData.height,
+                        shadowColor: "#000",
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.1,
+                        shadowRadius: 3,
+                        transform: [{ rotate: rotation }]
+                      }
+                    ]}
+                    resizeMode="contain" 
+                  />
+                  {/* Item Label */}
+                  <Text 
+                    className="mt-1 text-xs font-medium text-gray-600"
+                    style={{ transform: [{ rotate: rotation }] }} // Apply same rotation
+                  >
+                    {itemData.label}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
         </View>
       );
     } else {
@@ -326,13 +383,28 @@ export default function Home() {
           style={cardStyle}       
           activeOpacity={0.8}
           onPress={() => {
-            // Scroll to this card when tapped
-            flatListRef.current?.scrollToIndex({
-              index,
-              animated: true,
-              viewPosition: 0.5
-            });
-            console.log(`Card ${item.id} pressed`);
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); // Light haptic for all card taps
+
+            if (item.type === 'outfit') {
+              // Navigate to a new page for 'outfit' cards
+              console.log(`Outfit Card ${item.id} (index ${index}) pressed, navigating.`);
+              router.push({
+                pathname: `/outfit/${item.id}`, // Dynamic route using outfit ID
+                params: { 
+                  items: JSON.stringify(item.items),
+                  // You can pass a general title for the outfit card if available, e.g.:
+                  // title: item.title || `Outfit ${item.id}` 
+                }
+              });
+            } else {
+              // For 'create' card or any other types, scroll to it (maintains previous behavior)
+              flatListRef.current?.scrollToIndex({
+                index,
+                animated: true,
+                viewPosition: 0.5 // Center the card
+              });
+              console.log(`Card ${item.id} (type: ${item.type}, index ${index}) pressed, scrolling.`);
+            }
           }}
         >
           {cardContent}
@@ -377,8 +449,18 @@ export default function Home() {
         className="flex-row justify-between items-center px-6 py-5 bg-white border-b border-gray-100" 
         style={{ zIndex: 10 }}
       >
-        {/* Text size remains increased */}
-        <Text className="text-3xl font-bold text-gray-800">OutfitAI</Text>
+        {/* Text size remains increased, now with a shadow */}
+        <Text 
+          className="text-3xl font-bold" 
+          style={{
+            color: '#8A2BE2', 
+            textShadowColor: 'rgba(0, 0, 0, 0.25)', 
+            textShadowOffset: { width: 1, height: 1 }, 
+            textShadowRadius: 3
+          }}
+        >
+          OutfitAI
+        </Text>
         <View className="flex-row items-center space-x-3">
           {/* Settings Icon (Preferences Icon removed from here) */}
           <TouchableOpacity 
@@ -521,7 +603,7 @@ export default function Home() {
         />
       </View>
       
-      {/* Preferences button at bottom of screen */}
+      {/* History button at bottom of screen */}
       <View 
         style={{
           position: 'absolute',
@@ -530,10 +612,15 @@ export default function Home() {
           right: 0,
           alignItems: 'center',
           paddingHorizontal: 20,
+          zIndex: 100, // Ensure this view is on top
         }}
       >
         <TouchableOpacity
-          onPress={() => router.push('/modal/history')}
+          onPress={() => {
+            console.log("History button pressed!"); // Add log for debugging
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            router.push('/modal/history'); 
+          }}
           activeOpacity={0.7}
           style={{
             width: '100%',
@@ -561,7 +648,7 @@ export default function Home() {
           >
             <Ionicons name="time-outline" size={24} color="#FFF" style={{ marginRight: 10 }} />
             <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
-              History
+              View Outfit History
             </Text>
           </LinearGradient>
         </TouchableOpacity>

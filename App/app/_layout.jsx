@@ -31,6 +31,14 @@ export default function RootLayout() {
                         animationDuration: 800,
                     }}
                 />
+                <Stack.Screen
+                    name="outfit/[id]"
+                    options={{
+                        headerShown: false,
+                        animation: 'slide_from_bottom',
+                        animationDuration: 400,
+                    }}
+                />
             </Stack>
         </GlobalProvider>
     </GestureHandlerRootView>
