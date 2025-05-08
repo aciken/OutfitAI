@@ -101,7 +101,7 @@ export default function WelcomePage() {
             Your app's description goes here. Highlight main features and benefits.
           </Text>
           
-          <Link href="/modal/signup" asChild>
+          <Link href="/onboarding/gender" asChild>
             <TouchableOpacity 
               className="w-full rounded-full mb-4 overflow-hidden"
               style={{

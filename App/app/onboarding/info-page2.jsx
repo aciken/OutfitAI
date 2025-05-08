@@ -1,0 +1,196 @@
+import React from 'react';
+import {
+  SafeAreaView,
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Dimensions,
+  ScrollView
+} from 'react-native';
+import { useRouter, Stack } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
+
+const { width } = Dimensions.get('window');
+
+// Onboarding Progress Bar Component (refined version)
+const OnboardingProgressBar = ({ currentStep, totalSteps }) => {
+  return (
+    <View style={styles.headerProgressBarContainer}>
+      {Array.from({ length: totalSteps }).map((_, index) => {
+        const stepNumber = index + 1;
+        const isActive = stepNumber <= currentStep;
+        return (
+          <View 
+            key={stepNumber}
+            style={[
+              styles.headerProgressStep,
+              isActive ? styles.activeHeaderProgressStep : styles.inactiveHeaderProgressStep,
+            ]}
+          />
+        );
+      })}
+    </View>
+  );
+};
+
+export default function InfoPage2() {
+  const router = useRouter();
+
+  const handleNext = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.push('/onboarding/image-upload');
+  };
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <Stack.Screen 
+        options={{
+          headerShown: true,
+          headerTitleAlign: 'center',
+          headerStyle: { backgroundColor: '#fff', height: 80 },
+          headerTintColor: '#333',
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => router.back()} style={{ marginLeft: 15, padding: 5 }}>
+              <Ionicons name="arrow-back" size={24} color="#333" />
+            </TouchableOpacity>
+          ),
+          headerTitle: () => (
+            <View style={styles.customHeaderTitleContainer}>
+              <Text style={styles.customHeaderTitleText}>Step 6 of 7: Try-On</Text>
+              <OnboardingProgressBar currentStep={6} totalSteps={7} />
+            </View>
+          ),
+        }}
+      />
+      <ScrollView contentContainerStyle={styles.scrollContentContainer}>
+        <View style={styles.content}>
+            <Ionicons name="camera-reverse-outline" size={80} color="#8A2BE2" style={styles.infoIcon} />
+            <Text style={styles.title}>Get Ready for Virtual Try-On!</Text>
+            <Text style={styles.paragraph}>
+              The final step is uploading a full-body photo of yourself. 
+              This image is key to enabling our exciting virtual try-on feature.
+            </Text>
+            <Text style={styles.paragraph}>
+              Ensure your photo has good lighting and your body is clearly visible. You'll be able to see how different outfits look on you!
+            </Text>
+            <Text style={styles.highlightText}>
+              Your image is stored securely and only used for this feature.
+            </Text>
+        </View>
+      </ScrollView>
+      <View style={styles.footer}>
+        <TouchableOpacity 
+          style={styles.nextButtonWrapper} 
+          onPress={handleNext} 
+        >
+          <LinearGradient
+            colors={['#8A2BE2', '#A020F0']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.nextButton}
+          >
+            <Text style={styles.nextButtonText}>Upload Image</Text>
+            <Ionicons name="arrow-forward" size={20} color="#fff" style={{ marginLeft: 8 }} />
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+// Styles (using the same refined style structure as info-page1.jsx)
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#F7F7F7',
+  },
+  customHeaderTitleContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  customHeaderTitleText: {
+    fontSize: 17,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  headerProgressBarContainer: {
+    flexDirection: 'row',
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#EAEAEA',
+    width: width * 0.6,
+  },
+  headerProgressStep: {
+    flex: 1,
+    height: '100%',
+    borderRadius: 2.5,
+    marginRight: 1,
+  },
+  activeHeaderProgressStep: {
+    backgroundColor: '#8A2BE2',
+  },
+  inactiveHeaderProgressStep: {
+    backgroundColor: 'transparent',
+  },
+  scrollContentContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
+  content: {
+    alignItems: 'center',
+    padding: 30,
+  },
+  infoIcon: {
+      marginBottom: 25,
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 15,
+  },
+  paragraph: {
+    fontSize: 16,
+    color: '#555',
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 24,
+  },
+  highlightText: {
+    fontSize: 16,
+    color: '#666', // Slightly less prominent than main highlight
+    fontWeight: '500',
+    textAlign: 'center',
+    marginTop: 10,
+    fontStyle: 'italic',
+  },
+  footer: {
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#ECECEC',
+    backgroundColor: '#F7F7F7',
+  },
+  nextButtonWrapper: {
+    borderRadius: 25,
+    overflow: 'hidden',
+  },
+  nextButton: {
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+  },
+  nextButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+}); 

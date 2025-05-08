@@ -21,14 +21,17 @@
     "expo-linking": "~7.1.4",
     "expo-router": "~5.0.5",
     "expo-status-bar": "~2.2.3",
+    "fs": "^0.0.1-security",
     "nativewind": "^2.0.11",
+    "openai": "^4.97.0",
     "react": "19.0.0",
     "react-native": "0.79.2",
     "react-native-background-remover": "^0.3.2",
     "react-native-gesture-handler": "^2.24.0",
     "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "5.4.0",
-    "react-native-screens": "~4.10.0"
+    "react-native-screens": "~4.10.0",
+    "expo-image-picker": "~16.1.4"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
