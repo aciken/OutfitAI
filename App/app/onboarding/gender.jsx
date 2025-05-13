@@ -55,7 +55,10 @@ export default function GenderSelectionPage() {
     if (selectedGender) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       console.log('Selected Gender:', selectedGender);
-      router.push('/onboarding/style-preferences');
+      router.push({
+        pathname: '/onboarding/style-preferences',
+        params: { gender: selectedGender },
+      });
     } else {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       alert('Please select a gender to continue.');

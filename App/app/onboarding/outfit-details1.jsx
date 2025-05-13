@@ -8,7 +8,7 @@ import {
   ScrollView,
   Dimensions
 } from 'react-native';
-import { useRouter, Stack } from 'expo-router';
+import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -51,6 +51,7 @@ const COMPONENT_OPTIONS = [
 
 export default function OutfitComponentsPage() {
   const router = useRouter();
+  const existingParams = useLocalSearchParams();
   const [selectedComponents, setSelectedComponents] = useState([]);
 
   const handleSelectComponent = (componentId) => {
@@ -65,7 +66,17 @@ export default function OutfitComponentsPage() {
   const handleNext = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     console.log('Selected Outfit Components:', selectedComponents);
-    router.push('/onboarding/outfit-details2');
+    console.log('Existing Params (OutfitDetails1):', existingParams);
+
+    const dataToPass = {
+      ...existingParams,
+      outfitComponents: selectedComponents,
+    };
+
+    router.push({
+      pathname: '/onboarding/outfit-details2',
+      params: dataToPass,
+    });
   };
 
   return (

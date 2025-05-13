@@ -8,7 +8,7 @@ import {
   Dimensions,
   ScrollView
 } from 'react-native';
-import { useRouter, Stack } from 'expo-router';
+import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -38,10 +38,15 @@ const OnboardingProgressBar = ({ currentStep, totalSteps }) => {
 
 export default function InfoPage2() {
   const router = useRouter();
+  const existingParams = useLocalSearchParams();
 
   const handleNext = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.push('/onboarding/image-upload');
+    console.log('Forwarding params from InfoPage2:', existingParams);
+    router.push({
+      pathname: '/onboarding/image-upload',
+      params: existingParams, 
+    });
   };
 
   return (

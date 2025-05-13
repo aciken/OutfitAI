@@ -10,7 +10,7 @@ import {
   Alert,
   Modal
 } from 'react-native';
-import { useRouter, Stack } from 'expo-router';
+import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -42,6 +42,7 @@ const OnboardingProgressBar = ({ currentStep, totalSteps }) => {
 
 export default function ImageUploadPage() {
   const router = useRouter();
+  const existingParams = useLocalSearchParams();
   const [selectedImage, setSelectedImage] = useState(null);
   const [isOptionsModalVisible, setIsOptionsModalVisible] = useState(false);
 
@@ -110,7 +111,17 @@ export default function ImageUploadPage() {
     if (selectedImage) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       console.log('Selected Image URI:', selectedImage);
-      router.push('/modal/signup');
+      console.log('Existing Params (ImageUploadPage):', existingParams);
+
+      const dataToPass = {
+        ...existingParams,
+        userImageURI: selectedImage,
+      };
+
+      router.push({ 
+        pathname: '/modal/signup',
+        params: dataToPass,
+      });
     } else {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       alert('Please select or take an image to continue.');

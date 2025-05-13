@@ -8,7 +8,7 @@ import {
   ScrollView,
   Dimensions
 } from 'react-native';
-import { useRouter, Stack } from 'expo-router';
+import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -49,6 +49,7 @@ const COLOR_OPTIONS = [
 
 export default function ColorPreferencesPage() {
   const router = useRouter();
+  const existingParams = useLocalSearchParams();
   const [selectedColors, setSelectedColors] = useState([]);
 
   const handleSelectColor = (colorId) => {
@@ -63,7 +64,17 @@ export default function ColorPreferencesPage() {
   const handleNext = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     console.log('Selected Colors:', selectedColors);
-    router.push('/onboarding/info-page2');
+    console.log('Existing Params (ColorPreferencesPage):', existingParams);
+
+    const dataToPass = {
+      ...existingParams,
+      colors: selectedColors,
+    };
+
+    router.push({ 
+      pathname: '/onboarding/info-page2',
+      params: dataToPass,
+    });
   };
 
   return (

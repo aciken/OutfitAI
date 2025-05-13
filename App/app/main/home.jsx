@@ -33,6 +33,12 @@ import HealsImage from '../../assets/outfits/heals1.png';
 import Jeans2Image from '../../assets/outfits/jeans2.png'; 
 import Shirt2Image from '../../assets/outfits/shirt2.png';
 import Shoes2Image from '../../assets/outfits/shoes2.png';
+// Placeholder import for the mannequin image for outfit 3 - PLEASE REPLACE with your actual image
+import MannequinOutfit3Image from '../../assets/outfits/outfit3.png'; 
+// Placeholder import for the mannequin image for outfit 1 - PLEASE REPLACE with your actual image
+import MannequinOutfit1Image from '../../assets/outfits/outfit1.png';
+// Placeholder import for the mannequin image for outfit 2 - PLEASE REPLACE with your actual image
+import MannequinOutfit2Image from '../../assets/outfits/outfit2.png';
 
 // Get screen dimensions for responsive sizing
 const { width, height } = Dimensions.get('window');
@@ -68,17 +74,26 @@ export default function Home() {
     {
       id: 'outfit1', 
       type: 'outfit',
-      // Add labels to items
+      // Display a single mannequin image on the card
       items: [
+        { source: MannequinOutfit1Image, height: 300 }
+      ],
+      // Store original items for the detail view
+      detailedItems: [
         { source: HoodieImage, height: 100, label: 'Cozy Hoodie' }, 
         { source: PantsImage, height: 100, label: 'Casual Pants' }, 
         { source: ShoesImage, height: 80, label: 'Sneakers' }
-      ] 
+      ]
     },
     {
       id: 'outfit2',
       type: 'outfit',
+      // Display a single mannequin image on the card
       items: [
+        { source: MannequinOutfit2Image, height: 300 }
+      ],
+      // Store original items for the detail view
+      detailedItems: [
         { source: DressImage, height: 200, label: 'Summer Dress' },
         { source: HealsImage, height: 150, label: 'Stylish Heels' }
       ]
@@ -86,11 +101,16 @@ export default function Home() {
     {
       id: 'outfit3', // New outfit ID
       type: 'outfit',
+      // Display a single mannequin image on the card
       items: [
+        { source: MannequinOutfit3Image, height: 300 } // Increased height again
+      ],
+      // Store original items for the detail view
+      detailedItems: [
         { source: Shirt2Image, height: 100, label: 'Graphic Tee' },
         { source: Jeans2Image, height: 100, label: 'Denim Jeans' },
         { source: Shoes2Image, height: 80, label: 'High Tops' }
-      ] 
+      ]
     }
   ]);
 
@@ -388,10 +408,15 @@ export default function Home() {
             if (item.type === 'outfit') {
               // Navigate to a new page for 'outfit' cards
               console.log(`Outfit Card ${item.id} (index ${index}) pressed, navigating.`);
+              
+              // Determine which items to pass to the detail screen
+              // Prioritize detailedItems if available, otherwise use items
+              let itemsToPass = item.detailedItems ? item.detailedItems : item.items;
+
               router.push({
                 pathname: `/outfit/${item.id}`, // Dynamic route using outfit ID
                 params: { 
-                  items: JSON.stringify(item.items),
+                  items: JSON.stringify(itemsToPass),
                   // You can pass a general title for the outfit card if available, e.g.:
                   // title: item.title || `Outfit ${item.id}` 
                 }

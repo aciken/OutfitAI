@@ -8,7 +8,7 @@ import {
   ScrollView,
   Dimensions
 } from 'react-native';
-import { useRouter, Stack } from 'expo-router';
+import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -51,6 +51,7 @@ const STYLE_OPTIONS = [
 
 export default function StylePreferencesPage() {
   const router = useRouter();
+  const existingParams = useLocalSearchParams();
   const [selectedStyles, setSelectedStyles] = useState([]);
 
   const handleSelectStyle = (styleId) => {
@@ -65,7 +66,17 @@ export default function StylePreferencesPage() {
   const handleNext = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     console.log('Selected Styles:', selectedStyles);
-    router.push('/onboarding/info-page1'); // Navigate to new info-page1
+    console.log('Existing Params (StylePreferencesPage) Gender:', existingParams.gender);
+
+    const dataToPass = {
+      ...existingParams,
+      styles: selectedStyles,
+    };
+
+    router.push({
+      pathname: '/onboarding/info-page1',
+      params: dataToPass,
+    });
   };
 
   return (
