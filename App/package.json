@@ -28,6 +28,7 @@
     "openai": "^4.97.0",
     "react": "19.0.0",
     "react-native": "0.79.2",
+    "react-native-appwrite": "^0.7.4",
     "react-native-background-remover": "^0.3.2",
     "react-native-gesture-handler": "^2.24.0",
     "react-native-reanimated": "~3.17.4",

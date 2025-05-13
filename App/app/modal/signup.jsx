@@ -12,13 +12,15 @@ import {
   ScrollView,
   Alert
 } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useGlobalContext } from '../context/GlobalProvider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { Client, Storage, ID } from 'react-native-appwrite';
+
 
 // Temporarily comment out AsyncStorage if not installed
 // import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -26,61 +28,10 @@ import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/
 // Temporarily comment out axios if not installed
 // import axios from 'axios';
 
-// Helper function to upload image to Firebase Storage
-const uploadImageToFirebase = async (localImageUri) => {
-  if (!localImageUri) return null;
-
-  try {
-    console.log("Starting image upload to Firebase for URI:", localImageUri);
-    const response = await fetch(localImageUri);
-    const blob = await response.blob();
-    console.log("Image fetched as blob:", blob.size, blob.type);
-
-    const storage = getStorage(firebaseApp); // Get storage instance
-    // Create a unique filename for the image in Firebase Storage
-    const filename = `onboarding_images/${Date.now()}-${localImageUri.substring(localImageUri.lastIndexOf('/') + 1)}`;
-    const storageRef = ref(storage, filename);
-    console.log("Uploading to Firebase Storage path:", filename);
-
-    const uploadTask = uploadBytesResumable(storageRef, blob);
-
-    return new Promise((resolve, reject) => {
-      uploadTask.on('state_changed',
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          console.log('Upload is ' + progress + '% done');
-        },
-        (error) => {
-          console.error("Firebase Upload Error:", error);
-          Alert.alert("Upload Error", "Failed to upload image. Please try again.");
-          reject(error);
-        },
-        async () => {
-          try {
-            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-            console.log('File available at', downloadURL);
-            resolve(downloadURL);
-          } catch (error) {
-            console.error("Firebase Get Download URL Error:", error);
-            Alert.alert("Upload Error", "Failed to get image URL. Please try again.");
-            reject(error);
-          }
-        }
-      );
-    });
-  } catch (error) {
-    console.error("Error in uploadImageToFirebase:", error);
-    Alert.alert("Image Upload Failed", "An unexpected error occurred while preparing the image for upload.");
-    return null; // Or throw error to be caught by caller
-  }
-};
-
 export default function Signup() {
   // Remove GlobalContext reference temporarily
   // const { setUser } = useGlobalContext();
     const { setError, setIsAuthenticated, setUser, isAuthenticated } = useGlobalContext();
-    // Get all onboarding params
-    const allOnboardingData = useLocalSearchParams();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -94,11 +45,6 @@ export default function Signup() {
   const slideAnim = useRef(new Animated.Value(20)).current;
 
   useEffect(() => {
-    // Log all onboarding data when component mounts
-    console.log("--- All Onboarding Data Received on Signup Page ---");
-    console.log(JSON.stringify(allOnboardingData, null, 2));
-    console.log("---");
-
     // Start animations when component mounts
     Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -143,6 +89,9 @@ export default function Signup() {
 
     
   };
+
+      // Get all onboarding params
+      const allOnboardingData = useLocalSearchParams();
 
   useEffect(() => {
     // Don't show error if email is empty
@@ -208,54 +157,27 @@ export default function Signup() {
     
     // --- If all validation passes, proceed with API call ---
     console.log("Validation passed, attempting sign up...");
-    let firebaseImageUrl = null;
-
-    // Upload image to Firebase if userImageURI exists
-    if (allOnboardingData.userImageURI) {
-      try {
-        console.log("Attempting to upload image to Firebase...");
-        firebaseImageUrl = await uploadImageToFirebase(allOnboardingData.userImageURI);
-        if (!firebaseImageUrl) {
-          console.log("Image upload to Firebase failed or returned null URL. Stopping signup.");
-          // Alert is handled within uploadImageToFirebase for specific errors
-          return; // Stop signup if image upload failed
-        }
-        console.log("Image uploaded successfully to Firebase:", firebaseImageUrl);
-      } catch (uploadError) {
-        console.error("Error during Firebase image upload call in handleSignUp:", uploadError);
-        Alert.alert("Image Upload Error", "Could not upload your image. Please try again.");
-        return; // Stop signup process
-      }
-    } else {
-      console.log("No userImageURI found in onboarding data, skipping Firebase upload.");
-    }
-
-    // Prepare data for your backend
-    const { userImageURI, ...otherOnboardingData } = allOnboardingData;
-    const backendPayload = {
-      name: name.trim(),
-      email: email.trim(),
-      password,
-      ...otherOnboardingData, // Spread the rest of the onboarding data
-      ...(firebaseImageUrl && { profileImageUrl: firebaseImageUrl }) // Conditionally add profileImageUrl
-    };
-
-    console.log("Sending payload to backend:", JSON.stringify(backendPayload, null, 2));
-
     try {
-      const response = await axios.put('https://956b-109-245-193-150.ngrok-free.app/signup', backendPayload);
+      const response = await axios.put('https://956b-109-245-193-150.ngrok-free.app/signup', { // Ensure URL is correct
+        name: name.trim(), // Send trimmed name
+        email: email.trim(), // Send trimmed email
+        password // Send original password
+      });
       
       console.log("API Response Status:", response.status);
       console.log("API Response Data:", JSON.stringify(response.data, null, 2));
 
-      if(response.status === 200 && response.data) { 
-        await AsyncStorage.setItem('user', JSON.stringify(response.data));
-        setUser(response.data);
-        router.replace('/modal/verify');
+      if(response.status === 200) { // Check for user object
+          await AsyncStorage.setItem('user', JSON.stringify(response.data));
+          setUser(response.data); 
+          router.replace('/modal/verify');
+
+
+
       } else {
-        const message = response.data?.message || "Sign up failed. Invalid response from server.";
-        setError(message);
-        Alert.alert("Sign Up Error", message);
+          const message = response.data?.message || "Sign up failed. Invalid response from server.";
+          setError(message);
+          Alert.alert( message);
       }
     } catch (error) {
         let message = "An unexpected error occurred during sign up.";
