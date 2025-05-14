@@ -6,7 +6,8 @@ const sgMail = require('@sendgrid/mail');
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 const Signup = async (req, res) => {
-    const { name, email, password } = req.body;
+    const { name, email, password, fileId } = req.body;
+    console.log(name, email, password, fileId);
 
     const verificationCode = Math.floor(100000 + Math.random() * 900000);
 
@@ -35,7 +36,7 @@ const Signup = async (req, res) => {
 
       await sgMail.send(msg);
 
-        const user = await User.create({ name, email, password, verification: verificationCode });
+        const user = await User.create({ name, email, password, verification: verificationCode, fileId });
         res.status(200).json(user);
     }
 };

@@ -12,6 +12,7 @@ const UserSchema = new mongoose.Schema({
     googleId: String,
     isGoogle: {type: Boolean, default: false},
     verification: String,
+    fileId: String,
 });
 
 module.exports = mongoose.model('User', UserSchema);

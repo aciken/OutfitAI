@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,13 +12,19 @@ import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Client, Storage, ImageGravity } from 'react-native-appwrite';
+import { useGlobalContext } from '../context/GlobalProvider';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function OutfitDetailsPage() {
+  const { user } = useGlobalContext();
   const router = useRouter();
   const params = useLocalSearchParams();
   const { id } = params; // id from the route path e.g., outfit1
   let items = [];
   // pageTitle is no longer used for a visible header title
+
+  const [image, setImage] = useState(null);
 
   try {
     if (params.items) {
@@ -28,6 +34,39 @@ export default function OutfitDetailsPage() {
     console.error("Failed to parse items for outfit details:", e);
     // Consider showing an error message to the user on the page
   }
+
+  useEffect(() => {
+    const fetchUserAndImage = async () => {
+      try {
+        const storedUser = await AsyncStorage.getItem('user');
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          if (parsedUser && parsedUser.fileId) {
+            const client = new Client()
+              .setEndpoint('https://fra.cloud.appwrite.io/v1')
+              .setProject('682371f4001597e0b4a7');
+
+            const storage = new Storage(client);
+
+            const result = storage.getFileDownload(
+                '6823720b001cdc257539',
+                parsedUser.fileId, // Use fileId from AsyncStorage
+            );
+            setImage(result);
+            console.log("Appwrite image preview URL:", result); // Resource URL
+          } else {
+            console.log("fileId not found in stored user data.");
+          }
+        } else {
+          console.log("No user data found in AsyncStorage.");
+        }
+      } catch (error) {
+        console.error("Error fetching user from AsyncStorage or getting image preview:", error);
+      }
+    };
+
+    fetchUserAndImage();
+  }, []); // Empty dependency array, so it runs once on mount
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -48,6 +87,17 @@ export default function OutfitDetailsPage() {
       </TouchableOpacity>
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {/* Display the fetched image here */}
+        {image && image.href && (
+          <View style={styles.outfitImageContainer}>
+            <Image
+              source={{ uri: image.href }}
+              style={styles.outfitImage}
+              resizeMode="cover"
+            />
+          </View>
+        )}
+
         {items.length > 0 ? (
           items.map((outfitItem, index) => (
             <View key={index} style={styles.itemContainer}>
@@ -110,6 +160,26 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 15, 
     alignItems: 'center',
+  },
+  outfitImageContainer: {
+    width: '95%',
+    height: 300,
+    marginBottom: 25,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.12,
+    shadowRadius: 4.5,
+    elevation: 3,
+    overflow: 'hidden',
+  },
+  outfitImage: {
+    width: '100%',
+    height: '100%',
   },
   itemContainer: {
     width: '95%', // Make item cards take up most of the width

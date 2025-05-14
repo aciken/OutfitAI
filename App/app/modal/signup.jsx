@@ -94,6 +94,9 @@ export default function Signup() {
       const allOnboardingData = useLocalSearchParams();
 
   useEffect(() => {
+    // Get all onboarding params
+    console.log("All Onboarding Data:", allOnboardingData); // Log all onboarding data
+
     // Don't show error if email is empty
     if (!email) {
       setEmailError('');
@@ -131,6 +134,35 @@ export default function Signup() {
   const handleSignUp = async () => {
     setError(null); // Clear previous errors
 
+//     const client = new Client()
+//     .setEndpoint('https://fra.cloud.appwrite.io/v1')
+//     .setProject('682371f4001597e0b4a7');
+
+// const storage = new Storage(client);
+
+// const promise = storage.createFile(
+//     '6823720b001cdc257539',
+//     ID.unique(),
+//     {
+//         name: ID.unique() + '.jpg',
+//         type: 'image/jpeg',
+//         size: 1234567,
+//         uri: allOnboardingData.userImageURI,
+//     }
+// );
+
+// let fileId = '';
+
+// promise.then(function (response) {
+//     console.log(response);
+//     fileId = response.$id; // Success
+//     console.log(fileId);
+// }, function (error) {
+//     console.log(error); // Failure
+// });
+
+
+
     // 1. Check if all fields are filled
     if (!name.trim() || !email.trim() || !password || !confirmPassword) {
       Alert.alert('Error', 'Please fill in all fields.');
@@ -158,27 +190,75 @@ export default function Signup() {
     // --- If all validation passes, proceed with API call ---
     console.log("Validation passed, attempting sign up...");
     try {
-      const response = await axios.put('https://956b-109-245-193-150.ngrok-free.app/signup', { // Ensure URL is correct
+ 
+      const client = new Client()
+      .setEndpoint('https://fra.cloud.appwrite.io/v1')
+      .setProject('682371f4001597e0b4a7');
+  
+  const storage = new Storage(client);
+  
+  const promise = storage.createFile(
+      '6823720b001cdc257539',
+      ID.unique(),
+      {
+          name: ID.unique() + '.jpg',
+          type: 'image/jpeg',
+          size: 1234567,
+          uri: allOnboardingData.userImageURI,
+      }
+  );
+
+  let fileId = '';
+  
+  promise.then(function (response) {
+      console.log(response);
+      fileId = response.$id; // Success
+      axios.put('https://18ec-109-245-193-150.ngrok-free.app/signup', { // Ensure URL is correct
         name: name.trim(), // Send trimmed name
         email: email.trim(), // Send trimmed email
-        password // Send original password
-      });
-      
-      console.log("API Response Status:", response.status);
-      console.log("API Response Data:", JSON.stringify(response.data, null, 2));
-
-      if(response.status === 200) { // Check for user object
-          await AsyncStorage.setItem('user', JSON.stringify(response.data));
+        password,
+        fileId,
+      })
+      .then(response => {
+        if(response.status === 200) { // Check for user object
+          AsyncStorage.setItem('user', JSON.stringify(response.data));
           setUser(response.data); 
           router.replace('/modal/verify');
+        }
+        console.log("API Response Status:", response.status);
+        console.log("API Response Data:", JSON.stringify(response.data, null, 2));
+      })
+      .catch(error => {
+        console.log(error);
+      });
+  }, function (error) {
+      console.log(error); // Failure
+  });
+  
+
+
+      // const response = await axios.put('https://18ec-109-245-193-150.ngrok-free.app/signup', { // Ensure URL is correct
+      //   name: name.trim(), // Send trimmed name
+      //   email: email.trim(), // Send trimmed email
+      //   password,
+      //   fileId,
+      // });
+      
+      // console.log("API Response Status:", response.status);
+      // console.log("API Response Data:", JSON.stringify(response.data, null, 2));
+
+      // if(response.status === 200) { // Check for user object
+      //     await AsyncStorage.setItem('user', JSON.stringify(response.data));
+      //     setUser(response.data); 
+      //     router.replace('/modal/verify');
 
 
 
-      } else {
-          const message = response.data?.message || "Sign up failed. Invalid response from server.";
-          setError(message);
-          Alert.alert( message);
-      }
+      // } else {
+      //     const message = response.data?.message || "Sign up failed. Invalid response from server.";
+      //     setError(message);
+      //     Alert.alert( message);
+      // }
     } catch (error) {
         let message = "An unexpected error occurred during sign up.";
         if (error.response) {
