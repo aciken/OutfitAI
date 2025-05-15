@@ -6,7 +6,8 @@ import {
   ScrollView,
   StyleSheet,
   SafeAreaView,
-  TouchableOpacity
+  TouchableOpacity,
+  ActivityIndicator
 } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,6 +16,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Client, Storage, ImageGravity } from 'react-native-appwrite';
 import { useGlobalContext } from '../context/GlobalProvider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { GestureDetector, Gesture, Directions } from 'react-native-gesture-handler';
 
 export default function OutfitDetailsPage() {
   const { user } = useGlobalContext();
@@ -25,6 +27,13 @@ export default function OutfitDetailsPage() {
   // pageTitle is no longer used for a visible header title
 
   const [image, setImage] = useState(null);
+  const [isApplyingOutfit, setIsApplyingOutfit] = useState(false);
+
+  const flingGesture = Gesture.Fling()
+    .direction(Directions.DOWN)
+    .onEnd(() => {
+      router.back();
+    });
 
   try {
     if (params.items) {
@@ -68,54 +77,85 @@ export default function OutfitDetailsPage() {
     fetchUserAndImage();
   }, []); // Empty dependency array, so it runs once on mount
 
+  const handleApplyOutfit = () => {
+    setIsApplyingOutfit(true);
+    // Simulate an API call or processing
+    setTimeout(() => {
+      setIsApplyingOutfit(false);
+      // Here you would typically do something with the result or navigate
+      // For now, just resetting the loading state
+      console.log("Outfit applied (simulated)");
+    }, 3000); // Simulate a 3-second loading animation
+  };
+
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar style="dark" backgroundColor="#fff" />
-      <Stack.Screen options={{ headerShown: false }} />
-      
-      {/* Floating Back Button with Gradient */}
-      <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-        <LinearGradient
-          colors={['#8A2BE2', '#A020F0']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.gradientBackground}
-        >
-          <Ionicons name="arrow-down" size={22} color="#fff" style={{ marginRight: 6 }} />
-          <Text style={styles.backButtonText}>Back</Text>
-        </LinearGradient>
-      </TouchableOpacity>
+    <GestureDetector gesture={flingGesture}>
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar style="dark" backgroundColor="#fff" />
+        <Stack.Screen options={{ headerShown: false, gestureEnabled: false }} />
+        
+        <View style={styles.headerContainer}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
+            <Ionicons name="close" size={32} color="#000000" />
+          </TouchableOpacity>
+        </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {/* Display the fetched image here */}
-        {image && image.href && (
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          {/* Display the fetched image or loading animation */}
           <View style={styles.outfitImageContainer}>
-            <Image
-              source={{ uri: image.href }}
-              style={styles.outfitImage}
-              resizeMode="cover"
-            />
+            {isApplyingOutfit ? (
+              <View style={styles.loadingOverlayContainer}>
+                <ActivityIndicator size="large" color="#FFFFFF" />
+                <Text style={styles.loadingText}>Applying Outfit...</Text>
+              </View>
+            ) : (
+              image && image.href && (
+                <Image
+                  source={{ uri: image.href }}
+                  style={styles.outfitImage}
+                  resizeMode="cover"
+                />
+              )
+            )}
           </View>
-        )}
 
-        {items.length > 0 ? (
-          items.map((outfitItem, index) => (
-            <View key={index} style={styles.itemContainer}>
-              <Image 
-                source={outfitItem.source} 
-                style={[styles.image, { height: outfitItem.height || 150 }]} // Provide a default height
-                resizeMode="contain" 
-              />
-              <Text style={styles.label}>{outfitItem.label}</Text>
+          {/* Outfit Items Section */}
+          {items.length > 0 && (
+            <View style={styles.itemsSectionContainer}>
+              <Text style={styles.itemsTitle}>Outfit Items</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalItemsScroll}>
+                {items.map((item, index) => (
+                  <View key={item.id || index.toString()} style={styles.itemCard}>
+                    <Image 
+                      source={item.source} 
+                      style={styles.itemImageInCard}
+                      resizeMode="contain"
+                    />
+                    {/* You can add item.label here if needed, like in your original modal */}
+                  </View>
+                ))}
+              </ScrollView>
             </View>
-          ))
-        ) : (
-          <Text style={styles.errorText}>
-            No items found for this outfit, or there was an error loading them.
-          </Text>
-        )}
-      </ScrollView>
-    </SafeAreaView>
+          )}
+        </ScrollView>
+
+        {/* Apply Outfit Button at the bottom */}
+        <TouchableOpacity 
+          onPress={handleApplyOutfit}
+          style={styles.continueButton}
+          disabled={isApplyingOutfit}
+        >
+          <LinearGradient
+            colors={isApplyingOutfit ? ['#BDBDBD', '#A0A0A0'] : ['#8A2BE2', '#A020F0']}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={styles.continueButtonGradient}
+          >
+            <Text style={styles.continueButtonText}>Apply Outfit</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </SafeAreaView>
+    </GestureDetector>
   );
 }
 
@@ -124,41 +164,32 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F7F7F7',
   },
-  backButton: {
-    position: 'absolute',
-    top: 45,
-    left: 15,
-    zIndex: 10,
-    width: 110,
-    height: 44,
-    borderRadius: 22,
+  headerContainer: { 
+    height: 60, 
+    width: '100%',
+    backgroundColor: '#F7F7F7', 
+    flexDirection: 'row',
+    alignItems: 'center', 
+    justifyContent: 'flex-end',
+    paddingHorizontal: 15, 
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.20,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
     shadowRadius: 3,
     elevation: 5,
-    overflow: 'hidden',
+    zIndex: 1,
   },
-  gradientBackground: {
-    width: '100%',
-    height: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
+  closeButton: { 
+    zIndex: 100,
+    width: 40, 
+    height: 40, 
     justifyContent: 'center',
-    borderRadius: 22,
-  },
-  backButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    alignItems: 'center',
   },
   scrollContainer: {
-    paddingTop: 100,
+    paddingTop: 20,
     paddingVertical: 20,
-    paddingHorizontal: 15, 
+    paddingHorizontal: 15,
     alignItems: 'center',
   },
   outfitImageContainer: {
@@ -166,7 +197,7 @@ const styles = StyleSheet.create({
     height: 300,
     marginBottom: 25,
     borderRadius: 12,
-    backgroundColor: '#fff',
+    backgroundColor: '#e0e0e0',
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -176,43 +207,86 @@ const styles = StyleSheet.create({
     shadowRadius: 4.5,
     elevation: 3,
     overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   outfitImage: {
     width: '100%',
     height: '100%',
   },
-  itemContainer: {
-    width: '95%', // Make item cards take up most of the width
-    marginBottom: 20,
+  loadingOverlayContainer: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
     borderRadius: 12,
-    padding: 20,
+  },
+  loadingText: {
+    marginTop: 15,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  itemsSectionContainer: {
+    width: '100%',
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  itemsTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginLeft: 15,
+    marginBottom: 15,
+  },
+  horizontalItemsScroll: {
+    paddingLeft: 15,
+    paddingRight: 5,
+  },
+  itemCard: {
+    width: 120,
+    height: 120,
+    borderRadius: 10,
+    marginRight: 15,
+    backgroundColor: '#fff',
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.12,
-    shadowRadius: 4.5,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
   },
-  image: {
-    width: '100%', 
-    marginBottom: 12,
-    borderRadius: 8,
+  itemImageInCard: {
+    width: '100%',
+    height: '100%',
   },
-  label: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#444',
-    textAlign: 'center',
+  continueButton: {
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'absolute',
+    bottom: 25,
+    left: '5%',
+    right: '5%',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
+    overflow: 'hidden',
   },
-  errorText: {
-    fontSize: 16,
-    color: 'red',
-    textAlign: 'center',
-    marginTop: 30,
-    paddingHorizontal: 20,
-  }
+  continueButtonGradient: {
+    width: '100%',
+    paddingVertical: 18,
+    paddingHorizontal: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 30,
+  },
+  continueButtonText: {
+    fontSize: 18,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
 }); 

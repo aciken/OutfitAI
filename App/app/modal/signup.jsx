@@ -213,7 +213,7 @@ export default function Signup() {
   promise.then(function (response) {
       console.log(response);
       fileId = response.$id; // Success
-      axios.put('https://18ec-109-245-193-150.ngrok-free.app/signup', { // Ensure URL is correct
+      axios.put('https://33f2-109-245-193-150.ngrok-free.app/signup', { // Ensure URL is correct
         name: name.trim(), // Send trimmed name
         email: email.trim(), // Send trimmed email
         password,

@@ -39,6 +39,12 @@ export default function RootLayout() {
                         animationDuration: 400,
                     }}
                 />
+                <Stack.Screen
+                    name="processing/imageResult"
+                    options={{
+                        headerShown: false,
+                    }}
+                />
             </Stack>
         </GlobalProvider>
     </GestureHandlerRootView>
