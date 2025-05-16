@@ -147,10 +147,38 @@ export default function OutfitDetailsPage() {
         name: 'image.png',
         type: 'image/png',
       });
-      formData.append('prompt', "Add a pair of sunglasses to the person in the image.");
+
+      // Process and append outfit item images
+      if (items && items.length > 0) {
+        console.log(`Processing and appending ${items.length} outfit items to FormData...`);
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          if (item.source) {
+            try {
+              console.log(`Processing item image ${i} from source:`, item.source);
+              const manipulatedItemImageUri = await imageToPngBuffer(item.source); // Use existing imageToPngBuffer
+              formData.append(`image`, { 
+                uri: manipulatedItemImageUri,
+                name: `item_${i}.png`,
+                type: 'image/png',
+              });
+              console.log(`Appended item_image_${i} to FormData with URI: ${manipulatedItemImageUri}`);
+            } catch (itemError) {
+              console.error(`Failed to process and append item image ${i}:`, itemError.message, "Source was:", item.source);
+            }
+          } else {
+            console.log(`Skipping item image ${i} due to missing source.`);
+          }
+        }
+      } else {
+        console.log("No outfit items to process for FormData.");
+      }
+
+      const dynamicPrompt = "Dress the person in the main image using the provided outfit item images. Ensure the outfit looks natural and cohesive.";
+      console.log("Using dynamic prompt for FormData:", dynamicPrompt);
+      formData.append('prompt', dynamicPrompt);
       formData.append('model', "gpt-image-1");
       formData.append('n', 1);
-      formData.append('size', "1024x1024");
 
       console.log("Calling OpenAI API via fetch with FormData (model: gpt-image-1, no response_format)...");
 
