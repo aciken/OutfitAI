@@ -32,6 +32,7 @@
     "react-native": "0.79.2",
     "react-native-appwrite": "^0.7.4",
     "react-native-background-remover": "^0.3.2",
+    "react-native-dotenv": "^3.4.11",
     "react-native-gesture-handler": "~2.24.0",
     "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "5.4.0",
