@@ -68,9 +68,15 @@ export default function Home() {
   
   // Search modal state and animation values
   const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
+  const [expandedSection, setExpandedSection] = useState('search'); // 'search', 'type', or 'color'
   const searchButtonRef = useRef(null);
   const [buttonPosition, setButtonPosition] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const modalAnimation = useRef(new Animated.Value(0)).current;
+  
+  // Animation values for each section's expansion
+  const searchSectionHeight = useRef(new Animated.Value(expandedSection === 'search' ? 1 : 0)).current;
+  const typeSectionHeight = useRef(new Animated.Value(expandedSection === 'type' ? 1 : 0)).current;
+  const colorSectionHeight = useRef(new Animated.Value(expandedSection === 'color' ? 1 : 0)).current;
   
   // Updated sample data structure for cards
   const [cards] = useState([
@@ -235,6 +241,67 @@ export default function Home() {
     }).start(() => {
       setIsSearchModalVisible(false);
     });
+  };
+
+  // Handle section expansion with animation
+  const toggleSection = (section) => {
+    // Only animate if selecting a different section
+    if (expandedSection !== section) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      
+      // Collapse current section
+      if (expandedSection === 'search') {
+        Animated.timing(searchSectionHeight, {
+          toValue: 0,
+          duration: 300,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: false,
+        }).start();
+      } else if (expandedSection === 'type') {
+        Animated.timing(typeSectionHeight, {
+          toValue: 0,
+          duration: 300,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: false,
+        }).start();
+      } else if (expandedSection === 'color') {
+        Animated.timing(colorSectionHeight, {
+          toValue: 0,
+          duration: 300,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: false,
+        }).start();
+      }
+      
+      // Expand new section after a short delay
+      setTimeout(() => {
+        if (section === 'search') {
+          Animated.timing(searchSectionHeight, {
+            toValue: 1,
+            duration: 300,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: false,
+          }).start();
+        } else if (section === 'type') {
+          Animated.timing(typeSectionHeight, {
+            toValue: 1,
+            duration: 300,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: false,
+          }).start();
+        } else if (section === 'color') {
+          Animated.timing(colorSectionHeight, {
+            toValue: 1,
+            duration: 300,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: false,
+          }).start();
+        }
+      }, 150);
+      
+      // Update the state
+      setExpandedSection(section);
+    }
   };
 
   const renderCard = ({ item, index }) => {
@@ -717,138 +784,301 @@ export default function Home() {
             <BlurView intensity={25} tint="dark" style={StyleSheet.absoluteFill} />
           </Animated.View>
         </TouchableWithoutFeedback>
-        
-        {/* Modal Content - Animated from search button position */}
-        <Animated.View
-          style={{
-            position: 'absolute',
-            top: Platform.OS === 'ios' ? 70 : 50,
-            left: 20, 
-            right: 20,
-            borderRadius: 20,
-            overflow: 'hidden',
-            opacity: modalAnimation,
-            transform: [
-              {
-                translateY: modalAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [buttonPosition.y - 120, 0]
-                })
-              },
-              {
-                scaleX: modalAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0.6, 1]
-                })
-              },
-              {
-                scaleY: modalAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0.2, 1]
-                })
-              }
-            ]
-          }}
-        >
-          {/* Glass Card Effect */}
-          <BlurView
-            intensity={90}
-            tint="dark"
+
+        {/* Floating Glass Panels Container */}
+        <View style={{ flex: 1 }}>
+          {/* Search Panel */}
+          <Animated.View
             style={{
-              borderRadius: 20,
-              overflow: 'hidden',
-              borderWidth: 1,
-              borderColor: 'rgba(192, 126, 255, 0.3)',
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 10 },
-              shadowOpacity: 0.3,
-              shadowRadius: 20,
-              elevation: 20,
+              marginTop: Platform.OS === 'ios' ? 70 : 50,
+              marginHorizontal: 20,
+              marginBottom: 15,
+              transform: [
+                {
+                  translateY: modalAnimation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [buttonPosition.y - 100, 0]
+                  })
+                },
+                {
+                  scale: modalAnimation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.7, 1]
+                  })
+                }
+              ],
+              opacity: modalAnimation,
             }}
           >
-            <View style={styles.modalContainer}>
+            <BlurView
+              intensity={90}
+              tint="dark"
+              style={{
+                borderRadius: 16,
+                overflow: 'hidden',
+                borderWidth: 1,
+                borderColor: 'rgba(192, 126, 255, 0.3)',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 5 },
+                shadowOpacity: 0.3,
+                shadowRadius: 10,
+                elevation: 15,
+              }}
+            >
               {/* Header */}
-              <Text style={styles.modalTitle}>Find Clothing</Text>
-              
-              {/* Search Input */}
-              <View style={styles.searchInputContainer}>
-                <Ionicons name="search" size={22} color="#A0A0A0" style={{ marginHorizontal: 12 }} />
-                <TextInput
-                  style={styles.searchInput}
-                  placeholder="Search clothing items"
-                  placeholderTextColor="#A0A0A0"
-                  autoCapitalize="none"
-                />
-              </View>
-              
-              <Text style={styles.sectionTitle}>Suggested clothing types</Text>
-              
-              <ScrollView style={{ marginTop: 8 }}>
-                {/* Tops Options */}
-                <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
-                  <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
-                    <Ionicons name="shirt-outline" size={24} color="#C07EFF" />
-                  </View>
-                  <View style={styles.optionTextContainer}>
-                    <Text style={styles.optionTitle}>Tops</Text>
-                    <Text style={styles.optionSubtitle}>T-shirts, shirts, blouses</Text>
-                  </View>
-                </TouchableOpacity>
-                
-                {/* Bottoms Options */}
-                <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
-                  <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
-                    <Ionicons name="resize-outline" size={24} color="#C07EFF" />
-                  </View>
-                  <View style={styles.optionTextContainer}>
-                    <Text style={styles.optionTitle}>Bottoms</Text>
-                    <Text style={styles.optionSubtitle}>Pants, skirts, shorts</Text>
-                  </View>
-                </TouchableOpacity>
-                
-                {/* Dresses Options */}
-                <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
-                  <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
-                    <Ionicons name="woman-outline" size={24} color="#C07EFF" />
-                  </View>
-                  <View style={styles.optionTextContainer}>
-                    <Text style={styles.optionTitle}>Dresses</Text>
-                    <Text style={styles.optionSubtitle}>All dress styles</Text>
-                  </View>
-                </TouchableOpacity>
-                
-                {/* Accessories Options */}
-                <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
-                  <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
-                    <Ionicons name="watch-outline" size={24} color="#C07EFF" />
-                  </View>
-                  <View style={styles.optionTextContainer}>
-                    <Text style={styles.optionTitle}>Accessories</Text>
-                    <Text style={styles.optionSubtitle}>Jewelry, hats, scarves</Text>
-                  </View>
-                </TouchableOpacity>
-              </ScrollView>
-              
-              {/* Color Selector Section */}
-              <View style={styles.selectorSection}>
-                <Text style={styles.sectionTitle}>Colors</Text>
-                <View style={styles.colorContainer}>
-                  {/* Color circles */}
-                  {['#C07EFF', '#FF6B6B', '#48CAE4', '#80ED99', '#F8E16C', '#FFFFFF', '#202020'].map((color, index) => (
-                    <TouchableOpacity
-                      key={index}
-                      style={[
-                        styles.colorCircle,
-                        { backgroundColor: color },
-                        color === '#FFFFFF' && { borderWidth: 1, borderColor: '#DDD' }
-                      ]}
-                      activeOpacity={0.7}
+              <TouchableOpacity 
+                style={styles.sectionHeader}
+                activeOpacity={0.8}
+                onPress={() => toggleSection('search')}
+              >
+                <Text style={styles.sectionHeaderText}>Search</Text>
+              </TouchableOpacity>
+
+              {/* Content - Animated height */}
+              <Animated.View 
+                style={{
+                  maxHeight: searchSectionHeight.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, 100]
+                  }),
+                  opacity: searchSectionHeight,
+                  overflow: 'hidden',
+                }}
+              >
+                <View style={{ padding: 20 }}>
+                  {/* Search Input */}
+                  <View style={styles.searchInputContainer}>
+                    <Ionicons name="search" size={22} color="#A0A0A0" style={{ marginHorizontal: 12 }} />
+                    <TextInput
+                      style={styles.searchInput}
+                      placeholder="Search clothing items"
+                      placeholderTextColor="#A0A0A0"
+                      autoCapitalize="none"
                     />
-                  ))}
+                  </View>
                 </View>
-              </View>
-              
-              {/* Footer Actions */}
+              </Animated.View>
+            </BlurView>
+          </Animated.View>
+
+          {/* Type of Clothes Panel */}
+          <Animated.View
+            style={{
+              marginHorizontal: 20,
+              marginBottom: 15,
+              transform: [
+                {
+                  translateY: modalAnimation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [buttonPosition.y, 0]
+                  })
+                },
+                {
+                  scale: modalAnimation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.7, 1]
+                  })
+                }
+              ],
+              opacity: modalAnimation,
+            }}
+          >
+            <BlurView
+              intensity={90}
+              tint="dark"
+              style={{
+                borderRadius: 16,
+                overflow: 'hidden',
+                borderWidth: 1,
+                borderColor: 'rgba(192, 126, 255, 0.3)',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 5 },
+                shadowOpacity: 0.3,
+                shadowRadius: 10,
+                elevation: 15,
+              }}
+            >
+              {/* Header */}
+              <TouchableOpacity 
+                style={styles.sectionHeader}
+                activeOpacity={0.8}
+                onPress={() => toggleSection('type')}
+              >
+                <Text style={styles.sectionHeaderText}>Type Of Clothes</Text>
+              </TouchableOpacity>
+
+              {/* Content - Animated height */}
+              <Animated.View 
+                style={{
+                  maxHeight: typeSectionHeight.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, 300]
+                  }),
+                  opacity: typeSectionHeight,
+                  overflow: 'hidden',
+                }}
+              >
+                <View style={{ padding: 20 }}>
+                  <ScrollView style={{ maxHeight: 250 }}>
+                    {/* Tops Options */}
+                    <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
+                      <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
+                        <Ionicons name="shirt-outline" size={24} color="#C07EFF" />
+                      </View>
+                      <View style={styles.optionTextContainer}>
+                        <Text style={styles.optionTitle}>Tops</Text>
+                        <Text style={styles.optionSubtitle}>T-shirts, shirts, blouses</Text>
+                      </View>
+                    </TouchableOpacity>
+                    
+                    {/* Bottoms Options */}
+                    <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
+                      <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
+                        <Ionicons name="resize-outline" size={24} color="#C07EFF" />
+                      </View>
+                      <View style={styles.optionTextContainer}>
+                        <Text style={styles.optionTitle}>Bottoms</Text>
+                        <Text style={styles.optionSubtitle}>Pants, skirts, shorts</Text>
+                      </View>
+                    </TouchableOpacity>
+                    
+                    {/* Dresses Options */}
+                    <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
+                      <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
+                        <Ionicons name="woman-outline" size={24} color="#C07EFF" />
+                      </View>
+                      <View style={styles.optionTextContainer}>
+                        <Text style={styles.optionTitle}>Dresses</Text>
+                        <Text style={styles.optionSubtitle}>All dress styles</Text>
+                      </View>
+                    </TouchableOpacity>
+                    
+                    {/* Accessories Options */}
+                    <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
+                      <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
+                        <Ionicons name="watch-outline" size={24} color="#C07EFF" />
+                      </View>
+                      <View style={styles.optionTextContainer}>
+                        <Text style={styles.optionTitle}>Accessories</Text>
+                        <Text style={styles.optionSubtitle}>Jewelry, hats, scarves</Text>
+                      </View>
+                    </TouchableOpacity>
+                  </ScrollView>
+                </View>
+              </Animated.View>
+            </BlurView>
+          </Animated.View>
+
+          {/* Color Palette Panel */}
+          <Animated.View
+            style={{
+              marginHorizontal: 20,
+              marginBottom: 15,
+              transform: [
+                {
+                  translateY: modalAnimation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [buttonPosition.y + 50, 0]
+                  })
+                },
+                {
+                  scale: modalAnimation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.7, 1]
+                  })
+                }
+              ],
+              opacity: modalAnimation,
+            }}
+          >
+            <BlurView
+              intensity={90}
+              tint="dark"
+              style={{
+                borderRadius: 16,
+                overflow: 'hidden',
+                borderWidth: 1,
+                borderColor: 'rgba(192, 126, 255, 0.3)',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 5 },
+                shadowOpacity: 0.3,
+                shadowRadius: 10,
+                elevation: 15,
+              }}
+            >
+              {/* Header */}
+              <TouchableOpacity 
+                style={styles.sectionHeader}
+                activeOpacity={0.8}
+                onPress={() => toggleSection('color')}
+              >
+                <Text style={styles.sectionHeaderText}>Color Pallet</Text>
+              </TouchableOpacity>
+
+              {/* Content - Animated height */}
+              <Animated.View 
+                style={{
+                  maxHeight: colorSectionHeight.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, 200]
+                  }),
+                  opacity: colorSectionHeight,
+                  overflow: 'hidden',
+                }}
+              >
+                <View style={{ padding: 20 }}>
+                  <View style={styles.colorContainer}>
+                    {/* Color circles */}
+                    {['#C07EFF', '#FF6B6B', '#48CAE4', '#80ED99', '#F8E16C', '#FFFFFF', '#202020'].map((color, index) => (
+                      <TouchableOpacity
+                        key={index}
+                        style={[
+                          styles.colorCircle,
+                          { backgroundColor: color },
+                          color === '#FFFFFF' && { borderWidth: 1, borderColor: '#DDD' }
+                        ]}
+                        activeOpacity={0.7}
+                      />
+                    ))}
+                  </View>
+                </View>
+              </Animated.View>
+            </BlurView>
+          </Animated.View>
+
+          {/* Footer Actions - Separate floating panel */}
+          <Animated.View
+            style={{
+              position: 'absolute',
+              left: 20,
+              right: 20,
+              bottom: 40,
+              transform: [
+                {
+                  translateY: modalAnimation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [100, 0]
+                  })
+                }
+              ],
+              opacity: modalAnimation
+            }}
+          >
+            <BlurView
+              intensity={90}
+              tint="dark"
+              style={{
+                borderRadius: 16,
+                overflow: 'hidden',
+                borderWidth: 1,
+                borderColor: 'rgba(192, 126, 255, 0.3)',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 5 },
+                shadowOpacity: 0.3,
+                shadowRadius: 10,
+                elevation: 15,
+              }}
+            >
               <View style={styles.footerContainer}>
                 <TouchableOpacity 
                   style={styles.clearButton}
@@ -868,28 +1098,28 @@ export default function Home() {
                     handleCloseSearchModal();
                   }}
                 >
-                  <Ionicons name="search" size={18} color="#FFFFFF" style={{ marginRight: 5 }} />
                   <Text style={styles.searchButtonText}>Search</Text>
                 </TouchableOpacity>
               </View>
-            </View>
-          </BlurView>
-        </Animated.View>
+            </BlurView>
+          </Animated.View>
+        </View>
       </Modal>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  modalContainer: {
-    padding: 24,
-    maxHeight: 550,
+  sectionHeader: {
+    backgroundColor: '#000',
+    paddingVertical: 24,
+    paddingHorizontal: 16,
   },
-  modalTitle: {
-    fontSize: 26,
-    fontWeight: 'bold',
+  sectionHeaderText: {
     color: '#FFFFFF',
-    marginBottom: 20,
+    fontSize: 28,
+    fontWeight: '500',
+    textAlign: 'center',
   },
   searchInputContainer: {
     flexDirection: 'row',
@@ -897,8 +1127,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#2C1B4A',
     borderWidth: 1,
     borderColor: 'rgba(192, 126, 255, 0.2)',
-    borderRadius: 30,
-    marginBottom: 24,
+    borderRadius: 8,
     height: 56,
   },
   searchInput: {
@@ -906,12 +1135,6 @@ const styles = StyleSheet.create({
     height: 56,
     fontSize: 16,
     color: '#FFFFFF',
-  },
-  sectionTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#C07EFF',
-    marginBottom: 12,
   },
   optionContainer: {
     flexDirection: 'row',
@@ -944,51 +1167,39 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#A0A0A0',
   },
-  selectorSection: {
-    marginTop: 16,
-    marginBottom: 16,
-  },
   colorContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: 8,
   },
   colorCircle: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    marginRight: 12,
-    marginBottom: 12,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 16,
+    marginBottom: 16,
   },
   footerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 8,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(192, 126, 255, 0.15)',
+    padding: 20,
   },
   clearButton: {
     paddingVertical: 8,
     paddingHorizontal: 12,
   },
   clearButtonText: {
-    fontSize: 16,
-    color: '#C07EFF',
+    fontSize: 24,
+    color: '#FFFFFF',
+    fontWeight: '500',
   },
   searchButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#8A2BE2',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 24,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
   },
   searchButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 24,
+    fontWeight: '500',
     color: '#FFFFFF',
   },
 });
