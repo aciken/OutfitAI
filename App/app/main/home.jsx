@@ -249,55 +249,79 @@ export default function Home() {
     if (expandedSection !== section) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       
-      // Collapse current section
+      // Collapse current section with improved animation
       if (expandedSection === 'search') {
-        Animated.timing(searchSectionHeight, {
+        Animated.spring(searchSectionHeight, {
           toValue: 0,
-          duration: 300,
-          easing: Easing.out(Easing.cubic),
+          damping: 15,
+          mass: 0.9,
+          stiffness: 100,
+          overshootClamping: true,
+          restDisplacementThreshold: 0.01,
+          restSpeedThreshold: 0.01,
           useNativeDriver: false,
         }).start();
       } else if (expandedSection === 'type') {
-        Animated.timing(typeSectionHeight, {
+        Animated.spring(typeSectionHeight, {
           toValue: 0,
-          duration: 300,
-          easing: Easing.out(Easing.cubic),
+          damping: 15,
+          mass: 0.9,
+          stiffness: 100,
+          overshootClamping: true,
+          restDisplacementThreshold: 0.01,
+          restSpeedThreshold: 0.01,
           useNativeDriver: false,
         }).start();
       } else if (expandedSection === 'color') {
-        Animated.timing(colorSectionHeight, {
+        Animated.spring(colorSectionHeight, {
           toValue: 0,
-          duration: 300,
-          easing: Easing.out(Easing.cubic),
+          damping: 15,
+          mass: 0.9,
+          stiffness: 100,
+          overshootClamping: true,
+          restDisplacementThreshold: 0.01,
+          restSpeedThreshold: 0.01,
           useNativeDriver: false,
         }).start();
       }
       
-      // Expand new section after a short delay
+      // Expand new section after a short delay with enhanced animation
       setTimeout(() => {
         if (section === 'search') {
-          Animated.timing(searchSectionHeight, {
+          Animated.spring(searchSectionHeight, {
             toValue: 1,
-            duration: 300,
-            easing: Easing.out(Easing.cubic),
+            damping: 17,
+            mass: 1,
+            stiffness: 80,
+            overshootClamping: false,
+            restDisplacementThreshold: 0.01,
+            restSpeedThreshold: 0.01,
             useNativeDriver: false,
           }).start();
         } else if (section === 'type') {
-          Animated.timing(typeSectionHeight, {
+          Animated.spring(typeSectionHeight, {
             toValue: 1,
-            duration: 300,
-            easing: Easing.out(Easing.cubic),
+            damping: 17,
+            mass: 1,
+            stiffness: 80,
+            overshootClamping: false,
+            restDisplacementThreshold: 0.01,
+            restSpeedThreshold: 0.01,
             useNativeDriver: false,
           }).start();
         } else if (section === 'color') {
-          Animated.timing(colorSectionHeight, {
+          Animated.spring(colorSectionHeight, {
             toValue: 1,
-            duration: 300,
-            easing: Easing.out(Easing.cubic),
+            damping: 17,
+            mass: 1,
+            stiffness: 80,
+            overshootClamping: false,
+            restDisplacementThreshold: 0.01,
+            restSpeedThreshold: 0.01,
             useNativeDriver: false,
           }).start();
         }
-      }, 150);
+      }, 100); // Slightly faster transition for better UX
       
       // Update the state
       setExpandedSection(section);
@@ -844,15 +868,9 @@ export default function Home() {
                 {expandedSection !== 'search' && (
                   <Text style={styles.sectionSubtext}>Find clothing items by keyword</Text>
                 )}
-                <Ionicons 
-                  name={expandedSection === 'search' ? "chevron-up" : "chevron-down"} 
-                  size={20} 
-                  color="#C07EFF" 
-                  style={styles.headerIcon} 
-                />
               </TouchableOpacity>
 
-              {/* Content - Animated height */}
+              {/* Content - Animated height with improved animation */}
               <Animated.View 
                 style={{
                   maxHeight: searchSectionHeight.interpolate({
@@ -861,6 +879,14 @@ export default function Home() {
                   }),
                   opacity: searchSectionHeight,
                   overflow: 'hidden',
+                  transform: [
+                    {
+                      scale: searchSectionHeight.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.95, 1]
+                      })
+                    }
+                  ]
                 }}
               >
                 <View style={{ padding: 20 }}>
@@ -935,15 +961,9 @@ export default function Home() {
                 {expandedSection !== 'type' && (
                   <Text style={styles.sectionSubtext}>Tops, bottoms, dresses, accessories</Text>
                 )}
-                <Ionicons 
-                  name={expandedSection === 'type' ? "chevron-up" : "chevron-down"} 
-                  size={20} 
-                  color="#C07EFF" 
-                  style={styles.headerIcon} 
-                />
               </TouchableOpacity>
 
-              {/* Content - Animated height */}
+              {/* Content - Animated height with improved animation */}
               <Animated.View 
                 style={{
                   maxHeight: typeSectionHeight.interpolate({
@@ -952,6 +972,14 @@ export default function Home() {
                   }),
                   opacity: typeSectionHeight,
                   overflow: 'hidden',
+                  transform: [
+                    {
+                      scale: typeSectionHeight.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.95, 1]
+                      })
+                    }
+                  ]
                 }}
               >
                 <View style={{ padding: 20 }}>
@@ -1061,15 +1089,9 @@ export default function Home() {
                 {expandedSection !== 'color' && (
                   <Text style={styles.sectionSubtext}>Select colors for your outfit</Text>
                 )}
-                <Ionicons 
-                  name={expandedSection === 'color' ? "chevron-up" : "chevron-down"} 
-                  size={20} 
-                  color="#C07EFF" 
-                  style={styles.headerIcon} 
-                />
               </TouchableOpacity>
 
-              {/* Content - Animated height */}
+              {/* Content - Animated height with improved animation */}
               <Animated.View 
                 style={{
                   maxHeight: colorSectionHeight.interpolate({
@@ -1078,6 +1100,14 @@ export default function Home() {
                   }),
                   opacity: colorSectionHeight,
                   overflow: 'hidden',
+                  transform: [
+                    {
+                      scale: colorSectionHeight.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.95, 1]
+                      })
+                    }
+                  ]
                 }}
               >
                 <View style={{ padding: 20 }}>
@@ -1211,13 +1241,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginLeft: 30,
     fontStyle: 'italic',
-  },
-  
-  headerIcon: {
-    position: 'absolute',
-    right: 16,
-    top: '50%',
-    marginTop: -10,
   },
   
   footerContainer: {
