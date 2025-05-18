@@ -247,17 +247,46 @@ export default function Home() {
   const toggleSection = (section) => {
     if (expandedSection !== section) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      const animConfig = { duration: 300, easing: Easing.out(Easing.cubic), useNativeDriver: false };
       
-      if (expandedSection === 'search') Animated.timing(searchSectionHeight, { toValue: 0, ...animConfig }).start();
-      else if (expandedSection === 'type') Animated.timing(typeSectionHeight, { toValue: 0, ...animConfig }).start();
-      else if (expandedSection === 'color') Animated.timing(colorSectionHeight, { toValue: 0, ...animConfig }).start();
+      // Collapse current section with spring animation
+      const collapseConfig = {
+        toValue: 0,
+        damping: 15,
+        mass: 0.9,
+        stiffness: 100,
+        overshootClamping: true,
+        restDisplacementThreshold: 0.01,
+        restSpeedThreshold: 0.01,
+        useNativeDriver: false,
+      };
+      if (expandedSection === 'search') {
+        Animated.spring(searchSectionHeight, collapseConfig).start();
+      } else if (expandedSection === 'type') {
+        Animated.spring(typeSectionHeight, collapseConfig).start();
+      } else if (expandedSection === 'color') {
+        Animated.spring(colorSectionHeight, collapseConfig).start();
+      }
       
+      // Expand new section after a short delay with spring animation
+      const expandConfig = {
+        toValue: 1,
+        damping: 17,
+        mass: 1,
+        stiffness: 80,
+        overshootClamping: false,
+        restDisplacementThreshold: 0.01,
+        restSpeedThreshold: 0.01,
+        useNativeDriver: false,
+      };
       setTimeout(() => {
-        if (section === 'search') Animated.timing(searchSectionHeight, { toValue: 1, ...animConfig }).start();
-        else if (section === 'type') Animated.timing(typeSectionHeight, { toValue: 1, ...animConfig }).start();
-        else if (section === 'color') Animated.timing(colorSectionHeight, { toValue: 1, ...animConfig }).start();
-      }, 150);
+        if (section === 'search') {
+          Animated.spring(searchSectionHeight, expandConfig).start();
+        } else if (section === 'type') {
+          Animated.spring(typeSectionHeight, expandConfig).start();
+        } else if (section === 'color') {
+          Animated.spring(colorSectionHeight, expandConfig).start();
+        }
+      }, 100); // Correct 100ms delay for spring animation
       
       setExpandedSection(section);
     }
