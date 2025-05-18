@@ -11,12 +11,17 @@ import {
   TextInput,
   Animated,
   Easing,
-  StyleSheet
+  StyleSheet,
+  Modal,
+  TouchableWithoutFeedback,
+  ScrollView,
+  Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import { BlurView } from 'expo-blur';
 // import { BlurView } from 'expo-blur'; // No longer needed
 
 // Create an animated version of FlatList
@@ -60,6 +65,12 @@ export default function Home() {
   // Animation values for button appearance
   const buttonOpacity = useRef(new Animated.Value(0)).current;
   const [buttonVisible, setButtonVisible] = useState(false);
+  
+  // Search modal state and animation values
+  const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
+  const searchButtonRef = useRef(null);
+  const [buttonPosition, setButtonPosition] = useState({ x: 0, y: 0, width: 0, height: 0 });
+  const modalAnimation = useRef(new Animated.Value(0)).current;
   
   // Updated sample data structure for cards
   const [cards] = useState([
@@ -187,6 +198,39 @@ export default function Home() {
       });
     }
   }, [activeCardIndex, buttonOpacity]);
+
+  // Open the search modal with animation
+  const handleOpenSearchModal = () => {
+    // Measure the search button's position
+    if (searchButtonRef.current) {
+      searchButtonRef.current.measure((x, y, width, height, pageX, pageY) => {
+        setButtonPosition({ x: pageX, y: pageY, width, height });
+        
+        // Show the modal
+        setIsSearchModalVisible(true);
+        
+        // Start the animation
+        Animated.timing(modalAnimation, {
+          toValue: 1,
+          duration: 350,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }).start();
+      });
+    }
+  };
+  
+  // Close the search modal with animation
+  const handleCloseSearchModal = () => {
+    Animated.timing(modalAnimation, {
+      toValue: 0,
+      duration: 250,
+      easing: Easing.in(Easing.cubic),
+      useNativeDriver: true,
+    }).start(() => {
+      setIsSearchModalVisible(false);
+    });
+  };
 
   const renderCard = ({ item, index }) => {
     let cardContent;
@@ -475,20 +519,17 @@ export default function Home() {
         </View>
       </View>
       
-      {/* Search input & Preferences Icon Row - Now a Search Button Row */}
+      {/* Search Button Row */}
       <View 
-        className="flex-row items-center px-6 py-4" // Parent row for layout
-        style={{
-          zIndex: 10, 
-        }}
+        className="flex-row items-center px-6 py-4"
+        style={{ zIndex: 10 }}
       >
-        {/* Search Button - Styled like the image, dark theme */}
         <TouchableOpacity 
+          ref={searchButtonRef}
           className="flex-1 bg-[#201030] rounded-full px-4 py-3.5 shadow-md" 
           activeOpacity={0.8}
-          onPress={() => console.log('Search button pressed - Navigate or open modal here')}
+          onPress={handleOpenSearchModal}
           style={{
-            // Shadow styles remain the same for the floating effect
             shadowColor: '#000000',
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.25,
@@ -496,7 +537,6 @@ export default function Home() {
             elevation: 5,
           }}
         >
-          {/* Inner View to center the icon and text */}
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
             <Ionicons name="search" size={20} color="#D0D0D0" style={{ marginRight: 8 }} /> 
             <Text className="text-base text-gray-100">
@@ -504,8 +544,6 @@ export default function Home() {
             </Text>
           </View>
         </TouchableOpacity>
-        
-        {/* Preferences Icon - REMOVED EARLIER */}
       </View>
       
       {/* Create Your Outfit Button - animated appearance/disappearance */}
@@ -645,6 +683,311 @@ export default function Home() {
           </Text>
         </TouchableOpacity>
       </View>
+      
+      {/* Search Modal */}
+      <Modal
+        transparent={true}
+        visible={isSearchModalVisible}
+        onRequestClose={handleCloseSearchModal}
+        animationType="none" // Using custom animation
+      >
+        <TouchableWithoutFeedback onPress={handleCloseSearchModal}>
+          <Animated.View style={[
+            StyleSheet.absoluteFill,
+            { 
+              backgroundColor: 'rgba(0,0,0,0)', // Start transparent
+              opacity: modalAnimation.interpolate({
+                inputRange: [0, 0.5, 1],
+                outputRange: [0, 0.7, 1] // Fade in background
+              })
+            }
+          ]}>
+            <BlurView 
+              intensity={40} 
+              tint="dark" 
+              style={StyleSheet.absoluteFill} 
+            />
+          </Animated.View>
+        </TouchableWithoutFeedback>
+        
+        {/* Modal Content - Animated from button position */}
+        <Animated.View
+          style={[
+            styles.modalContainer,
+            {
+              transform: [
+                {
+                  translateY: modalAnimation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [
+                      buttonPosition.y - height * 0.1, // Start near button Y position
+                      0 // End at top of safe area
+                    ]
+                  })
+                },
+                {
+                  scaleX: modalAnimation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.3, 1] // Grow from button size to full width
+                  })
+                },
+                {
+                  scaleY: modalAnimation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.1, 1] // Grow from button height to full height
+                  })
+                }
+              ],
+              opacity: modalAnimation
+            }
+          ]}
+        >
+          <TouchableWithoutFeedback>
+            <View style={styles.modalContent}>
+              {/* Modal Header */}
+              <Text style={styles.modalTitle}>Search Outfits</Text>
+              
+              {/* Search Input */}
+              <View style={styles.searchInputContainer}>
+                <Ionicons name="search" size={20} color="#707070" style={{ marginRight: 10 }} />
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Search styles, items, colors..."
+                  placeholderTextColor="#707070"
+                />
+              </View>
+              
+              {/* Scroll Content */}
+              <ScrollView style={{ flex: 1 }}>
+                {/* Suggested Categories Section */}
+                <Text style={styles.sectionTitle}>Suggested categories</Text>
+                
+                {/* Category Cards */}
+                <View style={styles.categoriesContainer}>
+                  {/* Tops Category */}
+                  <TouchableOpacity style={styles.categoryCard}>
+                    <View style={[styles.categoryIcon, { backgroundColor: 'rgba(125, 211, 252, 0.3)' }]}>
+                      <Ionicons name="shirt-outline" size={24} color="#7DD3FC" />
+                    </View>
+                    <View style={styles.categoryTextContainer}>
+                      <Text style={styles.categoryTitle}>Tops</Text>
+                      <Text style={styles.categorySubtitle}>T-shirts, shirts, blouses</Text>
+                    </View>
+                  </TouchableOpacity>
+                  
+                  {/* Bottoms Category */}
+                  <TouchableOpacity style={styles.categoryCard}>
+                    <View style={[styles.categoryIcon, { backgroundColor: 'rgba(134, 239, 172, 0.3)' }]}>
+                      <Ionicons name="repeat-outline" size={24} color="#86EFAC" />
+                    </View>
+                    <View style={styles.categoryTextContainer}>
+                      <Text style={styles.categoryTitle}>Bottoms</Text>
+                      <Text style={styles.categorySubtitle}>Pants, shorts, skirts</Text>
+                    </View>
+                  </TouchableOpacity>
+                  
+                  {/* Dresses Category */}
+                  <TouchableOpacity style={styles.categoryCard}>
+                    <View style={[styles.categoryIcon, { backgroundColor: 'rgba(251, 146, 60, 0.3)' }]}>
+                      <Ionicons name="woman-outline" size={24} color="#FB923C" />
+                    </View>
+                    <View style={styles.categoryTextContainer}>
+                      <Text style={styles.categoryTitle}>Dresses</Text>
+                      <Text style={styles.categorySubtitle}>All dress styles</Text>
+                    </View>
+                  </TouchableOpacity>
+                  
+                  {/* Accessories Category */}
+                  <TouchableOpacity style={styles.categoryCard}>
+                    <View style={[styles.categoryIcon, { backgroundColor: 'rgba(192, 132, 252, 0.3)' }]}>
+                      <Ionicons name="watch-outline" size={24} color="#C084FC" />
+                    </View>
+                    <View style={styles.categoryTextContainer}>
+                      <Text style={styles.categoryTitle}>Accessories</Text>
+                      <Text style={styles.categorySubtitle}>Jewelry, bags, hats</Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+                
+                {/* Filter Sections */}
+                <View style={styles.filterSection}>
+                  <TouchableOpacity style={styles.filterButton}>
+                    <Text style={styles.filterButtonText}>Filter by Type</Text>
+                    <Ionicons name="chevron-forward" size={20} color="#A0A0A0" />
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity style={styles.filterButton}>
+                    <Text style={styles.filterButtonText}>Filter by Color</Text>
+                    <Ionicons name="chevron-forward" size={20} color="#A0A0A0" />
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity style={styles.filterButton}>
+                    <Text style={styles.filterButtonText}>Filter by Style</Text>
+                    <Ionicons name="chevron-forward" size={20} color="#A0A0A0" />
+                  </TouchableOpacity>
+                </View>
+              </ScrollView>
+              
+              {/* Footer Actions */}
+              <View style={styles.modalFooter}>
+                <TouchableOpacity 
+                  style={styles.clearButton}
+                  onPress={() => {
+                    console.log('Clear all filters');
+                    // Clear filter logic here
+                  }}
+                >
+                  <Text style={styles.clearButtonText}>Clear all</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                  style={styles.searchButton}
+                  onPress={() => {
+                    console.log('Search with filters');
+                    handleCloseSearchModal();
+                    // Search logic here
+                  }}
+                >
+                  <Ionicons name="search" size={18} color="#FFFFFF" style={{ marginRight: 5 }} />
+                  <Text style={styles.searchButtonText}>Search</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+        </Animated.View>
+      </Modal>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  // Modal styles
+  modalContainer: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 60 : 40, // Account for status bar and header
+    left: 20,
+    right: 20,
+    bottom: 30,
+    backgroundColor: '#1F1F1F', // Dark but lighter than page background
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.37,
+    shadowRadius: 7.49,
+    elevation: 12,
+  },
+  modalContent: {
+    flex: 1,
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#E5E5E5',
+    marginBottom: 15,
+  },
+  searchInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2A2A2A',
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    marginBottom: 20,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#E5E5E5',
+  },
+  sectionTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#A0A0A0',
+    marginBottom: 12,
+  },
+  categoriesContainer: {
+    marginBottom: 20,
+  },
+  categoryCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2A2A2A',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 10,
+  },
+  categoryIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  categoryTextContainer: {
+    flex: 1,
+  },
+  categoryTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#E5E5E5',
+    marginBottom: 2,
+  },
+  categorySubtitle: {
+    fontSize: 13,
+    color: '#A0A0A0',
+  },
+  filterSection: {
+    marginTop: 10,
+    marginBottom: 20,
+  },
+  filterButton: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#2A2A2A',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 10,
+  },
+  filterButtonText: {
+    fontSize: 16,
+    color: '#E5E5E5',
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 15,
+    borderTopWidth: 1,
+    borderTopColor: '#2A2A2A',
+  },
+  clearButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  clearButtonText: {
+    fontSize: 16,
+    color: '#A0A0A0',
+    fontWeight: '500',
+  },
+  searchButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#8A2BE2',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+  },
+  searchButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+});
