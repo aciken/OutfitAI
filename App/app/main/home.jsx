@@ -243,7 +243,7 @@ export default function Home() {
     });
   };
 
-  // Handle section expansion with animation
+  // Toggle section expansion with animation
   const toggleSection = (section) => {
     // Only animate if selecting a different section
     if (expandedSection !== section) {
@@ -827,11 +827,29 @@ export default function Home() {
             >
               {/* Header */}
               <TouchableOpacity 
-                style={styles.sectionHeader}
+                style={[
+                  styles.sectionHeader,
+                  expandedSection === 'search' ? styles.expandedHeader : styles.collapsedHeader
+                ]}
                 activeOpacity={0.8}
                 onPress={() => toggleSection('search')}
               >
-                <Text style={styles.sectionHeaderText}>Search</Text>
+                <View style={styles.sectionHeaderContent}>
+                  <Ionicons name="search" size={expandedSection === 'search' ? 24 : 20} color="#FFF" style={{ marginRight: 8 }} />
+                  <Text style={[
+                    styles.sectionHeaderText,
+                    expandedSection === 'search' ? styles.expandedHeaderText : styles.collapsedHeaderText
+                  ]}>Search</Text>
+                </View>
+                {expandedSection !== 'search' && (
+                  <Text style={styles.sectionSubtext}>Find clothing items by keyword</Text>
+                )}
+                <Ionicons 
+                  name={expandedSection === 'search' ? "chevron-up" : "chevron-down"} 
+                  size={20} 
+                  color="#C07EFF" 
+                  style={styles.headerIcon} 
+                />
               </TouchableOpacity>
 
               {/* Content - Animated height */}
@@ -900,11 +918,29 @@ export default function Home() {
             >
               {/* Header */}
               <TouchableOpacity 
-                style={styles.sectionHeader}
+                style={[
+                  styles.sectionHeader,
+                  expandedSection === 'type' ? styles.expandedHeader : styles.collapsedHeader
+                ]}
                 activeOpacity={0.8}
                 onPress={() => toggleSection('type')}
               >
-                <Text style={styles.sectionHeaderText}>Type Of Clothes</Text>
+                <View style={styles.sectionHeaderContent}>
+                  <Ionicons name="shirt-outline" size={expandedSection === 'type' ? 24 : 20} color="#FFF" style={{ marginRight: 8 }} />
+                  <Text style={[
+                    styles.sectionHeaderText,
+                    expandedSection === 'type' ? styles.expandedHeaderText : styles.collapsedHeaderText
+                  ]}>Type Of Clothes</Text>
+                </View>
+                {expandedSection !== 'type' && (
+                  <Text style={styles.sectionSubtext}>Tops, bottoms, dresses, accessories</Text>
+                )}
+                <Ionicons 
+                  name={expandedSection === 'type' ? "chevron-up" : "chevron-down"} 
+                  size={20} 
+                  color="#C07EFF" 
+                  style={styles.headerIcon} 
+                />
               </TouchableOpacity>
 
               {/* Content - Animated height */}
@@ -1008,11 +1044,29 @@ export default function Home() {
             >
               {/* Header */}
               <TouchableOpacity 
-                style={styles.sectionHeader}
+                style={[
+                  styles.sectionHeader,
+                  expandedSection === 'color' ? styles.expandedHeader : styles.collapsedHeader
+                ]}
                 activeOpacity={0.8}
                 onPress={() => toggleSection('color')}
               >
-                <Text style={styles.sectionHeaderText}>Color Pallet</Text>
+                <View style={styles.sectionHeaderContent}>
+                  <Ionicons name="color-palette-outline" size={expandedSection === 'color' ? 24 : 20} color="#FFF" style={{ marginRight: 8 }} />
+                  <Text style={[
+                    styles.sectionHeaderText,
+                    expandedSection === 'color' ? styles.expandedHeaderText : styles.collapsedHeaderText
+                  ]}>Color Palette</Text>
+                </View>
+                {expandedSection !== 'color' && (
+                  <Text style={styles.sectionSubtext}>Select colors for your outfit</Text>
+                )}
+                <Ionicons 
+                  name={expandedSection === 'color' ? "chevron-up" : "chevron-down"} 
+                  size={20} 
+                  color="#C07EFF" 
+                  style={styles.headerIcon} 
+                />
               </TouchableOpacity>
 
               {/* Content - Animated height */}
@@ -1111,22 +1165,95 @@ export default function Home() {
 
 const styles = StyleSheet.create({
   sectionHeader: {
-    backgroundColor: 'transparent',
-    paddingVertical: 24,
+    paddingVertical: 16,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.1)',
     position: 'relative',
     overflow: 'hidden',
+    backgroundColor: 'transparent',
   },
+  
+  expandedHeader: {
+    paddingVertical: 20,
+    backgroundColor: 'rgba(138, 43, 226, 0.15)',
+  },
+  
+  collapsedHeader: {
+    backgroundColor: 'rgba(30, 20, 50, 0.5)',
+  },
+  
+  sectionHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  
   sectionHeaderText: {
     color: '#FFFFFF',
-    fontSize: 28,
     fontWeight: '500',
-    textAlign: 'center',
+    textAlign: 'left',
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
+  },
+  
+  expandedHeaderText: {
+    fontSize: 24,
+  },
+  
+  collapsedHeaderText: {
+    fontSize: 18,
+  },
+  
+  sectionSubtext: {
+    color: '#C9C9C9',
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 30,
+    fontStyle: 'italic',
+  },
+  
+  headerIcon: {
+    position: 'absolute',
+    right: 16,
+    top: '50%',
+    marginTop: -10,
+  },
+  
+  footerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+  },
+  clearButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  clearButtonText: {
+    fontSize: 24,
+    color: '#FFFFFF',
+    fontWeight: '500',
+  },
+  searchButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  searchButtonText: {
+    fontSize: 24,
+    fontWeight: '500',
+    color: '#FFFFFF',
+  },
+  colorContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  colorCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 16,
+    marginBottom: 16,
   },
   searchInputContainer: {
     flexDirection: 'row',
@@ -1173,40 +1300,5 @@ const styles = StyleSheet.create({
   optionSubtitle: {
     fontSize: 13,
     color: '#A0A0A0',
-  },
-  colorContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  colorCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 16,
-    marginBottom: 16,
-  },
-  footerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-  },
-  clearButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  clearButtonText: {
-    fontSize: 24,
-    color: '#FFFFFF',
-    fontWeight: '500',
-  },
-  searchButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  searchButtonText: {
-    fontSize: 24,
-    fontWeight: '500',
-    color: '#FFFFFF',
   },
 });
