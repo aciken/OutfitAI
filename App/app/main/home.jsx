@@ -1111,15 +1111,22 @@ export default function Home() {
 
 const styles = StyleSheet.create({
   sectionHeader: {
-    backgroundColor: '#000',
+    backgroundColor: 'transparent',
     paddingVertical: 24,
     paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    position: 'relative',
+    overflow: 'hidden',
   },
   sectionHeaderText: {
     color: '#FFFFFF',
     fontSize: 28,
     fontWeight: '500',
     textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   searchInputContainer: {
     flexDirection: 'row',
