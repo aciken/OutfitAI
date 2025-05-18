@@ -53,11 +53,7 @@ const INACTIVE_SCALE = 0.95;
 
 export default function Home() {
   const router = useRouter();
-  // Add search state
-  const [searchQuery, setSearchQuery] = useState('');
-  // Add state to track active card index
   const [activeCardIndex, setActiveCardIndex] = useState(0);
-  // Previous active index for tracking changes
   const [prevActiveIndex, setPrevActiveIndex] = useState(0);
   const [showScrollToStart, setShowScrollToStart] = useState(false);
   
@@ -115,49 +111,9 @@ export default function Home() {
     }
   ]);
 
-  // Add filtered cards based on search
-  const filteredCards = cards.filter(card => {
-    const query = searchQuery.toLowerCase();
-    if (query === '') return true;
-
-    if (card.type === 'create') {
-      return card.title.toLowerCase().includes(query);
-    }
-    
-    if (card.type === 'outfit') {
-      // Define keywords for each outfit card
-      const outfitKeywords = {
-        'outfit1': ['hoodie', 'pants', 'shoes', 'cozy', 'casual', 'sneakers'],
-        'outfit2': ['dress', 'heals', 'summer', 'stylish'],
-        'outfit3': ['shirt', 'tee', 'jeans', 'denim', 'shoes', 'tops'] // Added keywords for outfit3
-      };
-
-      // Check if the query matches any keyword for this specific outfit
-      if (outfitKeywords[card.id]?.some(keyword => query.includes(keyword))) {
-        return true; // Show this card if the query matches its keywords
-      }
-      
-      // Check if the query matches keywords for OTHER outfits
-      // If it does, hide the current card
-      const allOtherKeywords = Object.entries(outfitKeywords)
-        .filter(([id]) => id !== card.id)
-        .flatMap(([, keywords]) => keywords);
-        
-      if (allOtherKeywords.some(keyword => query.includes(keyword))) {
-        return false; // Hide this card if the query matches another outfit's keywords
-      }
-      
-      // If the query doesn't match any outfit keywords specifically, 
-      // but is not empty, and doesn't match the create card title, 
-      // we might default to showing all outfit cards or none.
-      // Let's default to showing the card if the query doesn't explicitly match another outfit.
-      // This allows searching for general terms without hiding everything.
-      // Consider revising this default behavior if needed.
-      return true;
-    }
-    
-    return false; // Should not happen with current card types
-  });
+  // Remove filtered cards logic based on search, directly use cards
+  // const filteredCards = cards.filter(card => { ... });
+  const filteredCards = cards; // Simplified
 
   // Reference to the FlatList to programmatically control it
   const flatListRef = React.useRef();
@@ -519,48 +475,20 @@ export default function Home() {
         </View>
       </View>
       
-      {/* Search input & Preferences Icon Row */}
+      {/* Search input & Preferences Icon Row - Now a Search Button Row */}
       <View 
-        className="flex-row items-center justify-between px-6 py-4" // Simplified row styling
+        className="flex-row items-center px-6 py-4" // Parent row for layout
         style={{
           zIndex: 10, 
-          // No background, border, or shadow for the row itself
         }}
       >
-        {/* Search Input Container - Floating Element */}
-        <View 
-          className="flex-1 flex-row items-center bg-[#201030] rounded-full px-4 py-3 shadow-md"
-          style={{
-            marginRight: 12, // Space between search and preferences
-            shadowColor: '#000000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.25,
-            shadowRadius: 3.84,
-            elevation: 5,
-          }}
-        >
-          <Ionicons name="search" size={20} color="#D0D0D0" style={{ marginRight: 10 }} /> 
-          <TextInput
-            className="flex-1 text-base text-gray-100" // Brighter text
-            placeholder="Search outfits..."
-            placeholderTextColor="#909090" // Adjusted placeholder color
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            style={{ color: '#E0E0E0' }} // Ensure input text color is light
-          />
-          {searchQuery !== '' && (
-            <TouchableOpacity onPress={() => setSearchQuery('')} style={{ marginLeft: 8 }}>
-              <Ionicons name="close-circle" size={20} color="#D0D0D0" />
-            </TouchableOpacity>
-          )}
-        </View>
-        
-        {/* Preferences Icon - Floating Element */}
+        {/* Search Button - Styled like the image, dark theme */}
         <TouchableOpacity 
-          onPress={() => router.push('/modal/preferences')} 
-          activeOpacity={0.7}
-          className="p-3 bg-[#201030] rounded-full shadow-md" // Consistent styling with search
+          className="flex-1 bg-[#201030] rounded-full px-4 py-3.5 shadow-md" 
+          activeOpacity={0.8}
+          onPress={() => console.log('Search button pressed - Navigate or open modal here')}
           style={{
+            // Shadow styles remain the same for the floating effect
             shadowColor: '#000000',
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.25,
@@ -568,8 +496,16 @@ export default function Home() {
             elevation: 5,
           }}
         >
-          <Ionicons name="options" size={22} color="#C07EFF" /> 
+          {/* Inner View to center the icon and text */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+            <Ionicons name="search" size={20} color="#D0D0D0" style={{ marginRight: 8 }} /> 
+            <Text className="text-base text-gray-100">
+              Start your search
+            </Text>
+          </View>
         </TouchableOpacity>
+        
+        {/* Preferences Icon - REMOVED EARLIER */}
       </View>
       
       {/* Create Your Outfit Button - animated appearance/disappearance */}
