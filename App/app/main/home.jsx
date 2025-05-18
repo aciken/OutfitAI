@@ -48,7 +48,7 @@ const CARD_WIDTH = width * 0.7;
 const CARD_SPACING = 16;
 // Define animation configuration values
 const ANIMATION_SPEED = 200;
-const INACTIVE_SCALE = 0.92;
+const INACTIVE_SCALE = 0.95;
 
 export default function Home() {
   const router = useRouter();
@@ -298,16 +298,21 @@ export default function Home() {
     }
 
     if (item.type === 'create') {
-      cardClasses = "h-[400px] rounded-2xl justify-center items-center bg-gray-50 border border-dashed border-gray-300 overflow-hidden";
+      cardClasses = "h-[400px] rounded-2xl justify-center items-center border border-dashed overflow-hidden";
+      cardStyle = {
+        ...cardStyle,
+        borderColor: 'rgba(192, 126, 255, 0.4)',
+        backgroundColor: 'rgba(26, 13, 46, 0.6)'
+      };
       cardContent = (
         <>
-          {/* Gradient Background for Create Card */}
+          {/* Gradient Background for Create Card - Dark Theme */}
           <LinearGradient
-            colors={['rgba(250, 250, 250, 0.8)', 'rgba(245, 245, 245, 0.6)']}
+            colors={['rgba(40, 20, 70, 0.5)', 'rgba(30, 10, 60, 0.3)']}
             style={StyleSheet.absoluteFill}
           />
           
-          {/* Custom styled plus icon */}
+          {/* Custom styled plus icon - should still look good */}
           <View className="mb-4 rounded-full overflow-hidden" style={{ width: 70, height: 70 }}>
             <LinearGradient
               colors={['#8A2BE2', '#A020F0']}
@@ -319,27 +324,47 @@ export default function Home() {
             </LinearGradient>
           </View>
           
-          {/* Improved text style */}
-          <Text className="text-2xl font-bold text-gray-800 text-center px-6">
+          {/* Improved text style - Light colors for dark theme */}
+          <Text className="text-2xl font-bold text-gray-100 text-center px-6">
             {item.title}
           </Text>
-          <Text className="text-sm text-gray-500 mt-2 text-center px-8">
+          <Text className="text-sm text-gray-300 mt-2 text-center px-8">
             Tap to create your perfect outfit combination
           </Text>
         </>
       );
     } else if (item.type === 'outfit') {
-      cardClasses = "h-[400px] rounded-2xl bg-white overflow-hidden";
+      // Remove card-specific classes, make background transparent for the TouchableOpacity
+      cardClasses = "h-[400px] rounded-2xl overflow-hidden"; // Keep height, rounding for consistency, overflow
+      
+      // Adjust cardStyle: remove borders, explicit background for floating effect
+      // Shadows will come from the image container or be very subtle on the touchable itself
+      if (isActive) {
+        cardStyle = {
+          ...cardStyle, // Keep existing active shadow for focus or use image shadow primarily
+          // shadowColor: '#8A2BE2', // Original active shadow
+          // shadowOffset: { width: 0, height: 8 },
+          // shadowOpacity: 0.2,
+          // shadowRadius: 20,
+          // elevation: 16,
+          borderWidth: 0, // No border for floating items
+        };
+      } else {
+        cardStyle = {
+          ...cardStyle, // Keep existing inactive shadow or rely on image shadow
+          // shadowColor: '#000000', // Original inactive shadow
+          // shadowOffset: { width: 0, height: 3 },
+          // shadowOpacity: 0.12,
+          // shadowRadius: 8,
+          // elevation: 6,
+          borderWidth: 0, // No border for floating items
+        };
+      }
+      
       cardContent = (
-        // Container for gradient + items
+        // Container for items, centered
         <View className="flex-1 justify-center items-center w-full">
-          {/* Subtle Background Gradient */}
-          <LinearGradient
-            colors={['rgba(255, 255, 255, 0)', 'rgba(245, 240, 255, 0.5)', 'rgba(230, 220, 250, 0.3)']} // Light purple tones
-            style={StyleSheet.absoluteFill}
-            start={{ x: 0.5, y: 0 }}
-            end={{ x: 0.5, y: 1 }}
-          />
+          {/* REMOVE Inner LinearGradient background for outfit items */}
         
           {/* Item Container */}
           <View className="p-4 justify-center items-center">
@@ -354,24 +379,26 @@ export default function Home() {
                     className="rounded-lg" 
                     style={[
                       {
-                        width: CARD_WIDTH * 0.6, // Slightly reduced width to make space for label
-                        height: itemData.height,
-                        shadowColor: "#000",
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowOpacity: 0.1,
-                        shadowRadius: 3,
+                        width: CARD_WIDTH * 0.8, // Increased image width
+                        height: itemData.height, // Original height
+                        shadowColor: "#000", // Keep existing image shadow
+                        shadowOffset: { width: 0, height: 4 }, // Slightly stronger shadow
+                        shadowOpacity: 0.15,
+                        shadowRadius: 5,
                         transform: [{ rotate: rotation }]
                       }
                     ]}
                     resizeMode="contain" 
                   />
-                  {/* Item Label */}
-                  <Text 
-                    className="mt-1 text-xs font-medium text-gray-600"
-                    style={{ transform: [{ rotate: rotation }] }} // Apply same rotation
-                  >
-                    {itemData.label}
-                  </Text>
+                  {/* Item Label - ensure visibility on new background */}
+                  {itemData.label && (
+                    <Text 
+                      className="mt-2 text-xs font-semibold text-gray-200" // Changed color for dark bg
+                      style={{ transform: [{ rotate: rotation }] }} // Apply same rotation
+                    >
+                      {itemData.label}
+                    </Text>
+                  )}
                 </View>
               );
             })}
@@ -466,22 +493,24 @@ export default function Home() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <StatusBar barStyle="dark-content" />
+    <SafeAreaView className="flex-1 bg-[#1A0D2E]">
+      <StatusBar barStyle="light-content" />
       
       {/* Header */}
       <View 
-        className="flex-row justify-between items-center px-6 py-5 bg-white border-b border-gray-100" 
-        style={{ zIndex: 10 }}
+        className="flex-row justify-between items-center px-6 py-5"
+        style={{
+          zIndex: 10, 
+          backgroundColor: '#1A0D2E',
+        }}
       >
-        {/* Text size remains increased, now with a shadow */}
         <Text 
-          className="text-3xl font-bold" 
+          className="text-3xl font-bold"
           style={{
-            color: '#8A2BE2', 
-            textShadowColor: 'rgba(0, 0, 0, 0.25)', 
-            textShadowOffset: { width: 1, height: 1 }, 
-            textShadowRadius: 3
+            color: '#C07EFF',
+            textShadowColor: 'rgba(0, 0, 0, 0.5)',
+            textShadowOffset: { width: 1, height: 2 }, 
+            textShadowRadius: 4
           }}
         >
           OutfitAI
@@ -489,8 +518,8 @@ export default function Home() {
         <View className="flex-row items-center space-x-3">
           {/* Settings Icon (Preferences Icon removed from here) */}
           <TouchableOpacity 
-            className="overflow-hidden rounded-full shadow-sm" 
-            style={{ elevation: 2 }}
+            className="overflow-hidden rounded-full shadow-md"
+            style={{ elevation: 3, shadowColor: '#C07EFF' }}
             onPress={() => router.push('/modal/settings')}
             activeOpacity={0.5}
           >
@@ -500,7 +529,7 @@ export default function Home() {
               end={{ x: 1, y: 0 }}
               className="p-2 rounded-full" 
             >
-              <Ionicons name="settings" size={24} color="#fff" /> 
+              <Ionicons name="settings" size={24} color="#FFF" /> 
             </LinearGradient>
           </TouchableOpacity>
         </View>
@@ -508,32 +537,50 @@ export default function Home() {
       
       {/* Search input & Preferences Icon Row */}
       <View 
-        className="flex-row items-center px-6 py-3 border-b border-gray-100 space-x-3 bg-white"
-        style={{ zIndex: 10 }}
+        className="flex-row items-center px-6 py-4 space-x-3"
+        style={{
+          zIndex: 10, 
+          backgroundColor: '#1A0D2E',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 2,
+          elevation: 3,
+        }}
       >
         {/* Search Input Container (takes up remaining space) */}
-        <View className="flex-1 flex-row items-center bg-gray-50 rounded-lg px-3 py-2 border border-gray-200">
-          <Ionicons name="search" size={20} color="#999" style={{ marginRight: 8 }} />
+        <View 
+          className="flex-1 flex-row items-center bg-[rgba(44,27,74,0.8)] rounded-full px-4 py-2.5 border border-[rgba(192,126,255,0.25)]"
+        >
+          <Ionicons name="search" size={20} color="#A0A0A0" style={{ marginRight: 10 }} />
           <TextInput
-            className="flex-1 text-base text-gray-800"
+            className="flex-1 text-base text-gray-200"
             placeholder="Search outfits..."
-            placeholderTextColor="#999"
+            placeholderTextColor="#A0A0A0"
             value={searchQuery}
             onChangeText={setSearchQuery}
+            style={{ color: '#E0E0E0' }}
           />
           {searchQuery !== '' && (
             <TouchableOpacity onPress={() => setSearchQuery('')} style={{ marginLeft: 8 }}>
-              <Ionicons name="close-circle" size={20} color="#999" />
+              <Ionicons name="close-circle" size={20} color="#A0A0A0" />
             </TouchableOpacity>
           )}
         </View>
         {/* Preferences Icon (fixed width, clickable) */}
         <TouchableOpacity 
           onPress={() => router.push('/modal/preferences')} 
-          activeOpacity={0.5}
-          className="p-2"
+          activeOpacity={0.6}
+          className="p-2.5 rounded-full bg-[rgba(44,27,74,0.8)] border border-[rgba(192,126,255,0.25)] shadow-sm"
+          style={{
+            shadowColor: '#C07EFF',
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.2,
+            shadowRadius: 2,
+            elevation: 2
+          }}
         >
-          <Ionicons name="options" size={24} color="#8A2BE2" />
+          <Ionicons name="options" size={22} color="#C07EFF" />
         </TouchableOpacity>
       </View>
       
@@ -552,7 +599,7 @@ export default function Home() {
               {
                 translateY: buttonOpacity.interpolate({
                   inputRange: [0, 1],
-                  outputRange: [10, 0], // Slide up/down effect combined with fade
+                  outputRange: [10, 0],
                 })
               }
             ]
@@ -565,15 +612,15 @@ export default function Home() {
               borderRadius: 18,
               flexDirection: 'row',
               alignItems: 'center',
-              shadowColor: '#000',
+              shadowColor: '#C07EFF',
               shadowOffset: { width: 0, height: 1 },
-              shadowOpacity: 0.2, 
-              shadowRadius: 2,
-              elevation: 3,
+              shadowOpacity: 0.4, 
+              shadowRadius: 3,
+              elevation: 4,
               overflow: 'hidden',
-              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              backgroundColor: 'rgba(40, 20, 70, 0.85)',
               borderWidth: 1,
-              borderColor: 'rgba(138, 43, 226, 0.3)',
+              borderColor: 'rgba(192, 126, 255, 0.5)',
             }}
             onPress={() => {
               flatListRef.current?.scrollToIndex({
@@ -585,19 +632,23 @@ export default function Home() {
             }}
             activeOpacity={0.7}
           >
-            <Ionicons name="chevron-back" size={18} color="#8A2BE2" style={{ marginRight: 6 }} /> 
-            <Text style={{ color: '#8A2BE2', fontSize: 13, fontWeight: '600' }}> 
+            <Ionicons name="chevron-back" size={18} color="#E0E0E0" style={{ marginRight: 6 }} />
+            <Text style={{ color: '#E0E0E0', fontSize: 13, fontWeight: '600' }}>
               Create Your Outfit
             </Text>
           </TouchableOpacity>
         </Animated.View>
       )}
       
-      {/* FlatList Container */}
+      {/* FlatList Container - Add a gradient background here */}
       <View 
         className="absolute inset-0 justify-center items-center"
         style={{ top: 120, bottom: 0, left: 0, right: 0, zIndex: 1 }}
       >
+        <LinearGradient
+          colors={['#1A0D2E', '#3B1F78', '#1A0D2E']} // Dark, "fantastic" gradient
+          style={StyleSheet.absoluteFill}
+        />
         <AnimatedFlatList
           ref={flatListRef}
           data={filteredCards}
