@@ -838,7 +838,7 @@ export default function Home() {
               intensity={90}
               tint="dark"
               style={{
-                borderRadius: 16,
+                borderRadius: 24,
                 overflow: 'hidden',
                 borderWidth: 1,
                 borderColor: 'rgba(192, 126, 255, 0.3)',
@@ -847,6 +847,7 @@ export default function Home() {
                 shadowOpacity: 0.3,
                 shadowRadius: 10,
                 elevation: 15,
+                marginBottom: 15, // Added margin to ensure spacing between rounded panels
               }}
             >
               {/* Header */}
@@ -931,7 +932,7 @@ export default function Home() {
               intensity={90}
               tint="dark"
               style={{
-                borderRadius: 16,
+                borderRadius: 24,
                 overflow: 'hidden',
                 borderWidth: 1,
                 borderColor: 'rgba(192, 126, 255, 0.3)',
@@ -940,6 +941,7 @@ export default function Home() {
                 shadowOpacity: 0.3,
                 shadowRadius: 10,
                 elevation: 15,
+                marginBottom: 15, // Added margin to ensure spacing between rounded panels
               }}
             >
               {/* Header */}
@@ -1059,7 +1061,7 @@ export default function Home() {
               intensity={90}
               tint="dark"
               style={{
-                borderRadius: 16,
+                borderRadius: 24,
                 overflow: 'hidden',
                 borderWidth: 1,
                 borderColor: 'rgba(192, 126, 255, 0.3)',
@@ -1068,6 +1070,7 @@ export default function Home() {
                 shadowOpacity: 0.3,
                 shadowRadius: 10,
                 elevation: 15,
+                marginBottom: 15, // Added margin to ensure spacing between rounded panels
               }}
             >
               {/* Header */}
@@ -1145,47 +1148,59 @@ export default function Home() {
                   })
                 }
               ],
-              opacity: modalAnimation
+              opacity: modalAnimation,
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
             }}
           >
-            <BlurView
-              intensity={90}
-              tint="dark"
+            {/* Clear all text button */}
+            <TouchableOpacity 
+              onPress={() => {
+                console.log('Clear all filters');
+              }}
+              activeOpacity={0.6}
+            >
+              <Text style={{
+                fontSize: 16,
+                color: '#FFFFFF',
+                fontWeight: '500',
+                textDecorationLine: 'underline',
+              }}>
+                Clear all
+              </Text>
+            </TouchableOpacity>
+            
+            {/* Search button */}
+            <TouchableOpacity 
               style={{
-                borderRadius: 16,
-                overflow: 'hidden',
-                borderWidth: 1,
-                borderColor: 'rgba(192, 126, 255, 0.3)',
+                backgroundColor: '#7B2CBF',
+                paddingVertical: 12,
+                paddingHorizontal: 24,
+                borderRadius: 25,
+                flexDirection: 'row',
+                alignItems: 'center',
                 shadowColor: '#000',
-                shadowOffset: { width: 0, height: 5 },
-                shadowOpacity: 0.3,
-                shadowRadius: 10,
-                elevation: 15,
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.2,
+                shadowRadius: 5,
+                elevation: 3,
+              }}
+              activeOpacity={0.8}
+              onPress={() => {
+                console.log('Search with filters');
+                handleCloseSearchModal();
               }}
             >
-              <View style={styles.footerContainer}>
-                <TouchableOpacity 
-                  style={styles.clearButton}
-                  activeOpacity={0.6}
-                  onPress={() => {
-                    console.log('Clear all filters');
-                  }}
-                >
-                  <Text style={styles.clearButtonText}>Clear all</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity 
-                  style={styles.searchButton}
-                  activeOpacity={0.8}
-                  onPress={() => {
-                    console.log('Search with filters');
-                    handleCloseSearchModal();
-                  }}
-                >
-                  <Text style={styles.searchButtonText}>Search</Text>
-                </TouchableOpacity>
-              </View>
-            </BlurView>
+              <Ionicons name="search" size={18} color="#FFF" style={{ marginRight: 8 }} />
+              <Text style={{
+                fontSize: 16,
+                fontWeight: '600',
+                color: '#FFFFFF',
+              }}>
+                Search
+              </Text>
+            </TouchableOpacity>
           </Animated.View>
         </View>
       </Modal>
