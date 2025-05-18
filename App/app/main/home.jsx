@@ -876,7 +876,11 @@ export default function Home() {
                 style={{
                   maxHeight: searchSectionHeight.interpolate({
                     inputRange: [0, 1],
-                    outputRange: [0, 100]
+                    outputRange: [0, 350]
+                  }),
+                  height: searchSectionHeight.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, 350]
                   }),
                   opacity: searchSectionHeight,
                   overflow: 'hidden',
@@ -890,7 +894,7 @@ export default function Home() {
                   ]
                 }}
               >
-                <View style={{ padding: 20 }}>
+                <View style={{ padding: 20, height: 330 }}>
                   {/* Search Input */}
                   <View style={styles.searchInputContainer}>
                     <Ionicons name="search" size={22} color="#A0A0A0" style={{ marginHorizontal: 12 }} />
@@ -970,7 +974,11 @@ export default function Home() {
                 style={{
                   maxHeight: typeSectionHeight.interpolate({
                     inputRange: [0, 1],
-                    outputRange: [0, 300]
+                    outputRange: [0, 350]
+                  }),
+                  height: typeSectionHeight.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, 350]
                   }),
                   opacity: typeSectionHeight,
                   overflow: 'hidden',
@@ -984,8 +992,8 @@ export default function Home() {
                   ]
                 }}
               >
-                <View style={{ padding: 20 }}>
-                  <ScrollView style={{ maxHeight: 250 }}>
+                <View style={{ padding: 20, height: 330 }}>
+                  <ScrollView style={{ maxHeight: 310 }}>
                     {/* Tops Options */}
                     <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
                       <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
@@ -1099,7 +1107,11 @@ export default function Home() {
                 style={{
                   maxHeight: colorSectionHeight.interpolate({
                     inputRange: [0, 1],
-                    outputRange: [0, 200]
+                    outputRange: [0, 350]
+                  }),
+                  height: colorSectionHeight.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, 350]
                   }),
                   opacity: colorSectionHeight,
                   overflow: 'hidden',
@@ -1113,7 +1125,7 @@ export default function Home() {
                   ]
                 }}
               >
-                <View style={{ padding: 20 }}>
+                <View style={{ padding: 20, height: 330 }}>
                   <View style={styles.colorContainer}>
                     {/* Color circles */}
                     {['#C07EFF', '#FF6B6B', '#48CAE4', '#80ED99', '#F8E16C', '#FFFFFF', '#202020'].map((color, index) => (
