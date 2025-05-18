@@ -17,7 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { BlurView } from 'expo-blur';
+// import { BlurView } from 'expo-blur'; // No longer needed
 
 // Create an animated version of FlatList
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
@@ -39,6 +39,7 @@ import MannequinOutfit3Image from '../../assets/outfits/outfit3.png';
 import MannequinOutfit1Image from '../../assets/outfits/outfit1.png';
 // Placeholder import for the mannequin image for outfit 2 - PLEASE REPLACE with your actual image
 import MannequinOutfit2Image from '../../assets/outfits/outfit2.png';
+import PlusIconImage from '../../assets/PlusIcon.png'; // Import the new PlusIcon
 
 // Get screen dimensions for responsive sizing
 const { width, height } = Dimensions.get('window');
@@ -273,58 +274,73 @@ export default function Home() {
     };
     
     // Base shared styles
-    if (isActive) {
-      cardStyle = {
-        ...cardStyle,
-        shadowColor: '#8A2BE2',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.2,
-        shadowRadius: 20,
-        elevation: 16,
-        borderWidth: 1.5, // Increased border width for active card
-        borderColor: 'rgba(138, 43, 226, 0.25)', // Increased opacity for active border
-      };
+    if (item.type !== 'create') { // Only apply active/inactive generic styles to non-create cards
+      if (isActive) {
+        cardStyle = {
+          shadowColor: '#8A2BE2', // Active shadow for outfit cards
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: 0.25,
+          shadowRadius: 12,
+          elevation: 12,
+          // borderWidth: 1.5, // Outfits have no border as per current floating design
+          // borderColor: 'rgba(138, 43, 226, 0.25)',
+        };
+      } else {
+        cardStyle = {
+          shadowColor: '#000000', // Inactive shadow for outfit cards
+          shadowOffset: { width: 0, height: 3 },
+          shadowOpacity: 0.15,
+          shadowRadius: 8,
+          elevation: 6,
+          // borderWidth: 1, 
+          // borderColor: 'rgba(0, 0, 0, 0.06)',
+        };
+      }
     } else {
-      cardStyle = {
-        ...cardStyle,
-        shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.12,
-        shadowRadius: 8,
-        elevation: 6,
-        borderWidth: 1, 
-        borderColor: 'rgba(0, 0, 0, 0.06)', // Decreased opacity for inactive border
-      };
+      cardStyle = {}; // Reset for create card, it defines all its style
     }
 
     if (item.type === 'create') {
-      cardClasses = "h-[400px] rounded-2xl justify-center items-center border border-dashed overflow-hidden";
+      cardClasses = "h-[400px] rounded-2xl justify-center items-center overflow-hidden"; // No specific border class here
       cardStyle = {
-        ...cardStyle,
-        borderColor: 'rgba(192, 126, 255, 0.4)',
-        backgroundColor: 'rgba(26, 13, 46, 0.6)'
+        // backgroundColor: '#0D0718', // Replaced by gradient
+        borderColor: '#A020F0',      // Bright purple border
+        borderWidth: 1.5,            
+        shadowColor: '#000000',      // Standard subtle shadow for depth
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 5,
+        elevation: 8,               
       };
       cardContent = (
         <>
-          {/* Gradient Background for Create Card - Dark Theme */}
           <LinearGradient
-            colors={['rgba(40, 20, 70, 0.5)', 'rgba(30, 10, 60, 0.3)']}
-            style={StyleSheet.absoluteFill}
+            colors={['#301A4A', '#200F3A']} // Darker, richer purple gradient
+            style={StyleSheet.absoluteFill} 
           />
           
-          {/* Custom styled plus icon - should still look good */}
-          <View className="mb-4 rounded-full overflow-hidden" style={{ width: 70, height: 70 }}>
-            <LinearGradient
-              colors={['#8A2BE2', '#A020F0']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              className="w-full h-full justify-center items-center"
-            >
-              <Ionicons name="add" size={40} color="#fff" />
-            </LinearGradient>
+          {/* Wrapper View for Icon and its Glow */}
+          <View style={{
+            width: 120, // Match icon dimensions for the glow canvas
+            height: 120,
+            marginBottom: 24,
+            shadowColor: '#A020F0',      // Bright purple for glow
+            shadowOffset: { width: 0, height: 0 }, // Centered glow
+            shadowOpacity: 0.75,         // Opacity of the glow
+            shadowRadius: 15,            // Radius of the glow
+            // elevation for Android - Note: Complex glows on Android might still be tricky with just elevation
+            elevation: 10, // Added elevation for Android shadow attempt
+          }}>
+            <Image 
+              source={PlusIconImage} 
+              style={{
+                width: '100%', // Icon fills the wrapper
+                height: '100%',
+              }}
+              resizeMode="contain" 
+            />
           </View>
           
-          {/* Improved text style - Light colors for dark theme */}
           <Text className="text-2xl font-bold text-gray-100 text-center px-6">
             {item.title}
           </Text>
@@ -334,39 +350,11 @@ export default function Home() {
         </>
       );
     } else if (item.type === 'outfit') {
-      // Remove card-specific classes, make background transparent for the TouchableOpacity
-      cardClasses = "h-[400px] rounded-2xl overflow-hidden"; // Keep height, rounding for consistency, overflow
-      
-      // Adjust cardStyle: remove borders, explicit background for floating effect
-      // Shadows will come from the image container or be very subtle on the touchable itself
-      if (isActive) {
-        cardStyle = {
-          ...cardStyle, // Keep existing active shadow for focus or use image shadow primarily
-          // shadowColor: '#8A2BE2', // Original active shadow
-          // shadowOffset: { width: 0, height: 8 },
-          // shadowOpacity: 0.2,
-          // shadowRadius: 20,
-          // elevation: 16,
-          borderWidth: 0, // No border for floating items
-        };
-      } else {
-        cardStyle = {
-          ...cardStyle, // Keep existing inactive shadow or rely on image shadow
-          // shadowColor: '#000000', // Original inactive shadow
-          // shadowOffset: { width: 0, height: 3 },
-          // shadowOpacity: 0.12,
-          // shadowRadius: 8,
-          // elevation: 6,
-          borderWidth: 0, // No border for floating items
-        };
-      }
-      
+      cardClasses = "h-[400px] rounded-2xl overflow-hidden"; // No background, relies on image content
+      // cardStyle for outfits is already set by the isActive/isInactive block above
+      // It will mainly consist of shadows as borders are currently 0 for the floating look.
       cardContent = (
-        // Container for items, centered
         <View className="flex-1 justify-center items-center w-full">
-          {/* REMOVE Inner LinearGradient background for outfit items */}
-        
-          {/* Item Container */}
           <View className="p-4 justify-center items-center">
             {item.items.map((itemData, imgIndex) => {
               const rotation = imgIndex % 2 === 0 ? '-1.5deg' : '1.5deg';
@@ -461,7 +449,8 @@ export default function Home() {
         >
           {cardContent}
           
-          {/* Blur overlay that fades based on position */}
+          {/* Blur overlay that fades based on position - REMOVED */}
+          {/* 
           <Animated.View 
             style={{
               position: 'absolute',
@@ -479,14 +468,9 @@ export default function Home() {
             }}
             pointerEvents="none"
           >
-            <BlurView 
-              intensity={25}
-              style={{ 
-                width: '100%', 
-                height: '100%',
-              }}
-            />
+            // No BlurView needed as per the new design 
           </Animated.View>
+          */}
         </TouchableOpacity>
       </Animated.View>
     );
@@ -537,50 +521,54 @@ export default function Home() {
       
       {/* Search input & Preferences Icon Row */}
       <View 
-        className="flex-row items-center px-6 py-4 space-x-3"
+        className="flex-row items-center justify-between px-6 py-4" // Simplified row styling
         style={{
           zIndex: 10, 
-          backgroundColor: '#1A0D2E',
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 2,
-          elevation: 3,
+          // No background, border, or shadow for the row itself
         }}
       >
-        {/* Search Input Container (takes up remaining space) */}
+        {/* Search Input Container - Floating Element */}
         <View 
-          className="flex-1 flex-row items-center bg-[rgba(44,27,74,0.8)] rounded-full px-4 py-2.5 border border-[rgba(192,126,255,0.25)]"
+          className="flex-1 flex-row items-center bg-[#201030] rounded-full px-4 py-3 shadow-md"
+          style={{
+            marginRight: 12, // Space between search and preferences
+            shadowColor: '#000000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.25,
+            shadowRadius: 3.84,
+            elevation: 5,
+          }}
         >
-          <Ionicons name="search" size={20} color="#A0A0A0" style={{ marginRight: 10 }} />
+          <Ionicons name="search" size={20} color="#D0D0D0" style={{ marginRight: 10 }} /> 
           <TextInput
-            className="flex-1 text-base text-gray-200"
+            className="flex-1 text-base text-gray-100" // Brighter text
             placeholder="Search outfits..."
-            placeholderTextColor="#A0A0A0"
+            placeholderTextColor="#909090" // Adjusted placeholder color
             value={searchQuery}
             onChangeText={setSearchQuery}
-            style={{ color: '#E0E0E0' }}
+            style={{ color: '#E0E0E0' }} // Ensure input text color is light
           />
           {searchQuery !== '' && (
             <TouchableOpacity onPress={() => setSearchQuery('')} style={{ marginLeft: 8 }}>
-              <Ionicons name="close-circle" size={20} color="#A0A0A0" />
+              <Ionicons name="close-circle" size={20} color="#D0D0D0" />
             </TouchableOpacity>
           )}
         </View>
-        {/* Preferences Icon (fixed width, clickable) */}
+        
+        {/* Preferences Icon - Floating Element */}
         <TouchableOpacity 
           onPress={() => router.push('/modal/preferences')} 
-          activeOpacity={0.6}
-          className="p-2.5 rounded-full bg-[rgba(44,27,74,0.8)] border border-[rgba(192,126,255,0.25)] shadow-sm"
+          activeOpacity={0.7}
+          className="p-3 bg-[#201030] rounded-full shadow-md" // Consistent styling with search
           style={{
-            shadowColor: '#C07EFF',
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.2,
-            shadowRadius: 2,
-            elevation: 2
+            shadowColor: '#000000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.25,
+            shadowRadius: 3.84,
+            elevation: 5,
           }}
         >
-          <Ionicons name="options" size={22} color="#C07EFF" />
+          <Ionicons name="options" size={22} color="#C07EFF" /> 
         </TouchableOpacity>
       </View>
       
@@ -701,32 +689,24 @@ export default function Home() {
           style={{
             width: '100%',
             maxWidth: 400,
-            shadowColor: '#8A2BE2',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.3,
-            shadowRadius: 5,
-            elevation: 5,
+            backgroundColor: '#2C1B4A', // Slightly lighter, distinct dark purple
+            shadowColor: '#100520',      // Thematic dark purple shadow
+            shadowOffset: { width: 0, height: 3 }, // Increased offset
+            shadowOpacity: 0.3,          // Increased opacity
+            shadowRadius: 5,             // Increased radius for softer shadow
+            elevation: 7,                // Adjusted elevation
             borderRadius: 12,
-            overflow: 'hidden',
+            paddingVertical: 16, 
+            paddingHorizontal: 20,
+            flexDirection: 'row', // Moved layout from LinearGradient
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
-          <LinearGradient
-            colors={['#8A2BE2', '#A020F0']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={{
-              paddingVertical: 16,
-              paddingHorizontal: 20,
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Ionicons name="time-outline" size={24} color="#FFF" style={{ marginRight: 10 }} />
-            <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
-              View Outfit History
-            </Text>
-          </LinearGradient>
+          <Ionicons name="time-outline" size={24} color="#FFF" style={{ marginRight: 10 }} />
+          <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
+            View Outfit History
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

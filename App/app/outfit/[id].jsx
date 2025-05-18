@@ -180,12 +180,12 @@ export default function OutfitDetailsPage() {
   return (
     <GestureDetector gesture={flingGesture}>
       <SafeAreaView style={styles.safeArea}>
-        <StatusBar style="dark" backgroundColor="#fff" />
+        <StatusBar style="light-content" backgroundColor="#1A0D2E" />
         <Stack.Screen options={{ headerShown: false }} />
 
         <View style={styles.headerContainer}>
           <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
-            <Ionicons name="close" size={32} color="#000" />
+            <Ionicons name="close" size={32} color="#C07EFF" />
           </TouchableOpacity>
         </View>
 
@@ -202,7 +202,7 @@ export default function OutfitDetailsPage() {
               <Image source={{ uri: appwriteImage.href }} style={styles.outfitImage} />
             ) : (
               <View style={styles.placeholderContainer}>
-                <Ionicons name="image-outline" size={60} color="#AAA" />
+                <Ionicons name="image-outline" size={60} color="#888" />
                 <Text style={styles.placeholderText}>Your outfit preview will appear here.</Text>
               </View>
             )}
@@ -236,7 +236,7 @@ export default function OutfitDetailsPage() {
           style={[styles.continueButton, isApplyingOutfit && styles.continueButtonDisabled]}
         >
           <LinearGradient
-            colors={isApplyingOutfit ? ['#999', '#bbb'] : ['#8A2BE2', '#A020F0']}
+            colors={isApplyingOutfit ? ['#4A3B5E', '#5A4B6E'] : ['#8A2BE2', '#A020F0']}
             style={styles.continueButtonGradient}
           >
             <Text style={styles.continueButtonText}>
@@ -250,16 +250,17 @@ export default function OutfitDetailsPage() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#F7F7F7' },
+  safeArea: { flex: 1, backgroundColor: '#1A0D2E' },
   headerContainer: {
     height: 60, justifyContent: 'flex-end', flexDirection: 'row',
-    alignItems: 'center', paddingHorizontal: 15, borderBottomColor: '#E0E0E0', borderBottomWidth: 1,
+    alignItems: 'center', paddingHorizontal: 15, backgroundColor: '#1A0D2E',
   },
   closeButton: { padding: 5 },
   scrollContainer: { paddingBottom: 100, alignItems: 'center' },
   outfitImageContainer: {
     width: '95%', aspectRatio: 1, marginTop: 20, marginBottom: 25, borderRadius: 16,
-    backgroundColor: '#E9E9E9', overflow: 'hidden', justifyContent: 'center', alignItems: 'center',
+    backgroundColor: 'rgba(44,27,74,0.6)',
+    overflow: 'hidden', justifyContent: 'center', alignItems: 'center',
   },
   outfitImage: { width: '100%', height: '100%' },
   loadingOverlayContainer: {
@@ -268,7 +269,7 @@ const styles = StyleSheet.create({
   },
   loadingText: { color: '#FFF', marginTop: 10 },
   placeholderContainer: { alignItems: 'center' },
-  placeholderText: { color: '#777', marginTop: 10 },
+  placeholderText: { color: '#B0B0B0', marginTop: 10 },
   errorOverlay: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
     backgroundColor: 'rgba(220, 53, 69, 0.85)',
@@ -276,14 +277,15 @@ const styles = StyleSheet.create({
   },
   errorText: { color: '#FFF', marginLeft: 8 },
   itemsSectionContainer: { width: '95%', marginBottom: 20 },
-  itemsTitle: { fontSize: 18, fontWeight: '600', marginBottom: 10 },
+  itemsTitle: { fontSize: 18, fontWeight: '600', marginBottom: 10, color: '#E0E0E0' },
   itemCard: {
     width: 100, height: 130, borderRadius: 10, marginRight: 12,
-    backgroundColor: '#fff', alignItems: 'center', padding: 5,
-    borderWidth: 1, borderColor: '#EDEDED',
+    backgroundColor: 'rgba(44,27,74,0.8)',
+    alignItems: 'center', padding: 5,
+    borderWidth: 1, borderColor: 'rgba(192,126,255,0.25)',
   },
   itemImageInCard: { width: '100%', height: 80, resizeMode: 'contain' },
-  itemLabel: { fontSize: 11, color: '#444', textAlign: 'center', marginTop: 5 },
+  itemLabel: { fontSize: 11, color: '#E0E0E0', textAlign: 'center', marginTop: 5 },
   continueButton: {
     position: 'absolute', bottom: 30, left: '5%', right: '5%',
     borderRadius: 30, overflow: 'hidden', elevation: 6,
