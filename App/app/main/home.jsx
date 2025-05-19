@@ -45,6 +45,7 @@ import MannequinOutfit1Image from '../../assets/outfits/outfit1.png';
 // Placeholder import for the mannequin image for outfit 2 - PLEASE REPLACE with your actual image
 import MannequinOutfit2Image from '../../assets/outfits/outfit2.png';
 import PlusIconImage from '../../assets/PlusIcon.png'; // Import the new PlusIcon
+import HangerIconImage from '../../assets/HangerIcon.png'; // Import the hanger icon
 
 // Get screen dimensions for responsive sizing
 const { width, height } = Dimensions.get('window');
@@ -467,47 +468,131 @@ export default function Home() {
     );
   };
 
+  // Add this near the top of the component, with other state declarations
+  const borderAnimation = useRef(new Animated.Value(0)).current;
+
+  // Update the animation useEffect
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(borderAnimation, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: true,
+          easing: Easing.linear,
+        }),
+        Animated.timing(borderAnimation, {
+          toValue: 0,
+          duration: 2000,
+          useNativeDriver: true,
+          easing: Easing.linear,
+        }),
+      ])
+    ).start();
+  }, []);
+
   return (
     <SafeAreaView className="flex-1 bg-[#1A0D2E]">
       <StatusBar barStyle="light-content" />
       
       {/* Header */}
       <View 
-        className="flex-row justify-between items-center px-6 py-5"
+        className="flex-row justify-between items-center px-6 py-3"
         style={{
           zIndex: 10, 
-          backgroundColor: '#1A0D2E',
+          backgroundColor: 'rgba(26, 13, 46, 0.95)',
+          borderBottomWidth: 1,
+          borderBottomColor: 'rgba(192, 126, 255, 0.15)',
         }}
       >
-        <Text 
-          className="text-3xl font-bold"
-          style={{
-            color: '#C07EFF',
-            textShadowColor: 'rgba(0, 0, 0, 0.5)',
-            textShadowOffset: { width: 1, height: 2 }, 
-            textShadowRadius: 4
+        {/* Upgrade Button */}
+        <TouchableOpacity 
+          className="overflow-hidden rounded-full"
+          style={{ 
+            elevation: 3,
           }}
+          onPress={() => console.log('Upgrade pressed')}
+          activeOpacity={0.7}
         >
-          OutfitAI
-        </Text>
-        <View className="flex-row items-center space-x-3">
-          {/* Settings Icon (Preferences Icon removed from here) */}
-          <TouchableOpacity 
-            className="overflow-hidden rounded-full shadow-md"
-            style={{ elevation: 3, shadowColor: '#C07EFF' }}
-            onPress={() => router.push('/modal/settings')}
-            activeOpacity={0.5}
+          <Animated.View 
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              borderRadius: 20,
+              borderWidth: 1.5,
+              borderColor: borderAnimation.interpolate({
+                inputRange: [0, 0.5, 1],
+                outputRange: [
+                  'rgba(192, 126, 255, 0.3)',
+                  'rgba(255, 255, 255, 0.5)',
+                  'rgba(192, 126, 255, 0.3)'
+                ]
+              }),
+            }}
+          />
+          <LinearGradient
+            colors={['#5B21B6', '#2E1065']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            className="px-3 py-1.5 flex-row items-center"
           >
-            <LinearGradient
-              colors={['#8A2BE2', '#A020F0', '#9370DB']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              className="p-2 rounded-full" 
-            >
-              <Ionicons name="settings" size={24} color="#FFF" /> 
-            </LinearGradient>
-          </TouchableOpacity>
+            <Ionicons name="flash" size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
+            <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '600' }}>Upgrade</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+
+        {/* Centered Logo and Text */}
+        <View style={{ 
+          flexDirection: 'row', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          zIndex: -1
+        }}>
+          <Image 
+            source={HangerIconImage} 
+            style={{ 
+              width: 50,
+              height: 50,
+              marginRight: 2,
+              tintColor: '#FFFFFF'
+            }}
+            resizeMode="contain"
+          />
+          <Text 
+            className="text-2xl font-bold"
+            style={{
+              color: '#FFFFFF',
+              textShadowColor: 'rgba(192, 126, 255, 0.3)',
+              textShadowOffset: { width: 0, height: 1 }, 
+              textShadowRadius: 4
+            }}
+          >
+            OutfitAI
+          </Text>
         </View>
+
+        {/* Settings Button */}
+        <TouchableOpacity 
+          className="overflow-hidden rounded-full"
+          style={{ 
+            elevation: 3,
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            borderWidth: 1,
+            borderColor: 'rgba(255, 255, 255, 0.2)',
+          }}
+          onPress={() => router.push('/modal/settings')}
+          activeOpacity={0.7}
+        >
+          <View className="p-2">
+            <Ionicons name="settings-outline" size={24} color="#FFFFFF" />
+          </View>
+        </TouchableOpacity>
       </View>
       
       {/* Search input & Preferences Icon Row - Now a Search Button Row */}
