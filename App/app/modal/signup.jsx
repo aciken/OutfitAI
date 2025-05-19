@@ -274,117 +274,112 @@ export default function Signup() {
   };
   
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <StatusBar barStyle="dark-content" />
+    <SafeAreaView className="flex-1 bg-[#1A0D2E]">
+      <StatusBar barStyle="light-content" />
       
       {/* Close button */}
       <TouchableOpacity 
         className="absolute top-12 right-6 z-10" 
         onPress={() => router.back()}
       >
-        <Ionicons name="close" size={24} color="#000" />
+        <Ionicons name="close" size={24} color="#C07EFF" />
       </TouchableOpacity>
 
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        className="flex-1 justify-center"
+        className="flex-1"
       >
-        <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}>
+        <ScrollView 
+          contentContainerStyle={{ paddingVertical: 40 }}
+          className="px-6"
+        >
           <Animated.View 
-            className="px-6"
+            className="mb-4"
             style={{ 
               opacity: fadeAnim,
               transform: [{ translateY: slideAnim }]
             }}
           >
-            {/* Welcome Text */}
-            <Text className="text-black text-4xl font-bold mb-2 text-center">
+            {/* Header Text */}
+            <Text className="text-white text-4xl font-bold mb-2 text-center">
               Create Account
             </Text>
-            <Text className="text-gray-600 text-xl mb-10 text-center">
-              Start your journaling journey
+            <Text className="text-gray-300 text-base mb-8 text-center">
+              Join us to save and manage your outfits
             </Text>
-            
-            {/* Input Fields */}
-            <View className="mb-3">
+
+            {/* Form Fields */}
+            <View className="mb-5">
+              <Text className="text-gray-300 mb-2 ml-1">Your Name</Text>
               <TextInput
-                className="bg-gray-100 text-black py-3 px-5 rounded-full text-base"
-                placeholder="Your Name"
-                placeholderTextColor="#888"
+                className="bg-[#2A1B3E] text-white py-3 px-5 rounded-full text-base border border-[rgba(192,126,255,0.15)]"
+                placeholderTextColor="#9CA3AF"
                 value={name}
                 onChangeText={setName}
                 autoCapitalize="words"
               />
             </View>
-            
-            <View className="mb-3">
+
+            <View className="mb-1">
+              <Text className="text-gray-300 mb-2 ml-1">Email Address</Text>
               <TextInput
-                className={`bg-gray-100 text-black py-3 px-5 rounded-full text-base ${emailError ? 'border border-red-500' : 'border border-transparent'}`}
-                placeholder="Your Email"
-                placeholderTextColor="#888"
+                className="bg-[#2A1B3E] text-white py-3 px-5 rounded-full text-base border border-[rgba(192,126,255,0.15)]"
+                placeholderTextColor="#9CA3AF"
                 value={email}
-                onChangeText={(text) => setEmail(text.trim())} // Trim email input
+                onChangeText={setEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
               {emailError ? (
-                <View className="mt-1 ml-4">
-                  <Text className="text-red-500 text-xs">{emailError}</Text>
-                </View>
+                <Text className="text-red-400 text-xs mt-1 ml-1">{emailError}</Text>
               ) : null}
             </View>
-            
-            <View className="mb-3">
+
+            <View className="mb-1">
+              <Text className="text-gray-300 mb-2 ml-1">Password</Text>
               <TextInput
-                className={`bg-gray-100 text-black py-3 px-5 rounded-full text-base ${passwordError ? 'border border-red-500' : 'border border-transparent'}`}
-                placeholder="Create Password"
-                placeholderTextColor="#888"
+                className="bg-[#2A1B3E] text-white py-3 px-5 rounded-full text-base border border-[rgba(192,126,255,0.15)]"
+                placeholderTextColor="#9CA3AF"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
               />
-                {passwordError ? (
-                <View className="mt-1 ml-4">
-                  <Text className="text-red-500 text-xs">{passwordError}</Text>
-                </View>
+              {passwordError ? (
+                <Text className="text-red-400 text-xs mt-1 ml-1">{passwordError}</Text>
               ) : null}
             </View>
-            
-            <View className="mb-2">
+
+            <View className="mb-6">
+              <Text className="text-gray-300 mb-2 ml-1">Confirm Password</Text>
               <TextInput
-                className={`bg-gray-100 text-black py-3 px-5 rounded-full text-base ${!passwordsMatch && confirmPassword ? 'border border-red-500' : ''}`} // Show border only if not matching AND confirm has input
-                placeholder="Confirm Password"
-                placeholderTextColor="#888"
+                className="bg-[#2A1B3E] text-white py-3 px-5 rounded-full text-base border border-[rgba(192,126,255,0.15)]"
+                placeholderTextColor="#9CA3AF"
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry
               />
+              {!passwordsMatch && confirmPassword !== '' ? (
+                <Text className="text-red-400 text-xs mt-1 ml-1">Passwords don't match</Text>
+              ) : null}
             </View>
-            
-            {/* Password match error */}
-            {!passwordsMatch && confirmPassword ? ( // Show error only if not matching AND confirm has input
-              <Text className="text-red-500 text-xs mt-1 mb-3 ml-4"> {/* Adjusted style */}
-                Passwords don't match
-              </Text>
-            ) : <View style={{ height: 18, marginBottom: 3}} /> /* Keep space consistent */}
-            
-            {/* Terms and Privacy */}
-            <Text className="text-gray-600 text-xs text-center mb-6"> {/* Adjusted style */}
-              By signing up, you agree to our{' '}
-              <Text className="text-purple-600 underline">Terms of Service</Text> and{' '}
-              <Text className="text-purple-600 underline">Privacy Policy</Text>
-            </Text>
-            
+
             {/* Sign Up Button with Purple Gradient */}
             <TouchableOpacity 
-              className="rounded-full mb-6 overflow-hidden"
+              className="rounded-full mb-8 overflow-hidden"
               onPress={handleSignUp}
+              style={{
+                shadowColor: "#C07EFF",
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.3,
+                shadowRadius: 10,
+                elevation: 5,
+              }}
             >
               <LinearGradient
                 colors={['#8A2BE2', '#A020F0', '#9370DB']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                className="py-3 px-5"
+                className="py-4"
               >
                 <Text className="text-white text-center text-base font-semibold">
                   Create Account
@@ -394,28 +389,28 @@ export default function Signup() {
             
             {/* Divider */}
             <View className="flex-row items-center mb-6">
-              <View className="flex-1 h-[1px] bg-gray-300" />
-              <Text className="text-gray-600 mx-4">or</Text>
-              <View className="flex-1 h-[1px] bg-gray-300" />
+              <View className="flex-1 h-[1px] bg-[rgba(192,126,255,0.15)]" />
+              <Text className="text-gray-300 mx-4">or</Text>
+              <View className="flex-1 h-[1px] bg-[rgba(192,126,255,0.15)]" />
             </View>
             
             {/* Continue with Google */}
             <TouchableOpacity 
-              className="bg-gray-200 py-3 rounded-full mb-6 flex-row justify-center items-center"
+              className="bg-[#2A1B3E] py-3 rounded-full mb-6 flex-row justify-center items-center border border-[rgba(192,126,255,0.15)]"
             >
-              <Ionicons name="logo-google" size={18} color="#333" style={{ marginRight: 8 }} />
-              <Text className="text-gray-800 text-center text-base">
+              <Ionicons name="logo-google" size={18} color="#C07EFF" style={{ marginRight: 8 }} />
+              <Text className="text-white text-center text-base">
                 Continue with Google
               </Text>
             </TouchableOpacity>
             
             {/* Already have an account */}
             <TouchableOpacity 
-              className="mb-8"
-              onPress={() => router.push('/modal/signin')} // Just push, don't go back first
+              className="mb-4"
+              onPress={() => { router.back(); router.push('/modal/signin') }}
             >
-              <Text className="text-gray-600 text-center">
-                Already have an account? <Text className="text-purple-600">Sign in</Text>
+              <Text className="text-gray-300 text-center">
+                Already have an account? <Text className="text-[#C07EFF]">Sign in</Text>
               </Text>
             </TouchableOpacity>
           </Animated.View>

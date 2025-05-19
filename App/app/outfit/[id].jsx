@@ -180,7 +180,7 @@ export default function OutfitDetailsPage() {
   return (
     <GestureDetector gesture={flingGesture}>
       <SafeAreaView style={styles.safeArea}>
-        <StatusBar style="light-content" backgroundColor="#1A0D2E" />
+        <StatusBar style="light" backgroundColor="#1A0D2E" />
         <Stack.Screen options={{ headerShown: false }} />
 
         <View style={styles.headerContainer}>

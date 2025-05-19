@@ -71,11 +71,11 @@ export default function GenderSelectionPage() {
         options={{
           headerShown: true,
           headerTitleAlign: 'center', 
-          headerStyle: { backgroundColor: '#fff', height: 80 },
-          headerTintColor: '#333',
+          headerStyle: { backgroundColor: '#1A0D2E', height: 80 },
+          headerTintColor: '#fff',
           headerLeft: () => (
             <TouchableOpacity onPress={() => router.back()} style={{ marginLeft: 15, padding: 5 }}>
-              <Ionicons name="arrow-back" size={24} color="#333" />
+              <Ionicons name="arrow-back" size={24} color="#C07EFF" />
             </TouchableOpacity>
           ),
           headerTitle: () => (
@@ -118,7 +118,7 @@ export default function GenderSelectionPage() {
           disabled={!selectedGender}
         >
           <LinearGradient
-            colors={selectedGender ? ['#8A2BE2', '#A020F0'] : ['#D3D3D3', '#C0C0C0']}
+            colors={selectedGender ? ['#8A2BE2', '#A020F0'] : ['#3D2A5D', '#2A1B3E']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.nextButton}
@@ -135,7 +135,7 @@ export default function GenderSelectionPage() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F7F7F7',
+    backgroundColor: '#1A0D2E',
   },
   customHeaderTitleContainer: {
     alignItems: 'center', // Center children (text and progress bar)
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
   customHeaderTitleText: {
     fontSize: 17, // Slightly larger title text in header
     fontWeight: 'bold', // Keep it bold
-    color: '#333',
+    color: '#fff',
     textAlign: 'center',
     marginBottom: 6, // Increased space between title and progress bar
   },
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     height: 5, // Thinner progress bar
     borderRadius: 2.5,
-    backgroundColor: '#EAEAEA', // Softer inactive track color
+    backgroundColor: '#2A1B3E', // Darker inactive track color
     width: width * 0.6, // Define a width for the bar itself
     // No horizontal margin, as it's centered by its container's alignItems
     // marginTop is handled by marginBottom of customHeaderTitleText
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     marginRight: 1, // Tiny separation between segments
   },
   activeHeaderProgressStep: {
-    backgroundColor: '#8A2BE2',
+    backgroundColor: '#C07EFF',
   },
   inactiveHeaderProgressStep: {
     backgroundColor: 'transparent', // Let the container's bg show through for inactive parts
@@ -179,14 +179,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#fff',
     textAlign: 'center',
     marginTop: 20, // Keep some margin if progress bar was removed from here
     marginBottom: 10,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: '#C0C0C0',
     textAlign: 'center',
     marginBottom: 30,
     lineHeight: 22,
@@ -196,26 +196,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   optionButton: {
-    backgroundColor: '#fff',
+    backgroundColor: '#2A1B3E',
     paddingVertical: 18,
     paddingHorizontal: 20,
     borderRadius: 12,
     marginBottom: 15,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: 'rgba(192,126,255,0.15)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.2,
     shadowRadius: 2,
     elevation: 2,
   },
   selectedOptionButton: {
     backgroundColor: '#8A2BE2',
-    borderColor: '#7A1FB8',
+    borderColor: '#C07EFF',
   },
   optionText: {
     fontSize: 16,
-    color: '#333',
+    color: '#fff',
     fontWeight: '500',
     textAlign: 'center',
   },
@@ -227,7 +227,12 @@ const styles = StyleSheet.create({
     borderRadius: 25, 
     overflow: 'hidden', 
     marginTop: 20, 
-    marginBottom: 10, 
+    marginBottom: 10,
+    shadowColor: "#C07EFF",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 5,
   },
   nextButton: {
     paddingVertical: 15,

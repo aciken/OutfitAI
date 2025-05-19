@@ -83,11 +83,11 @@ export default function ColorPreferencesPage() {
         options={{
           headerShown: true,
           headerTitleAlign: 'center',
-          headerStyle: { backgroundColor: '#fff', height: 80 },
-          headerTintColor: '#333',
+          headerStyle: { backgroundColor: '#1A0D2E', height: 80 },
+          headerTintColor: '#fff',
           headerLeft: () => (
             <TouchableOpacity onPress={() => router.back()} style={{ marginLeft: 15, padding: 5 }}>
-              <Ionicons name="arrow-back" size={24} color="#333" />
+              <Ionicons name="arrow-back" size={24} color="#C07EFF" />
             </TouchableOpacity>
           ),
           headerTitle: () => (
@@ -184,7 +184,7 @@ const darkenColor = (hexColor, percent) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F7F7F7',
+    backgroundColor: '#1A0D2E',
   },
   customHeaderTitleContainer: {
     alignItems: 'center',
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
   customHeaderTitleText: {
     fontSize: 17,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#fff',
     textAlign: 'center',
     marginBottom: 6,
   },
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: '#EAEAEA',
+    backgroundColor: '#2A1B3E',
     width: width * 0.6,
   },
   headerProgressStep: {
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
     marginRight: 1,
   },
   activeHeaderProgressStep: {
-    backgroundColor: '#8A2BE2',
+    backgroundColor: '#C07EFF',
   },
   inactiveHeaderProgressStep: {
     backgroundColor: 'transparent',
@@ -225,71 +225,83 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#fff',
     textAlign: 'center',
     marginTop: 10,
     marginBottom: 10,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: '#C0C0C0',
     textAlign: 'center',
     marginBottom: 25,
     lineHeight: 22,
   },
   optionsContainer: {},
   optionButton: {
-    backgroundColor: '#fff',
+    backgroundColor: '#2A1B3E',
     paddingVertical: 15,
     paddingHorizontal: 15,
     borderRadius: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: 'rgba(192,126,255,0.15)',
     flexDirection: 'row',
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
     elevation: 2,
   },
   selectedOptionButton: {
-    // backgroundColor is set dynamically for selected color options
+    borderColor: '#C07EFF',
   },
   colorSwatch: {
-    width: 24,
-    height: 24,
-    borderRadius: 12, // Circular swatch
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     marginRight: 12,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: 'rgba(255,255,255,0.2)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1,
+    elevation: 2,
   },
   optionText: {
     flex: 1,
     fontSize: 16,
-    color: '#333',
+    color: '#fff',
     fontWeight: '500',
   },
   selectedOptionText: {
-    color: '#fff',
     fontWeight: 'bold',
   },
   checkbox: {
     width: 24,
     height: 24,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
   footer: {
-    padding: 20,
+    backgroundColor: '#1A0D2E',
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#ECECEC',
-    backgroundColor: '#F7F7F7',
+    borderTopColor: 'rgba(192,126,255,0.1)',
   },
   nextButtonWrapper: {
     borderRadius: 25,
     overflow: 'hidden',
+    shadowColor: "#C07EFF",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 5,
   },
   nextButton: {
     paddingVertical: 15,

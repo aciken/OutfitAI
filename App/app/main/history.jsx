@@ -78,6 +78,7 @@ export default function History() {
   const [activeCardIndex, setActiveCardIndex] = useState(0);
   const [sortBy, setSortBy] = useState('newest');
   const [focusedImage, setFocusedImage] = useState(null);
+  const [showSettings, setShowSettings] = useState(false);
   const flatListRef = useRef();
   const scrollX = useRef(new Animated.Value(0)).current;
   
@@ -85,6 +86,18 @@ export default function History() {
   const modalScale = useRef(new Animated.Value(0)).current;
   const modalOpacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(0)).current;
+
+  // Animation values for settings modal
+  const settingsTranslateY = useRef(new Animated.Value(height)).current;
+  const settingsOpacity = useRef(new Animated.Value(0)).current;
+  const settingsScale = useRef(new Animated.Value(0.9)).current;
+
+  // Settings state
+  const [settings, setSettings] = useState({
+    showOutfitItems: true,
+    showDate: true,
+    showItemCount: true,
+  });
 
   // Create pan responder for gesture handling
   const panResponder = useRef(
@@ -138,6 +151,74 @@ export default function History() {
               toValue: 1,
               useNativeDriver: true,
               damping: 20,
+            }),
+          ]).start();
+        }
+      },
+    })
+  ).current;
+
+  // Create pan responder for settings modal
+  const settingsPanResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return Math.abs(gestureState.dy) > 10;
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dy > 0) { // Only allow dragging down
+          settingsTranslateY.setValue(gestureState.dy);
+          settingsScale.setValue(1 - (gestureState.dy / height) * 0.1);
+          settingsOpacity.setValue(1 - (gestureState.dy / height) * 0.5);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dy > height * 0.2) {
+          // Dismiss if dragged more than 20% of screen height
+          Animated.parallel([
+            Animated.spring(settingsTranslateY, {
+              toValue: height,
+              useNativeDriver: true,
+              damping: 20,
+              stiffness: 90,
+            }),
+            Animated.spring(settingsScale, {
+              toValue: 0.9,
+              useNativeDriver: true,
+              damping: 20,
+              stiffness: 90,
+            }),
+            Animated.timing(settingsOpacity, {
+              toValue: 0,
+              duration: 200,
+              useNativeDriver: true,
+            }),
+          ]).start(() => {
+            setShowSettings(false);
+            settingsTranslateY.setValue(height);
+            settingsScale.setValue(0.9);
+            settingsOpacity.setValue(0);
+          });
+        } else {
+          // Return to original position
+          Animated.parallel([
+            Animated.spring(settingsTranslateY, {
+              toValue: 0,
+              useNativeDriver: true,
+              damping: 20,
+              stiffness: 90,
+            }),
+            Animated.spring(settingsScale, {
+              toValue: 1,
+              useNativeDriver: true,
+              damping: 20,
+              stiffness: 90,
+            }),
+            Animated.spring(settingsOpacity, {
+              toValue: 1,
+              useNativeDriver: true,
+              damping: 20,
+              stiffness: 90,
             }),
           ]).start();
         }
@@ -226,6 +307,80 @@ export default function History() {
       modalScale.setValue(0);
       modalOpacity.setValue(0);
     });
+  };
+
+  const handleSettingsPress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // Reset animation values before opening
+    settingsTranslateY.setValue(height);
+    settingsScale.setValue(0.9);
+    settingsOpacity.setValue(0);
+    
+    // Set modal to visible first
+    setShowSettings(true);
+    
+    // Then start the opening animation
+    requestAnimationFrame(() => {
+      Animated.parallel([
+        Animated.spring(settingsTranslateY, {
+          toValue: 0,
+          useNativeDriver: true,
+          damping: 20,
+          stiffness: 90,
+        }),
+        Animated.spring(settingsScale, {
+          toValue: 1,
+          useNativeDriver: true,
+          damping: 20,
+          stiffness: 90,
+        }),
+        Animated.spring(settingsOpacity, {
+          toValue: 1,
+          useNativeDriver: true,
+          damping: 20,
+          stiffness: 90,
+        }),
+      ]).start();
+    });
+  };
+
+  const handleCloseSettings = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
+    // Animate the closing with a smoother transition
+    Animated.parallel([
+      Animated.spring(settingsTranslateY, {
+        toValue: height,
+        useNativeDriver: true,
+        damping: 20,
+        stiffness: 90,
+      }),
+      Animated.spring(settingsScale, {
+        toValue: 0.9,
+        useNativeDriver: true,
+        damping: 20,
+        stiffness: 90,
+      }),
+      Animated.timing(settingsOpacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setShowSettings(false);
+      // Reset animation values after animation completes
+      settingsTranslateY.setValue(height);
+      settingsScale.setValue(0.9);
+      settingsOpacity.setValue(0);
+    });
+  };
+
+  const toggleSetting = (key) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSettings(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
   };
 
   const renderCard = ({ item, index }) => {
@@ -349,19 +504,7 @@ export default function History() {
           Outfit History
         </Text>
 
-        <TouchableOpacity 
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            setSortBy(sortBy === 'newest' ? 'oldest' : 'newest');
-          }}
-          className="p-2"
-        >
-          <Ionicons 
-            name={sortBy === 'newest' ? 'arrow-down' : 'arrow-up'} 
-            size={24} 
-            color="#FFFFFF" 
-          />
-        </TouchableOpacity>
+        <View className="w-10" />
       </View>
 
       {/* Outfit Cards */}

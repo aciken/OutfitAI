@@ -69,7 +69,7 @@ export default function Signin() {
 
 
     console.log(email, password);
-      axios.post('https://3930-109-245-193-150.ngrok-free.app/signin', { email, password })
+      axios.post('https://546f-109-245-193-150.ngrok-free.app/signin', { email, password })
       .then((response) => {
         if(response.status === 200) {
           setUser(response.data);
@@ -92,15 +92,15 @@ export default function Signin() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <StatusBar barStyle="dark-content" />
+    <SafeAreaView className="flex-1 bg-[#1A0D2E]">
+      <StatusBar barStyle="light-content" />
       
       {/* Close button */}
       <TouchableOpacity 
         className="absolute top-12 right-6 z-10" 
         onPress={() => router.back()}
       >
-        <Ionicons name="close" size={24} color="#000" />
+        <Ionicons name="close" size={24} color="#C07EFF" />
       </TouchableOpacity>
 
       <KeyboardAvoidingView 
@@ -116,19 +116,19 @@ export default function Signin() {
             }}
           >
             {/* Welcome Text */}
-            <Text className="text-black text-4xl font-bold mb-2 text-center">
+            <Text className="text-white text-4xl font-bold mb-2 text-center">
               Welcome back
             </Text>
-            <Text className="text-gray-600 text-xl mb-10 text-center">
+            <Text className="text-gray-300 text-xl mb-10 text-center">
               Let's get you in to your journal
             </Text>
             
             {/* Input Fields */}
             <View className="mb-3">
               <TextInput
-                className="bg-gray-100 text-black py-3 px-5 rounded-full text-base"
+                className="bg-[#2A1B3E] text-white py-3 px-5 rounded-full text-base border border-[rgba(192,126,255,0.15)]"
                 placeholder="Your Email"
-                placeholderTextColor="#888"
+                placeholderTextColor="#9CA3AF"
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -138,9 +138,9 @@ export default function Signin() {
             
             <View className="mb-2">
               <TextInput
-                className="bg-gray-100 text-black py-3 px-5 rounded-full text-base"
+                className="bg-[#2A1B3E] text-white py-3 px-5 rounded-full text-base border border-[rgba(192,126,255,0.15)]"
                 placeholder="Your Password"
-                placeholderTextColor="#888"
+                placeholderTextColor="#9CA3AF"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -149,7 +149,7 @@ export default function Signin() {
             
             {/* Forgot Password */}
             <TouchableOpacity className="mb-8">
-              <Text className="text-gray-600 text-center">
+              <Text className="text-gray-300 text-center">
                 Forgot password?
               </Text>
             </TouchableOpacity>
@@ -158,6 +158,13 @@ export default function Signin() {
             <TouchableOpacity 
               className="rounded-full mb-6 overflow-hidden"
               onPress={handleSignIn}
+              style={{
+                shadowColor: "#C07EFF",
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.3,
+                shadowRadius: 10,
+                elevation: 5,
+              }}
             >
               <LinearGradient
                 colors={['#8A2BE2', '#A020F0', '#9370DB']}
@@ -173,17 +180,17 @@ export default function Signin() {
             
             {/* Divider */}
             <View className="flex-row items-center mb-6">
-              <View className="flex-1 h-[1px] bg-gray-300" />
-              <Text className="text-gray-600 mx-4">or</Text>
-              <View className="flex-1 h-[1px] bg-gray-300" />
+              <View className="flex-1 h-[1px] bg-[rgba(192,126,255,0.15)]" />
+              <Text className="text-gray-300 mx-4">or</Text>
+              <View className="flex-1 h-[1px] bg-[rgba(192,126,255,0.15)]" />
             </View>
             
             {/* Continue with Google */}
             <TouchableOpacity 
-              className="bg-gray-200 py-3 rounded-full mb-6 flex-row justify-center items-center"
+              className="bg-[#2A1B3E] py-3 rounded-full mb-6 flex-row justify-center items-center border border-[rgba(192,126,255,0.15)]"
             >
-              <Ionicons name="logo-google" size={18} color="#333" style={{ marginRight: 8 }} />
-              <Text className="text-gray-800 text-center text-base">
+              <Ionicons name="logo-google" size={18} color="#C07EFF" style={{ marginRight: 8 }} />
+              <Text className="text-white text-center text-base">
                 Continue with Google
               </Text>
             </TouchableOpacity>
@@ -193,8 +200,8 @@ export default function Signin() {
               className="mb-8"
               onPress={() =>{ router.back();router.push('/modal/signup')}}
             >
-              <Text className="text-gray-600 text-center">
-                Don't have an account? <Text className="text-purple-600">Sign up</Text>
+              <Text className="text-gray-300 text-center">
+                Don't have an account? <Text className="text-[#C07EFF]">Sign up</Text>
               </Text>
             </TouchableOpacity>
           </Animated.View>

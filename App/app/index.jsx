@@ -11,17 +11,17 @@ import { useRouter } from 'expo-router';
 // Get screen dimensions for responsive sizing
 const { width, height } = Dimensions.get('window');
 
-// Updated icons using Ionicons with black color for light theme
+// Updated icons using Ionicons with light color for dark theme
 const ChartIcon = () => (
-  <Ionicons name="analytics-outline" size={22} color="#333" />
+  <Ionicons name="analytics-outline" size={22} color="#C07EFF" />
 );
 
 const AnalyticsIcon = () => (
-  <Ionicons name="bar-chart-outline" size={22} color="#333" />
+  <Ionicons name="bar-chart-outline" size={22} color="#C07EFF" />
 );
 
 const PersonalizedIcon = () => (
-  <Ionicons name="sparkles-outline" size={22} color="#333" />
+  <Ionicons name="sparkles-outline" size={22} color="#C07EFF" />
 );
 
 export default function WelcomePage() {
@@ -66,8 +66,8 @@ export default function WelcomePage() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <StatusBar style="dark" />
+    <SafeAreaView className="flex-1 bg-[#1A0D2E]">
+      <StatusBar style="light" />
       
       <Animated.View 
         className="flex-1 px-6 justify-between"
@@ -93,21 +93,21 @@ export default function WelcomePage() {
 
         {/* Bottom Section - Welcome Text and Buttons */}
         <View className="w-full items-center mb-10">
-          <Text className="text-black text-4xl font-bold mb-3 text-center">
-            App Name
+          <Text className="text-white text-4xl font-bold mb-3 text-center">
+            OutfitAI
           </Text>
           
-          <Text className="text-gray-700 text-center text-lg mb-10">
-            Your app's description goes here. Highlight main features and benefits.
+          <Text className="text-gray-300 text-center text-lg mb-10">
+            Your personal style assistant. Create, organize, and explore your perfect outfits.
           </Text>
           
           <Link href="/onboarding/gender" asChild>
             <TouchableOpacity 
               className="w-full rounded-full mb-4 overflow-hidden"
               style={{
-                shadowColor: "#000",
+                shadowColor: "#C07EFF",
                 shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.1,
+                shadowOpacity: 0.3,
                 shadowRadius: 10,
                 elevation: 5,
               }}
@@ -127,8 +127,8 @@ export default function WelcomePage() {
           
           <Link href="/modal/signin" asChild>
             <TouchableOpacity>
-              <Text className="text-gray-600 text-center text-base">
-                Already have an account? <Text className="text-purple-600">Sign in</Text>
+              <Text className="text-gray-300 text-center text-base">
+                Already have an account? <Text className="text-[#C07EFF]">Sign in</Text>
               </Text>
             </TouchableOpacity>
           </Link>
@@ -140,12 +140,12 @@ export default function WelcomePage() {
 
 const FeatureItem = ({ icon, title, description }) => (
   <View className="flex-row items-start space-x-4">
-    <View className="bg-gray-200 w-10 h-10 rounded-lg items-center justify-center">
+    <View className="bg-[#2A1B3E] w-10 h-10 rounded-lg items-center justify-center">
       {icon}
     </View>
     <View className="flex-1">
-      <Text className="text-base font-medium text-black mb-1">{title}</Text>
-      <Text className="text-gray-600 text-sm">{description}</Text>
+      <Text className="text-base font-medium text-white mb-1">{title}</Text>
+      <Text className="text-gray-300 text-sm">{description}</Text>
     </View>
   </View>
 );

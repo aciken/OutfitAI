@@ -17,7 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 // Reusable component for section headers
 const SectionHeader = ({ title }) => (
-  <Text className="text-xs font-semibold text-gray-500 uppercase mt-6 mb-2 px-1">
+  <Text className="text-xs font-semibold text-gray-400 uppercase mt-6 mb-2 px-1">
     {title}
   </Text>
 );
@@ -25,15 +25,15 @@ const SectionHeader = ({ title }) => (
 // Reusable component for settings options
 const SettingOption = ({ icon, text, onPress }) => (
   <TouchableOpacity 
-    className="flex-row items-center bg-white p-4 rounded-lg my-1"
+    className="flex-row items-center bg-[#1A0D2E] p-4 rounded-lg my-1"
     style={{
-      shadowColor: '#000',
+      shadowColor: '#8A2BE2',
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.1,
       shadowRadius: 2,
       elevation: 2,
       borderWidth: 1,
-      borderColor: 'rgba(0, 0, 0, 0.05)',
+      borderColor: 'rgba(192, 126, 255, 0.15)',
     }}
     onPress={onPress || (() => console.log(`${text} pressed`))}
   >
@@ -41,15 +41,15 @@ const SettingOption = ({ icon, text, onPress }) => (
       width: 32, 
       height: 32, 
       borderRadius: 16, 
-      backgroundColor: 'rgba(138, 43, 226, 0.1)', 
+      backgroundColor: 'rgba(192, 126, 255, 0.1)', 
       alignItems: 'center', 
       justifyContent: 'center',
       marginRight: 12
     }}>
-      <Ionicons name={icon} size={18} color="#8A2BE2" />
+      <Ionicons name={icon} size={18} color="#C07EFF" />
     </View>
-    <Text className="text-base text-gray-800 flex-1">{text}</Text> 
-    <Ionicons name="chevron-forward-outline" size={18} color="#8A2BE2" />
+    <Text className="text-base text-white flex-1">{text}</Text> 
+    <Ionicons name="chevron-forward-outline" size={18} color="#C07EFF" />
   </TouchableOpacity>
 );
 
@@ -91,21 +91,21 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <StatusBar barStyle="dark-content" />
+    <SafeAreaView className="flex-1 bg-[#1A0D2E]">
+      <StatusBar barStyle="light-content" />
 
       {/* Header */}
-      <View className="flex-row items-center justify-between px-4 pt-5 pb-4 border-b border-gray-100">
-        <Text className="text-xl font-bold text-gray-800">Settings</Text>
+      <View className="flex-row items-center justify-between px-4 pt-5 pb-4 border-b border-[rgba(192,126,255,0.15)]">
+        <Text className="text-xl font-bold text-white">Settings</Text>
         <TouchableOpacity 
           onPress={() => router.back()}
           style={{
             borderRadius: 18,
-            backgroundColor: 'rgba(138, 43, 226, 0.1)',
+            backgroundColor: 'rgba(192, 126, 255, 0.1)',
             padding: 8,
           }}
         >
-          <Ionicons name="close" size={20} color="#8A2BE2" /> 
+          <Ionicons name="close" size={20} color="#C07EFF" /> 
         </TouchableOpacity>
       </View>
 

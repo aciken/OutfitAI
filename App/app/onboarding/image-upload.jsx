@@ -134,11 +134,11 @@ export default function ImageUploadPage() {
         options={{
           headerShown: true,
           headerTitleAlign: 'center',
-          headerStyle: { backgroundColor: '#fff', height: 80 },
-          headerTintColor: '#333',
+          headerStyle: { backgroundColor: '#1A0D2E', height: 80 },
+          headerTintColor: '#fff',
           headerLeft: () => (
             <TouchableOpacity onPress={() => router.back()} style={{ marginLeft: 15, padding: 5 }}>
-              <Ionicons name="arrow-back" size={24} color="#333" />
+              <Ionicons name="arrow-back" size={24} color="#C07EFF" />
             </TouchableOpacity>
           ),
           headerTitle: () => (
@@ -165,7 +165,7 @@ export default function ImageUploadPage() {
                   <Image source={{ uri: selectedImage }} style={styles.previewImage} />
               ) : (
                   <View style={styles.imagePlaceholder}>
-                      <Ionicons name="person-outline" size={80} color="#C0C0C0" />
+                      <Ionicons name="person-outline" size={80} color="#C07EFF" />
                       <Text style={styles.imagePlaceholderText}>Tap to Add Image</Text>
                   </View>
               )}
@@ -181,7 +181,7 @@ export default function ImageUploadPage() {
                 disabled={!selectedImage}
             >
                 <LinearGradient
-                    colors={selectedImage ? ['#8A2BE2', '#A020F0'] : ['#D3D3D3', '#C0C0C0']}
+                    colors={selectedImage ? ['#8A2BE2', '#A020F0'] : ['#3D2A5D', '#2A1B3E']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.nextButton}
@@ -204,7 +204,7 @@ export default function ImageUploadPage() {
             activeOpacity={1}
             onPressOut={() => setIsOptionsModalVisible(false)}
         >
-            <BlurView intensity={70} tint="light" style={StyleSheet.absoluteFill} />
+            <BlurView intensity={70} tint="dark" style={StyleSheet.absoluteFill} />
             <View style={styles.modalContentContainer} onStartShouldSetResponder={() => true}>
                 <Text style={styles.modalTitle}>Upload Image</Text>
                 <Text style={styles.modalSubtitle}>Choose how you'd like to add your image.</Text>
@@ -214,9 +214,9 @@ export default function ImageUploadPage() {
                   onPress={handleChooseFromLibrary}
                   activeOpacity={0.8}
                 >
-                  <Ionicons name="images-outline" size={26} color="#8A2BE2" style={styles.modalOptionIcon} />
+                  <Ionicons name="images-outline" size={26} color="#C07EFF" style={styles.modalOptionIcon} />
                   <Text style={styles.modalOptionText}>Choose from Library</Text>
-                  <Ionicons name="chevron-forward" size={22} color="#B0B0B0" />
+                  <Ionicons name="chevron-forward" size={22} color="#C07EFF" />
                 </TouchableOpacity>
                 
                 <TouchableOpacity
@@ -224,9 +224,9 @@ export default function ImageUploadPage() {
                   onPress={handleTakePhoto}
                   activeOpacity={0.8}
                 >
-                  <Ionicons name="camera-outline" size={26} color="#8A2BE2" style={styles.modalOptionIcon} />
+                  <Ionicons name="camera-outline" size={26} color="#C07EFF" style={styles.modalOptionIcon} />
                   <Text style={styles.modalOptionText}>Take Photo</Text>
-                  <Ionicons name="chevron-forward" size={22} color="#B0B0B0" />
+                  <Ionicons name="chevron-forward" size={22} color="#C07EFF" />
                 </TouchableOpacity>
                 
                 <TouchableOpacity
@@ -247,7 +247,7 @@ export default function ImageUploadPage() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F7F7F7',
+    backgroundColor: '#1A0D2E',
   },
   customHeaderTitleContainer: {
     alignItems: 'center',
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
   customHeaderTitleText: {
     fontSize: 17,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#fff',
     textAlign: 'center',
     marginBottom: 6,
   },
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: '#EAEAEA',
+    backgroundColor: '#2A1B3E',
     width: width * 0.6,
   },
   headerProgressStep: {
@@ -274,77 +274,88 @@ const styles = StyleSheet.create({
     marginRight: 1,
   },
   activeHeaderProgressStep: {
-    backgroundColor: '#8A2BE2',
+    backgroundColor: '#C07EFF',
   },
   inactiveHeaderProgressStep: {
     backgroundColor: 'transparent',
   },
   container: {
     flex: 1,
+    padding: 20,
     justifyContent: 'space-between',
   },
   content: {
-    flex: 1,
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 10,
+    flex: 1,
+    justifyContent: 'center',
   },
   title: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#fff',
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: 15,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: '#C0C0C0',
     textAlign: 'center',
-    marginBottom: 25,
+    marginBottom: 30,
     lineHeight: 22,
   },
   imagePreviewContainer: {
-    width: width * 0.7,
-    height: width * 0.85,
+    width: width * 0.8,
+    height: width * 1.3, // Maintain 4:5 ratio for image preview
     borderRadius: 15,
-    backgroundColor: '#ECECEC',
+    overflow: 'hidden',
+    backgroundColor: '#2A1B3E',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
-    overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#D0D0D0',
-  },
-  imagePlaceholder: {
-    alignItems: 'center',
-  },
-  imagePlaceholderText: {
-      marginTop: 8,
-      color: '#777',
-      fontSize: 15,
-      fontWeight: '500'
+    borderColor: 'rgba(192,126,255,0.2)',
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   previewImage: {
     width: '100%',
     height: '100%',
+    resizeMode: 'cover',
+  },
+  imagePlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    height: '100%',
+  },
+  imagePlaceholderText: {
+    marginTop: 15,
+    fontSize: 16,
+    color: '#C07EFF',
+    textAlign: 'center',
   },
   imageNote: {
-      fontSize: 13,
-      color: '#888',
-      textAlign: 'center',
-      marginTop: 10,
-      marginBottom: 10,
+    fontSize: 14,
+    color: '#C0C0C0',
+    textAlign: 'center',
+    marginTop: 5,
+    fontStyle: 'italic',
   },
   footer: {
-    padding: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#ECECEC',
-    paddingBottom: 30,
+    paddingBottom: 10,
+    width: '100%',
   },
   nextButtonWrapper: {
     borderRadius: 25,
     overflow: 'hidden',
+    shadowColor: "#C07EFF",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 5,
   },
   nextButton: {
     paddingVertical: 15,
@@ -363,65 +374,65 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
   },
   modalContentContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    width: width * 0.85,
+    backgroundColor: '#2A1B3E',
     borderRadius: 20,
-    paddingVertical: 25,
-    paddingHorizontal: 20,
-    width: '88%',
-    maxWidth: 380,
-    alignItems: 'stretch',
-    shadowColor: "#000",
+    padding: 25,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.15,
-    shadowRadius: 15,
-    elevation: 10,
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 5,
+    borderColor: 'rgba(192,126,255,0.2)',
+    borderWidth: 1,
   },
   modalTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#2C2C2C',
+    color: '#fff',
     marginBottom: 8,
     textAlign: 'center',
   },
   modalSubtitle: {
-    fontSize: 15,
-    color: '#555555',
+    fontSize: 16,
+    color: '#C0C0C0',
     marginBottom: 25,
     textAlign: 'center',
-    lineHeight: 20,
   },
   modalOptionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 18,
-    paddingHorizontal: 15,
+    paddingVertical: 16,
+    paddingHorizontal: 5,
+    backgroundColor: '#3D2A5D',
     borderRadius: 12,
-    marginBottom: 12,
+    marginBottom: 15,
+    borderColor: 'rgba(192,126,255,0.2)',
     borderWidth: 1,
-    borderColor: '#EAEAEA',
   },
   modalOptionIcon: {
     marginRight: 15,
+    marginLeft: 10,
   },
   modalOptionText: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 17,
+    color: '#fff',
     fontWeight: '500',
-    color: '#333333',
   },
   modalCancelButton: {
-    marginTop: 15,
-    paddingVertical: 14,
+    padding: 15,
     borderRadius: 12,
-    backgroundColor: 'rgba(0,0,0,0.05)',
+    backgroundColor: 'rgba(192,126,255,0.1)',
+    alignItems: 'center',
+    marginTop: 5,
   },
   modalCancelButtonText: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#777777',
-    textAlign: 'center',
+    color: '#C07EFF',
+    fontWeight: '600',
   },
 }); 
