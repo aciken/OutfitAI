@@ -251,9 +251,9 @@ export default function Home() {
       // Collapse current section with spring animation
       const collapseConfig = {
         toValue: 0,
-        damping: 15,
+        damping: 20, // Increased from 15 for slower collapse
         mass: 0.9,
-        stiffness: 100,
+        stiffness: 80, // Reduced from 100 for slower collapse
         overshootClamping: true,
         restDisplacementThreshold: 0.01,
         restSpeedThreshold: 0.01,
@@ -270,9 +270,9 @@ export default function Home() {
       // Expand new section after a short delay with spring animation
       const expandConfig = {
         toValue: 1,
-        damping: 17,
+        damping: 22, // Increased from 17 for slower expansion
         mass: 1,
-        stiffness: 80,
+        stiffness: 65, // Reduced from 80 for slower expansion
         overshootClamping: false,
         restDisplacementThreshold: 0.01,
         restSpeedThreshold: 0.01,
@@ -286,7 +286,7 @@ export default function Home() {
         } else if (section === 'color') {
           Animated.spring(colorSectionHeight, expandConfig).start();
         }
-      }, 100); // Correct 100ms delay for spring animation
+      }, 100);
       
       setExpandedSection(section);
     }
@@ -796,7 +796,20 @@ export default function Home() {
           </Animated.View>
           
           {/* Footer Actions - ensure styles are correct */}
-          <Animated.View style={styles.footerActionsContainer}>
+          <Animated.View style={[
+            styles.footerActionsContainer,
+            {
+              transform: [
+                {
+                  translateY: modalAnimation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [50, 0]
+                  })
+                }
+              ],
+              opacity: modalAnimation
+            }
+          ]}>
             <TouchableOpacity onPress={() => console.log('Clear all filters')} activeOpacity={0.6}>
               <Text style={styles.clearAllText}>Clear all</Text>
             </TouchableOpacity>
