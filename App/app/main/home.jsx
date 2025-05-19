@@ -468,29 +468,6 @@ export default function Home() {
     );
   };
 
-  // Add this near the top of the component, with other state declarations
-  const borderAnimation = useRef(new Animated.Value(0)).current;
-
-  // Update the animation useEffect
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(borderAnimation, {
-          toValue: 1,
-          duration: 2000,
-          useNativeDriver: true,
-          easing: Easing.linear,
-        }),
-        Animated.timing(borderAnimation, {
-          toValue: 0,
-          duration: 2000,
-          useNativeDriver: true,
-          easing: Easing.linear,
-        }),
-      ])
-    ).start();
-  }, []);
-
   return (
     <SafeAreaView className="flex-1 bg-[#1A0D2E]">
       <StatusBar barStyle="light-content" />
@@ -514,7 +491,7 @@ export default function Home() {
           onPress={() => console.log('Upgrade pressed')}
           activeOpacity={0.7}
         >
-          <Animated.View 
+          <View 
             style={{
               position: 'absolute',
               top: 0,
@@ -523,14 +500,7 @@ export default function Home() {
               bottom: 0,
               borderRadius: 20,
               borderWidth: 1.5,
-              borderColor: borderAnimation.interpolate({
-                inputRange: [0, 0.5, 1],
-                outputRange: [
-                  'rgba(192, 126, 255, 0.3)',
-                  'rgba(255, 255, 255, 0.5)',
-                  'rgba(192, 126, 255, 0.3)'
-                ]
-              }),
+              borderColor: 'rgba(192, 126, 255, 0.5)',
             }}
           />
           <LinearGradient
@@ -554,16 +524,6 @@ export default function Home() {
           right: 0,
           zIndex: -1
         }}>
-          <Image 
-            source={HangerIconImage} 
-            style={{ 
-              width: 50,
-              height: 50,
-              marginRight: 2,
-              tintColor: '#FFFFFF'
-            }}
-            resizeMode="contain"
-          />
           <Text 
             className="text-2xl font-bold"
             style={{
@@ -738,7 +698,7 @@ export default function Home() {
           onPress={() => {
             console.log("History button pressed!"); // Add log for debugging
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            router.push('/modal/history'); 
+            router.push('/main/history'); 
           }}
           activeOpacity={0.7}
           style={{
