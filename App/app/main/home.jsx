@@ -719,36 +719,42 @@ export default function Home() {
                   overflow: 'hidden',
                   transform: [{ scale: searchSectionHeight.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] }) }]
               }}>
-                <View style={{ padding: 20, height: 330 }}>
-                  <View style={styles.searchInputContainer}>
-                    <Ionicons name="search" size={22} color="#A0A0A0" style={{ marginHorizontal: 12 }} />
-                    <TextInput style={styles.searchInput} placeholder="Search clothing items" placeholderTextColor="#A0A0A0" autoCapitalize="none" />
-                  </View>
-                  
-                  {/* Popular Searches */}
-                  <View style={{ marginTop: 20 }}>
-                    <Text style={styles.sectionTitle}>Popular Searches</Text>
-                    <View style={styles.searchTagsContainer}>
-                      {['Summer Outfits', 'Casual Style', 'Formal Wear', 'Street Fashion', 'Minimalist', 'Vintage'].map((tag, index) => (
-                        <TouchableOpacity key={index} style={styles.searchTag}>
-                          <Text style={styles.searchTagText}>{tag}</Text>
-                        </TouchableOpacity>
-                      ))}
+                <View style={{ height: 330 }}>
+                  {/* Fixed Search Input */}
+                  <View style={{ padding: 20, paddingBottom: 0 }}>
+                    <View style={styles.searchInputContainer}>
+                      <Ionicons name="search" size={22} color="#A0A0A0" style={{ marginHorizontal: 12 }} />
+                      <TextInput style={styles.searchInput} placeholder="Search clothing items" placeholderTextColor="#A0A0A0" autoCapitalize="none" />
                     </View>
                   </View>
 
-                  {/* Recent Searches */}
-                  <View style={{ marginTop: 20 }}>
-                    <Text style={styles.sectionTitle}>Recent Searches</Text>
-                    <View style={styles.recentSearchesContainer}>
-                      {['Blue Denim Jacket', 'White Sneakers', 'Black Dress', 'Leather Boots'].map((search, index) => (
-                        <TouchableOpacity key={index} style={styles.recentSearchItem}>
-                          <Ionicons name="time-outline" size={18} color="#A0A0A0" style={{ marginRight: 8 }} />
-                          <Text style={styles.recentSearchText}>{search}</Text>
-                        </TouchableOpacity>
-                      ))}
+                  {/* Scrollable Content */}
+                  <ScrollView style={{ flex: 1, paddingHorizontal: 20 }}>
+                    {/* Popular Searches */}
+                    <View style={{ marginTop: 20 }}>
+                      <Text style={styles.sectionTitle}>Popular Searches</Text>
+                      <View style={styles.searchTagsContainer}>
+                        {['Summer Outfits', 'Casual Style', 'Formal Wear', 'Street Fashion', 'Minimalist', 'Vintage'].map((tag, index) => (
+                          <TouchableOpacity key={index} style={styles.searchTag}>
+                            <Text style={styles.searchTagText}>{tag}</Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
                     </View>
-                  </View>
+
+                    {/* Recent Searches */}
+                    <View style={{ marginTop: 20, marginBottom: 20 }}>
+                      <Text style={styles.sectionTitle}>Recent Searches</Text>
+                      <View style={styles.recentSearchesContainer}>
+                        {['Blue Denim Jacket', 'White Sneakers', 'Black Dress', 'Leather Boots'].map((search, index) => (
+                          <TouchableOpacity key={index} style={styles.recentSearchItem}>
+                            <Ionicons name="time-outline" size={18} color="#A0A0A0" style={{ marginRight: 8 }} />
+                            <Text style={styles.recentSearchText}>{search}</Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    </View>
+                  </ScrollView>
                 </View>
               </Animated.View>
             </BlurView>
