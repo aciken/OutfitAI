@@ -68,15 +68,15 @@ export default function Home() {
   
   // Search modal state and animation values
   const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
-  const [expandedSection, setExpandedSection] = useState('search'); // 'search', 'type', or 'color'
+  const [expandedSection, setExpandedSection] = useState('search'); // 'search', 'style', or 'occasion'
   const searchButtonRef = useRef(null);
   const [buttonPosition, setButtonPosition] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const modalAnimation = useRef(new Animated.Value(0)).current;
   
   // Animation values for each section's expansion
   const searchSectionHeight = useRef(new Animated.Value(expandedSection === 'search' ? 1 : 0)).current;
-  const typeSectionHeight = useRef(new Animated.Value(expandedSection === 'type' ? 1 : 0)).current;
-  const colorSectionHeight = useRef(new Animated.Value(expandedSection === 'color' ? 1 : 0)).current;
+  const styleSectionHeight = useRef(new Animated.Value(expandedSection === 'style' ? 1 : 0)).current;
+  const occasionSectionHeight = useRef(new Animated.Value(expandedSection === 'occasion' ? 1 : 0)).current;
   
   // Updated sample data structure for cards
   const [cards] = useState([
@@ -251,9 +251,9 @@ export default function Home() {
       // Collapse current section with spring animation
       const collapseConfig = {
         toValue: 0,
-        damping: 20, // Increased from 15 for slower collapse
+        damping: 20,
         mass: 0.9,
-        stiffness: 80, // Reduced from 100 for slower collapse
+        stiffness: 80,
         overshootClamping: true,
         restDisplacementThreshold: 0.01,
         restSpeedThreshold: 0.01,
@@ -261,18 +261,18 @@ export default function Home() {
       };
       if (expandedSection === 'search') {
         Animated.spring(searchSectionHeight, collapseConfig).start();
-      } else if (expandedSection === 'type') {
-        Animated.spring(typeSectionHeight, collapseConfig).start();
-      } else if (expandedSection === 'color') {
-        Animated.spring(colorSectionHeight, collapseConfig).start();
+      } else if (expandedSection === 'style') {
+        Animated.spring(styleSectionHeight, collapseConfig).start();
+      } else if (expandedSection === 'occasion') {
+        Animated.spring(occasionSectionHeight, collapseConfig).start();
       }
       
       // Expand new section after a short delay with spring animation
       const expandConfig = {
         toValue: 1,
-        damping: 22, // Increased from 17 for slower expansion
+        damping: 22,
         mass: 1,
-        stiffness: 65, // Reduced from 80 for slower expansion
+        stiffness: 65,
         overshootClamping: false,
         restDisplacementThreshold: 0.01,
         restSpeedThreshold: 0.01,
@@ -281,10 +281,10 @@ export default function Home() {
       setTimeout(() => {
         if (section === 'search') {
           Animated.spring(searchSectionHeight, expandConfig).start();
-        } else if (section === 'type') {
-          Animated.spring(typeSectionHeight, expandConfig).start();
-        } else if (section === 'color') {
-          Animated.spring(colorSectionHeight, expandConfig).start();
+        } else if (section === 'style') {
+          Animated.spring(styleSectionHeight, expandConfig).start();
+        } else if (section === 'occasion') {
+          Animated.spring(occasionSectionHeight, expandConfig).start();
         }
       }, 100);
       
@@ -724,12 +724,37 @@ export default function Home() {
                     <Ionicons name="search" size={22} color="#A0A0A0" style={{ marginHorizontal: 12 }} />
                     <TextInput style={styles.searchInput} placeholder="Search clothing items" placeholderTextColor="#A0A0A0" autoCapitalize="none" />
                   </View>
+                  
+                  {/* Popular Searches */}
+                  <View style={{ marginTop: 20 }}>
+                    <Text style={styles.sectionTitle}>Popular Searches</Text>
+                    <View style={styles.searchTagsContainer}>
+                      {['Summer Outfits', 'Casual Style', 'Formal Wear', 'Street Fashion', 'Minimalist', 'Vintage'].map((tag, index) => (
+                        <TouchableOpacity key={index} style={styles.searchTag}>
+                          <Text style={styles.searchTagText}>{tag}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+
+                  {/* Recent Searches */}
+                  <View style={{ marginTop: 20 }}>
+                    <Text style={styles.sectionTitle}>Recent Searches</Text>
+                    <View style={styles.recentSearchesContainer}>
+                      {['Blue Denim Jacket', 'White Sneakers', 'Black Dress', 'Leather Boots'].map((search, index) => (
+                        <TouchableOpacity key={index} style={styles.recentSearchItem}>
+                          <Ionicons name="time-outline" size={18} color="#A0A0A0" style={{ marginRight: 8 }} />
+                          <Text style={styles.recentSearchText}>{search}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
                 </View>
               </Animated.View>
             </BlurView>
           </Animated.View>
 
-          {/* Type of Clothes Panel - ensure styles are correct */}
+          {/* Style Preferences Panel */}
           <Animated.View style={{
             marginHorizontal: 20, marginBottom: 15,
             transform: [
@@ -739,30 +764,94 @@ export default function Home() {
             opacity: modalAnimation,
           }}>
             <BlurView intensity={90} tint="dark" style={styles.searchPanelBlurView}> 
-              <TouchableOpacity style={[styles.sectionHeader, expandedSection === 'type' ? styles.expandedHeader : styles.collapsedHeader]} activeOpacity={0.8} onPress={() => toggleSection('type')}>
+              <TouchableOpacity style={[styles.sectionHeader, expandedSection === 'style' ? styles.expandedHeader : styles.collapsedHeader]} activeOpacity={0.8} onPress={() => toggleSection('style')}>
                 <View style={styles.sectionHeaderContent}>
-                  <Ionicons name="shirt-outline" size={expandedSection === 'type' ? 24 : 20} color="#FFF" style={{ marginRight: 8 }} />
-                  <Text style={[styles.sectionHeaderText, expandedSection === 'type' ? styles.expandedHeaderText : styles.collapsedHeaderText]}>Type Of Clothes</Text>
+                  <Ionicons name="brush-outline" size={expandedSection === 'style' ? 24 : 20} color="#FFF" style={{ marginRight: 8 }} />
+                  <Text style={[styles.sectionHeaderText, expandedSection === 'style' ? styles.expandedHeaderText : styles.collapsedHeaderText]}>Style Preferences</Text>
                 </View>
-                {expandedSection !== 'type' && <Text style={styles.sectionSubtext}>Tops, bottoms, dresses, accessories</Text>}
+                {expandedSection !== 'style' && <Text style={styles.sectionSubtext}>Choose your fashion style</Text>}
               </TouchableOpacity>
               <Animated.View style={{
-                  maxHeight: typeSectionHeight.interpolate({ inputRange: [0, 1], outputRange: [0, 350] }),
-                  height: typeSectionHeight.interpolate({ inputRange: [0, 1], outputRange: [0, 350] }),
-                  opacity: typeSectionHeight,
+                  maxHeight: styleSectionHeight.interpolate({ inputRange: [0, 1], outputRange: [0, 350] }),
+                  height: styleSectionHeight.interpolate({ inputRange: [0, 1], outputRange: [0, 350] }),
+                  opacity: styleSectionHeight,
                   overflow: 'hidden',
-                  transform: [{ scale: typeSectionHeight.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] }) }]
+                  transform: [{ scale: styleSectionHeight.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] }) }]
               }}>
-                 <View style={{ padding: 20, height: 330 }}>
+                <View style={{ padding: 20, height: 330 }}>
                   <ScrollView style={{ maxHeight: 310 }}>
-                    {/* Options... */}
+                    {/* Minimalist */}
+                    <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
+                      <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
+                        <Ionicons name="apps-outline" size={24} color="#C07EFF" />
+                      </View>
+                      <View style={styles.optionTextContainer}>
+                        <Text style={styles.optionTitle}>Minimalist</Text>
+                        <Text style={styles.optionSubtitle}>Clean lines, neutral colors, simple designs</Text>
+                      </View>
+                    </TouchableOpacity>
+
+                    {/* Street Style */}
+                    <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
+                      <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
+                        <Ionicons name="walk-outline" size={24} color="#C07EFF" />
+                      </View>
+                      <View style={styles.optionTextContainer}>
+                        <Text style={styles.optionTitle}>Street Style</Text>
+                        <Text style={styles.optionSubtitle}>Urban, casual, trendy streetwear</Text>
+                      </View>
+                    </TouchableOpacity>
+
+                    {/* Classic */}
+                    <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
+                      <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
+                        <Ionicons name="diamond-outline" size={24} color="#C07EFF" />
+                      </View>
+                      <View style={styles.optionTextContainer}>
+                        <Text style={styles.optionTitle}>Classic</Text>
+                        <Text style={styles.optionSubtitle}>Timeless pieces, elegant designs</Text>
+                      </View>
+                    </TouchableOpacity>
+
+                    {/* Bohemian */}
+                    <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
+                      <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
+                        <Ionicons name="flower-outline" size={24} color="#C07EFF" />
+                      </View>
+                      <View style={styles.optionTextContainer}>
+                        <Text style={styles.optionTitle}>Bohemian</Text>
+                        <Text style={styles.optionSubtitle}>Free-spirited, artistic, eclectic</Text>
+                      </View>
+                    </TouchableOpacity>
+
+                    {/* Sporty */}
+                    <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
+                      <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
+                        <Ionicons name="fitness-outline" size={24} color="#C07EFF" />
+                      </View>
+                      <View style={styles.optionTextContainer}>
+                        <Text style={styles.optionTitle}>Sporty</Text>
+                        <Text style={styles.optionSubtitle}>Athletic, comfortable, performance wear</Text>
+                      </View>
+                    </TouchableOpacity>
+
+                    {/* Vintage */}
+                    <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
+                      <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
+                        <Ionicons name="time-outline" size={24} color="#C07EFF" />
+                      </View>
+                      <View style={styles.optionTextContainer}>
+                        <Text style={styles.optionTitle}>Vintage</Text>
+                        <Text style={styles.optionSubtitle}>Retro-inspired, nostalgic fashion</Text>
+                      </View>
+                    </TouchableOpacity>
                   </ScrollView>
                 </View>
               </Animated.View>
             </BlurView>
           </Animated.View>
 
-          {/* Color Palette Panel - ensure styles are correct */}
+          {/* Occasion Panel */}
           <Animated.View style={{
             marginHorizontal: 20, marginBottom: 15,
             transform: [
@@ -772,24 +861,88 @@ export default function Home() {
             opacity: modalAnimation,
           }}>
             <BlurView intensity={90} tint="dark" style={styles.searchPanelBlurView}>
-              <TouchableOpacity style={[styles.sectionHeader, expandedSection === 'color' ? styles.expandedHeader : styles.collapsedHeader]} activeOpacity={0.8} onPress={() => toggleSection('color')}>
+              <TouchableOpacity style={[styles.sectionHeader, expandedSection === 'occasion' ? styles.expandedHeader : styles.collapsedHeader]} activeOpacity={0.8} onPress={() => toggleSection('occasion')}>
                 <View style={styles.sectionHeaderContent}>
-                  <Ionicons name="color-palette-outline" size={expandedSection === 'color' ? 24 : 20} color="#FFF" style={{ marginRight: 8 }} />
-                  <Text style={[styles.sectionHeaderText, expandedSection === 'color' ? styles.expandedHeaderText : styles.collapsedHeaderText]}>Color Palette</Text>
+                  <Ionicons name="calendar-outline" size={expandedSection === 'occasion' ? 24 : 20} color="#FFF" style={{ marginRight: 8 }} />
+                  <Text style={[styles.sectionHeaderText, expandedSection === 'occasion' ? styles.expandedHeaderText : styles.collapsedHeaderText]}>Occasion</Text>
                 </View>
-                {expandedSection !== 'color' && <Text style={styles.sectionSubtext}>Select colors for your outfit</Text>}
+                {expandedSection !== 'occasion' && <Text style={styles.sectionSubtext}>Select the event or occasion</Text>}
               </TouchableOpacity>
               <Animated.View style={{
-                  maxHeight: colorSectionHeight.interpolate({ inputRange: [0, 1], outputRange: [0, 350] }),
-                  height: colorSectionHeight.interpolate({ inputRange: [0, 1], outputRange: [0, 350] }),
-                  opacity: colorSectionHeight,
+                  maxHeight: occasionSectionHeight.interpolate({ inputRange: [0, 1], outputRange: [0, 350] }),
+                  height: occasionSectionHeight.interpolate({ inputRange: [0, 1], outputRange: [0, 350] }),
+                  opacity: occasionSectionHeight,
                   overflow: 'hidden',
-                  transform: [{ scale: colorSectionHeight.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] }) }]
+                  transform: [{ scale: occasionSectionHeight.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] }) }]
               }}>
                 <View style={{ padding: 20, height: 330 }}>
-                  <View style={styles.colorContainer}>
-                    {/* Colors... */}
-                  </View>
+                  <ScrollView style={{ maxHeight: 310 }}>
+                    {/* Casual Day */}
+                    <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
+                      <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
+                        <Ionicons name="sunny-outline" size={24} color="#C07EFF" />
+                      </View>
+                      <View style={styles.optionTextContainer}>
+                        <Text style={styles.optionTitle}>Casual Day</Text>
+                        <Text style={styles.optionSubtitle}>Everyday wear, comfortable and relaxed</Text>
+                      </View>
+                    </TouchableOpacity>
+
+                    {/* Business */}
+                    <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
+                      <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
+                        <Ionicons name="briefcase-outline" size={24} color="#C07EFF" />
+                      </View>
+                      <View style={styles.optionTextContainer}>
+                        <Text style={styles.optionTitle}>Business</Text>
+                        <Text style={styles.optionSubtitle}>Professional, office-appropriate attire</Text>
+                      </View>
+                    </TouchableOpacity>
+
+                    {/* Evening Out */}
+                    <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
+                      <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
+                        <Ionicons name="moon-outline" size={24} color="#C07EFF" />
+                      </View>
+                      <View style={styles.optionTextContainer}>
+                        <Text style={styles.optionTitle}>Evening Out</Text>
+                        <Text style={styles.optionSubtitle}>Nightlife, dinner, social events</Text>
+                      </View>
+                    </TouchableOpacity>
+
+                    {/* Special Event */}
+                    <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
+                      <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
+                        <Ionicons name="gift-outline" size={24} color="#C07EFF" />
+                      </View>
+                      <View style={styles.optionTextContainer}>
+                        <Text style={styles.optionTitle}>Special Event</Text>
+                        <Text style={styles.optionSubtitle}>Weddings, parties, celebrations</Text>
+                      </View>
+                    </TouchableOpacity>
+
+                    {/* Travel */}
+                    <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
+                      <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
+                        <Ionicons name="airplane-outline" size={24} color="#C07EFF" />
+                      </View>
+                      <View style={styles.optionTextContainer}>
+                        <Text style={styles.optionTitle}>Travel</Text>
+                        <Text style={styles.optionSubtitle}>Comfortable, versatile travel wear</Text>
+                      </View>
+                    </TouchableOpacity>
+
+                    {/* Outdoor */}
+                    <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
+                      <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
+                        <Ionicons name="leaf-outline" size={24} color="#C07EFF" />
+                      </View>
+                      <View style={styles.optionTextContainer}>
+                        <Text style={styles.optionTitle}>Outdoor</Text>
+                        <Text style={styles.optionSubtitle}>Adventure, hiking, outdoor activities</Text>
+                      </View>
+                    </TouchableOpacity>
+                  </ScrollView>
                 </View>
               </Animated.View>
             </BlurView>
@@ -999,5 +1152,80 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 12,
+  },
+  
+  searchTagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 8,
+  },
+  
+  searchTag: {
+    backgroundColor: 'rgba(192, 126, 255, 0.15)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginRight: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(192, 126, 255, 0.3)',
+  },
+  
+  searchTagText: {
+    color: '#C07EFF',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  
+  recentSearchesContainer: {
+    marginTop: 8,
+  },
+  
+  recentSearchItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  
+  recentSearchText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+  },
+  
+  colorSection: {
+    marginBottom: 24,
+  },
+  
+  colorSectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 12,
+  },
+  
+  colorRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -4,
+  },
+  
+  colorCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    margin: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
 });
