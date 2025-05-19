@@ -104,7 +104,7 @@ export default function OutfitDetailsPage() {
       formData.append('prompt', 'Dress the person in the main image using the provided outfit item images. Ensure the outfit looks natural and cohesive. Full body of the person must be visible. Without making the person look weird or deformed, make the person look good in the outfit, without making even a slight change in the persons face, reapat you CANT MAKE ANY CHANGES TO THE FACE IT NEEDS TO LOOK EXACTLY LIKE IN THE PHOTO, same with the new clothes that person wears.');
       formData.append('size', '1024x1024');
       formData.append('n', '1');
-      formData.append('quality', 'high');
+      formData.append('quality', 'medium');
       formData.append('image[]', {
         uri: userImageFileUri,
         name: 'user.png',

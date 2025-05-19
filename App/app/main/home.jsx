@@ -38,12 +38,18 @@ import HealsImage from '../../assets/outfits/heals1.png';
 import Jeans2Image from '../../assets/outfits/jeans2.png'; 
 import Shirt2Image from '../../assets/outfits/shirt2.png';
 import Shoes2Image from '../../assets/outfits/shoes2.png';
+// Import new images for outfit 4
+import PoloImage from '../../assets/outfits/Polo.png';
+import TrousersImage from '../../assets/outfits/trousers.png';
+import Shoes3Image from '../../assets/outfits/Shoes3.png';
 // Placeholder import for the mannequin image for outfit 3 - PLEASE REPLACE with your actual image
 import MannequinOutfit3Image from '../../assets/outfits/outfit3.png'; 
 // Placeholder import for the mannequin image for outfit 1 - PLEASE REPLACE with your actual image
 import MannequinOutfit1Image from '../../assets/outfits/outfit1.png';
 // Placeholder import for the mannequin image for outfit 2 - PLEASE REPLACE with your actual image
 import MannequinOutfit2Image from '../../assets/outfits/outfit2.png';
+// Placeholder import for the mannequin image for outfit 4 - PLEASE REPLACE with your actual image
+import MannequinOutfit4Image from '../../assets/outfits/outfit4.png';
 import PlusIconImage from '../../assets/PlusIcon.png'; // Import the new PlusIcon
 import HangerIconImage from '../../assets/HangerIcon.png'; // Import the hanger icon
 
@@ -125,6 +131,20 @@ export default function Home() {
         { source: Shirt2Image, height: 100, label: 'Graphic Tee' },
         { source: Jeans2Image, height: 100, label: 'Denim Jeans' },
         { source: Shoes2Image, height: 80, label: 'High Tops' }
+      ]
+    },
+    {
+      id: 'outfit4',
+      type: 'outfit',
+      // Display a single mannequin image on the card
+      items: [
+        { source: MannequinOutfit4Image, height: 300 }
+      ],
+      // Store original items for the detail view
+      detailedItems: [
+        { source: PoloImage, height: 100, label: 'Classic Polo' },
+        { source: TrousersImage, height: 110, label: 'Tailored Trousers' },
+        { source: Shoes3Image, height: 80, label: 'Formal Shoes' }
       ]
     }
   ]);
@@ -542,9 +562,6 @@ export default function Home() {
           className="overflow-hidden rounded-full"
           style={{ 
             elevation: 3,
-            backgroundColor: 'rgba(255, 255, 255, 0.1)',
-            borderWidth: 1,
-            borderColor: 'rgba(255, 255, 255, 0.2)',
           }}
           onPress={() => router.push('/modal/settings')}
           activeOpacity={0.7}
