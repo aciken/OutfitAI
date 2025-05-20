@@ -50,7 +50,7 @@ import MannequinOutfit1Image from '../../assets/outfits/outfit1.png';
 import MannequinOutfit2Image from '../../assets/outfits/outfit2.png';
 // Placeholder import for the mannequin image for outfit 4 - PLEASE REPLACE with your actual image
 import MannequinOutfit4Image from '../../assets/outfits/outfit4.png';
-import PlusIconImage from '../../assets/PlusIcon.png'; // Import the new PlusIcon
+import PlusIconImage from '../../assets/PlusIcon2.png'; // Import the new PlusIcon
 import HangerIconImage from '../../assets/HangerIcon.png'; // Import the hanger icon
 
 // Get screen dimensions for responsive sizing
@@ -454,13 +454,16 @@ export default function Home() {
                 pathname: `/outfit/${item.id}`,
                 params: { items: JSON.stringify(itemsToPass) },
               });
-            } else {
-              flatListRef.current?.scrollToIndex({
-                index,
-                animated: true,
-                viewPosition: 0.5,
-              });
-            }
+            }   else if (item.type === 'create') {
+    // Navigate to the create options page
+    router.push('/create/options');
+  } else {
+    flatListRef.current?.scrollToIndex({
+      index,
+      animated: true,
+      viewPosition: 0.5,
+    });
+  }
           }}
         >
           {cardContent}

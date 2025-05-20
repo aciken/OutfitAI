@@ -23,6 +23,12 @@ export default function RootLayout() {
                     }}
                 />
                 <Stack.Screen
+                    name="create"
+                    options={{
+                        headerShown: false,
+                    }}
+                />
+                <Stack.Screen
                     name="modal"
                     options={{
                         headerShown: false,
