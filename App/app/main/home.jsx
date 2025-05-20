@@ -456,7 +456,7 @@ export default function Home() {
               });
             }   else if (item.type === 'create') {
     // Navigate to the create options page
-    router.push('/create/options');
+    router.push('/modal/options');
   } else {
     flatListRef.current?.scrollToIndex({
       index,
