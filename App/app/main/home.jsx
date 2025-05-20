@@ -455,8 +455,8 @@ export default function Home() {
                 params: { items: JSON.stringify(itemsToPass) },
               });
             }   else if (item.type === 'create') {
-    // Navigate to the create options page
-    router.push('/modal/options');
+    // Navigate to the outfit creation page
+    router.push('/outfit/create');
   } else {
     flatListRef.current?.scrollToIndex({
       index,
