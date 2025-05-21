@@ -56,6 +56,7 @@ export default function OutfitDetailsPage() {
               parsedUser.fileId,
             );
             setAppwriteImage(result);
+            console.log(result);
           }
         }
       } catch (error) {

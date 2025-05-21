@@ -1180,7 +1180,7 @@ const styles = StyleSheet.create({
     color: '#A0A0A0',
   },
   searchPanelBlurView: { // Added for search panels if not already in a centralized style object
-    borderRadius: 24,
+    borderRadius: 40,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(192, 126, 255, 0.3)',
