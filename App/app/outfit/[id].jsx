@@ -13,6 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GestureDetector, Gesture, Directions } from 'react-native-gesture-handler';
 import * as FileSystem from 'expo-file-system';
 import * as ImageManipulator from 'expo-image-manipulator';
+import * as ImagePicker from 'expo-image-picker';
 import { OPENAI_API_KEY } from '@env';
 
 const IMAGE_MAX_DIMENSION = 512;
@@ -25,6 +26,7 @@ export default function OutfitDetailsPage() {
   let items = [];
 
   const [appwriteImage, setAppwriteImage] = useState(null);
+  const [displayImageUri, setDisplayImageUri] = useState(null);
   const [isApplyingOutfit, setIsApplyingOutfit] = useState(false);
   const [generatedImageUrl, setGeneratedImageUrl] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -56,6 +58,7 @@ export default function OutfitDetailsPage() {
               parsedUser.fileId,
             );
             setAppwriteImage(result);
+            setDisplayImageUri(result.href);
             console.log(result);
           }
         }
@@ -65,7 +68,58 @@ export default function OutfitDetailsPage() {
       }
     };
     fetchUserImage();
+
+    (async () => {
+      if (Platform.OS !== 'web') {
+        const libraryStatus = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (libraryStatus.status !== 'granted') {
+          Alert.alert('Permission Denied', 'Camera roll access is needed to select images.');
+        }
+        const cameraStatus = await ImagePicker.requestCameraPermissionsAsync();
+        if (cameraStatus.status !== 'granted') {
+          Alert.alert('Permission Denied', 'Camera access is needed to take photos.');
+        }
+      }
+    })();
   }, []);
+
+  const handleChangeDisplayImage = async () => {
+    Alert.alert(
+      "Change Image",
+      "Select new image source",
+      [
+        {
+          text: "Take Photo",
+          onPress: async () => {
+            const result = await ImagePicker.launchCameraAsync({
+              mediaTypes: ImagePicker.MediaTypeOptions.Images,
+              allowsEditing: true,
+              aspect: [1, 1],
+              quality: 0.7,
+            });
+            if (!result.canceled && result.assets && result.assets.length > 0) {
+              setDisplayImageUri(result.assets[0].uri);
+            }
+          }
+        },
+        {
+          text: "Choose from Library",
+          onPress: async () => {
+            const result = await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: ImagePicker.MediaTypeOptions.Images,
+              allowsEditing: true,
+              aspect: [1, 1],
+              quality: 0.7,
+            });
+            if (!result.canceled && result.assets && result.assets.length > 0) {
+              setDisplayImageUri(result.assets[0].uri);
+            }
+          }
+        },
+        { text: "Cancel", style: "cancel" }
+      ]
+    );
+  };
 
   const downloadImage = async (imageUrl) => {
     const localUri = FileSystem.cacheDirectory + `img_${Date.now()}.png`;
@@ -94,9 +148,9 @@ export default function OutfitDetailsPage() {
     }
 
     try {
-      if (!appwriteImage?.href) throw new Error("No user image available.");
+      if (!displayImageUri) throw new Error("No user image available.");
 
-      const userImageRemoteUrl = appwriteImage.href;
+      const userImageRemoteUrl = displayImageUri;
       const downloadedUserImageUri = await downloadImage(userImageRemoteUrl);
       const userImageFileUri = await imageToPngBuffer(downloadedUserImageUri);
 
@@ -191,30 +245,30 @@ export default function OutfitDetailsPage() {
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContainer}>
-          <View style={styles.outfitImageContainer}>
-            {isApplyingOutfit ? (
-              <View style={styles.loadingOverlayContainer}>
-                <ActivityIndicator size="large" color="#FFF" />
-                <Text style={styles.loadingText}>Crafting outfit...</Text>
-              </View>
-            ) : generatedImageUrl ? (
-              <Image source={{ uri: generatedImageUrl }} style={styles.outfitImage} />
-            ) : appwriteImage?.href ? (
-              <Image source={{ uri: appwriteImage.href }} style={styles.outfitImage} />
-            ) : (
-              <View style={styles.placeholderContainer}>
-                <Ionicons name="image-outline" size={60} color="#888" />
-                <Text style={styles.placeholderText}>Your outfit preview will appear here.</Text>
-              </View>
-            )}
+          <TouchableOpacity onPress={handleChangeDisplayImage} activeOpacity={0.8}>
+            <View style={styles.outfitImageContainer}>
+              {isApplyingOutfit ? (
+                <View style={styles.loadingOverlayContainer}>
+                  <ActivityIndicator size="large" color="#FFF" />
+                  <Text style={styles.loadingText}>Crafting outfit...</Text>
+                </View>
+              ) : displayImageUri ? (
+                <Image source={{ uri: displayImageUri }} style={styles.outfitImage} />
+              ) : (
+                <View style={styles.placeholderContainer}>
+                  <Ionicons name="image-outline" size={60} color="#888" />
+                  <Text style={styles.placeholderText}>Your outfit preview will appear here.</Text>
+                </View>
+              )}
 
-            {errorMsg && !isApplyingOutfit && (
-              <View style={styles.errorOverlay}>
-                <Ionicons name="alert-circle-outline" size={20} color="#fff" />
-                <Text style={styles.errorText}>{errorMsg}</Text>
-              </View>
-            )}
-          </View>
+              {errorMsg && !isApplyingOutfit && (
+                <View style={styles.errorOverlay}>
+                  <Ionicons name="alert-circle-outline" size={20} color="#fff" />
+                  <Text style={styles.errorText}>{errorMsg}</Text>
+                </View>
+              )}
+            </View>
+          </TouchableOpacity>
 
           {items.length > 0 && (
             <View style={styles.itemsSectionContainer}>
