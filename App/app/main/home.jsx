@@ -47,6 +47,30 @@ const CARD_SPACING = 16;
 const ANIMATION_SPEED = 200;
 const INACTIVE_SCALE = 0.90; // Adjusted for a noticeable but not too drastic scale change
 
+// Define selectable options for Style and Occasion
+const STYLE_OPTIONS = [
+  { id: 'minimalist', name: 'Minimalist', icon: 'apps-outline' },
+  { id: 'street', name: 'Street Style', icon: 'walk-outline' },
+  { id: 'classic', name: 'Classic', icon: 'diamond-outline' },
+  { id: 'bohemian', name: 'Bohemian', icon: 'flower-outline' },
+  { id: 'sporty', name: 'Sporty', icon: 'fitness-outline' },
+  { id: 'vintage', name: 'Vintage', icon: 'time-outline' },
+  { id: 'chic', name: 'Chic', icon: 'star-outline' },
+  { id: 'preppy', name: 'Preppy', icon: 'school-outline' },
+  { id: 'edgy', name: 'Edgy', icon: 'flash-outline' },
+];
+
+const OCCASION_OPTIONS = [
+  { id: 'casual_day', name: 'Casual Day', icon: 'sunny-outline' },
+  { id: 'work', name: 'Work/Office', icon: 'briefcase-outline' },
+  { id: 'evening_out', name: 'Evening Out', icon: 'moon-outline' },
+  { id: 'special_event', name: 'Special Event', icon: 'gift-outline' },
+  { id: 'vacation', name: 'Vacation', icon: 'airplane-outline' },
+  { id: 'loungewear', name: 'Loungewear', icon: 'home-outline' },
+  { id: 'weekend', name: 'Weekend', icon: 'calendar-outline' },
+  { id: 'sport_activity', name: 'Sport Activity', icon: 'basketball-outline' },
+];
+
 export default function Home() {
   const router = useRouter();
   const [activeCardIndex, setActiveCardIndex] = useState(0);
@@ -60,6 +84,10 @@ export default function Home() {
   const [isSearching, setIsSearching] = useState(false);
   const [originalCards, setOriginalCards] = useState([]); // To store the initial set of cards
   const [currentCards, setCurrentCards] = useState([]); // Cards to be displayed
+  
+  // State for style and occasion filters
+  const [selectedStyles, setSelectedStyles] = useState(new Set());
+  const [selectedOccasions, setSelectedOccasions] = useState(new Set());
   
   // Animation values for button appearance
   const buttonOpacity = useRef(new Animated.Value(0)).current;
@@ -319,34 +347,83 @@ export default function Home() {
     }
   };
 
+  // Toggle functions for style and occasion
+  const toggleStyle = (styleId) => {
+    setSelectedStyles(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(styleId)) {
+        newSet.delete(styleId);
+      } else {
+        newSet.add(styleId);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleOccasion = (occasionId) => {
+    setSelectedOccasions(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(occasionId)) {
+        newSet.delete(occasionId);
+      } else {
+        newSet.add(occasionId);
+      }
+      return newSet;
+    });
+  };
+
   // Function to handle the search logic
   const handleSearch = () => {
-    if (!searchQuery.trim()) {
-      // If search query is empty, reset to original cards and turn off searching state
+    const query = searchQuery.trim().toLowerCase();
+    const stylesSelected = selectedStyles.size > 0;
+    const occasionsSelected = selectedOccasions.size > 0;
+
+    if (!query && !stylesSelected && !occasionsSelected) {
+      // If no search query and no filters, reset to original cards
       setCurrentCards(originalCards);
       setIsSearching(false);
       handleCloseSearchModal();
       return;
     }
 
-    const lowerCaseQuery = searchQuery.toLowerCase();
     const filtered = originalCards.filter(card => {
-      // Always include the create card if it's explicitly searched for by its title or assigned keywords
+      // Keyword search (text input)
+      const keywordMatch = query ? (
+        (card.title && card.title.toLowerCase().includes(query)) ||
+        (card.keywords && card.keywords.some(k => k.toLowerCase().includes(query))) ||
+        (card.itemKeywords && card.itemKeywords.some(k => k.toLowerCase().includes(query)))
+      ) : true; // If no query, keyword match is true by default
+
+      // Style filter
+      const styleMatch = stylesSelected ? 
+        Array.from(selectedStyles).some(styleId => 
+          (card.keywords && card.keywords.some(k => k.toLowerCase().includes(styleId.toLowerCase()))) ||
+          (card.itemKeywords && card.itemKeywords.some(k => k.toLowerCase().includes(styleId.toLowerCase())))
+        ) 
+        : true; // If no styles selected, style match is true
+
+      // Occasion filter
+      const occasionMatch = occasionsSelected ? 
+        Array.from(selectedOccasions).some(occasionId => 
+          (card.keywords && card.keywords.some(k => k.toLowerCase().includes(occasionId.toLowerCase()))) ||
+          (card.itemKeywords && card.itemKeywords.some(k => k.toLowerCase().includes(occasionId.toLowerCase())))
+        ) 
+        : true; // If no occasions selected, occasion match is true
+      
+      // Create card handling: only filter by text query, ignore style/occasion for it unless explicitly keyworded for them
       if (card.type === 'create') {
-        const createCardTitleMatch = card.title.toLowerCase().includes(lowerCaseQuery);
-        const createCardKeywordMatch = card.keywords && card.keywords.some(k => k.toLowerCase().includes(lowerCaseQuery));
-        return createCardTitleMatch || createCardKeywordMatch;
+        return query ? (
+          (card.title && card.title.toLowerCase().includes(query)) ||
+          (card.keywords && card.keywords.some(k => k.toLowerCase().includes(query)))
+        ) : !(stylesSelected || occasionsSelected); // If query is empty, show create card only if no filters are active
       }
-      // For outfit cards, check outfit keywords and item keywords
-      const outfitKeywordMatch = card.keywords && card.keywords.some(k => k.toLowerCase().includes(lowerCaseQuery));
-      const itemKeywordMatch = card.itemKeywords && card.itemKeywords.some(k => k.toLowerCase().includes(lowerCaseQuery));
-      return outfitKeywordMatch || itemKeywordMatch;
+
+      return keywordMatch && styleMatch && occasionMatch;
     });
 
     setCurrentCards(filtered);
-    setIsSearching(true);
+    setIsSearching(true); // A search is active if query or filters are applied
     handleCloseSearchModal();
-    // Scroll to the beginning of the list after search
     if (flatListRef.current) {
       flatListRef.current.scrollToOffset({ animated: true, offset: 0 });
     }
@@ -355,9 +432,10 @@ export default function Home() {
   // Function to clear the search
   const handleClearSearch = () => {
     setSearchQuery('');
+    setSelectedStyles(new Set());
+    setSelectedOccasions(new Set());
     setCurrentCards(originalCards);
     setIsSearching(false);
-    // Optionally close the modal if it's open, though usually called from within modal
     if (isSearchModalVisible) {
         handleCloseSearchModal();
     }
@@ -927,71 +1005,25 @@ export default function Home() {
               }}>
                 <View style={{ padding: 20, height: 330 }}>
                   <ScrollView style={{ maxHeight: 310 }}>
-                    {/* Minimalist */}
-                    <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
-                      <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
-                        <Ionicons name="apps-outline" size={24} color="#C07EFF" />
-                      </View>
-                      <View style={styles.optionTextContainer}>
-                        <Text style={styles.optionTitle}>Minimalist</Text>
-                        <Text style={styles.optionSubtitle}>Clean lines, neutral colors, simple designs</Text>
-                      </View>
-                    </TouchableOpacity>
-
-                    {/* Street Style */}
-                    <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
-                      <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
-                        <Ionicons name="walk-outline" size={24} color="#C07EFF" />
-                      </View>
-                      <View style={styles.optionTextContainer}>
-                        <Text style={styles.optionTitle}>Street Style</Text>
-                        <Text style={styles.optionSubtitle}>Urban, casual, trendy streetwear</Text>
-                      </View>
-                    </TouchableOpacity>
-
-                    {/* Classic */}
-                    <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
-                      <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
-                        <Ionicons name="diamond-outline" size={24} color="#C07EFF" />
-                      </View>
-                      <View style={styles.optionTextContainer}>
-                        <Text style={styles.optionTitle}>Classic</Text>
-                        <Text style={styles.optionSubtitle}>Timeless pieces, elegant designs</Text>
-                      </View>
-                    </TouchableOpacity>
-
-                    {/* Bohemian */}
-                    <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
-                      <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
-                        <Ionicons name="flower-outline" size={24} color="#C07EFF" />
-                      </View>
-                      <View style={styles.optionTextContainer}>
-                        <Text style={styles.optionTitle}>Bohemian</Text>
-                        <Text style={styles.optionSubtitle}>Free-spirited, artistic, eclectic</Text>
-                      </View>
-                    </TouchableOpacity>
-
-                    {/* Sporty */}
-                    <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
-                      <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
-                        <Ionicons name="fitness-outline" size={24} color="#C07EFF" />
-                      </View>
-                      <View style={styles.optionTextContainer}>
-                        <Text style={styles.optionTitle}>Sporty</Text>
-                        <Text style={styles.optionSubtitle}>Athletic, comfortable, performance wear</Text>
-                      </View>
-                    </TouchableOpacity>
-
-                    {/* Vintage */}
-                    <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
-                      <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
-                        <Ionicons name="time-outline" size={24} color="#C07EFF" />
-                      </View>
-                      <View style={styles.optionTextContainer}>
-                        <Text style={styles.optionTitle}>Vintage</Text>
-                        <Text style={styles.optionSubtitle}>Retro-inspired, nostalgic fashion</Text>
-                      </View>
-                    </TouchableOpacity>
+                    {STYLE_OPTIONS.map((option) => (
+                      <TouchableOpacity 
+                        key={option.id} 
+                        style={[styles.optionContainer, selectedStyles.has(option.id) && styles.optionSelected]} 
+                        activeOpacity={0.8}
+                        onPress={() => toggleStyle(option.id)}
+                      >
+                        <View style={[styles.iconContainer, selectedStyles.has(option.id) ? styles.iconContainerSelected : styles.iconContainerDefault]}>
+                          <Ionicons name={option.icon} size={24} color={selectedStyles.has(option.id) ? '#FFFFFF' : '#C07EFF'} />
+                        </View>
+                        <View style={styles.optionTextContainer}>
+                          <Text style={[styles.optionTitle, selectedStyles.has(option.id) && styles.optionTextSelected]}>{option.name}</Text>
+                          {/* Add subtitle if you have it in STYLE_OPTIONS */}
+                        </View>
+                        {selectedStyles.has(option.id) && (
+                          <Ionicons name="checkmark-circle" size={24} color="#FFFFFF" style={styles.selectedCheckmark} />
+                        )}
+                      </TouchableOpacity>
+                    ))}
                   </ScrollView>
                 </View>
               </Animated.View>
@@ -1024,71 +1056,25 @@ export default function Home() {
               }}>
                 <View style={{ padding: 20, height: 330 }}>
                   <ScrollView style={{ maxHeight: 310 }}>
-                    {/* Casual Day */}
-                    <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
-                      <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
-                        <Ionicons name="sunny-outline" size={24} color="#C07EFF" />
-                      </View>
-                      <View style={styles.optionTextContainer}>
-                        <Text style={styles.optionTitle}>Casual Day</Text>
-                        <Text style={styles.optionSubtitle}>Everyday wear, comfortable and relaxed</Text>
-                      </View>
-                    </TouchableOpacity>
-
-                    {/* Business */}
-                    <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
-                      <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
-                        <Ionicons name="briefcase-outline" size={24} color="#C07EFF" />
-                      </View>
-                      <View style={styles.optionTextContainer}>
-                        <Text style={styles.optionTitle}>Business</Text>
-                        <Text style={styles.optionSubtitle}>Professional, office-appropriate attire</Text>
-                      </View>
-                    </TouchableOpacity>
-
-                    {/* Evening Out */}
-                    <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
-                      <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
-                        <Ionicons name="moon-outline" size={24} color="#C07EFF" />
-                      </View>
-                      <View style={styles.optionTextContainer}>
-                        <Text style={styles.optionTitle}>Evening Out</Text>
-                        <Text style={styles.optionSubtitle}>Nightlife, dinner, social events</Text>
-                      </View>
-                    </TouchableOpacity>
-
-                    {/* Special Event */}
-                    <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
-                      <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
-                        <Ionicons name="gift-outline" size={24} color="#C07EFF" />
-                      </View>
-                      <View style={styles.optionTextContainer}>
-                        <Text style={styles.optionTitle}>Special Event</Text>
-                        <Text style={styles.optionSubtitle}>Weddings, parties, celebrations</Text>
-                      </View>
-                    </TouchableOpacity>
-
-                    {/* Travel */}
-                    <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
-                      <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
-                        <Ionicons name="airplane-outline" size={24} color="#C07EFF" />
-                      </View>
-                      <View style={styles.optionTextContainer}>
-                        <Text style={styles.optionTitle}>Travel</Text>
-                        <Text style={styles.optionSubtitle}>Comfortable, versatile travel wear</Text>
-                      </View>
-                    </TouchableOpacity>
-
-                    {/* Outdoor */}
-                    <TouchableOpacity style={styles.optionContainer} activeOpacity={0.8}>
-                      <View style={[styles.iconContainer, { backgroundColor: 'rgba(192, 126, 255, 0.15)' }]}>
-                        <Ionicons name="leaf-outline" size={24} color="#C07EFF" />
-                      </View>
-                      <View style={styles.optionTextContainer}>
-                        <Text style={styles.optionTitle}>Outdoor</Text>
-                        <Text style={styles.optionSubtitle}>Adventure, hiking, outdoor activities</Text>
-                      </View>
-                    </TouchableOpacity>
+                    {OCCASION_OPTIONS.map((option) => (
+                      <TouchableOpacity 
+                        key={option.id} 
+                        style={[styles.optionContainer, selectedOccasions.has(option.id) && styles.optionSelected]} 
+                        activeOpacity={0.8}
+                        onPress={() => toggleOccasion(option.id)}
+                      >
+                        <View style={[styles.iconContainer, selectedOccasions.has(option.id) ? styles.iconContainerSelected : styles.iconContainerDefault]}>
+                          <Ionicons name={option.icon} size={24} color={selectedOccasions.has(option.id) ? '#FFFFFF' : '#C07EFF'} />
+                        </View>
+                        <View style={styles.optionTextContainer}>
+                          <Text style={[styles.optionTitle, selectedOccasions.has(option.id) && styles.optionTextSelected]}>{option.name}</Text>
+                          {/* Add subtitle if you have it in OCCASION_OPTIONS */}
+                        </View>
+                        {selectedOccasions.has(option.id) && (
+                          <Ionicons name="checkmark-circle" size={24} color="#FFFFFF" style={styles.selectedCheckmark} />
+                        )}
+                      </TouchableOpacity>
+                    ))}
                   </ScrollView>
                 </View>
               </Animated.View>
@@ -1254,6 +1240,23 @@ const styles = StyleSheet.create({
   optionSubtitle: {
     fontSize: 13,
     color: '#A0A0A0',
+  },
+  optionSelected: {
+    backgroundColor: '#7B2CBF', // Purple background for selected
+    borderColor: '#C07EFF',
+  },
+  optionTextSelected: {
+    color: '#FFFFFF', // White text for selected
+  },
+  iconContainerDefault: {
+    backgroundColor: 'rgba(192, 126, 255, 0.15)',
+  },
+  iconContainerSelected: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)', // Slightly different background for selected icon
+  },
+  selectedCheckmark: {
+    marginLeft: 'auto', // Pushes checkmark to the right
+    paddingLeft: 10, // Some space before the checkmark
   },
   searchPanelBlurView: { // Added for search panels if not already in a centralized style object
     borderRadius: 40,
