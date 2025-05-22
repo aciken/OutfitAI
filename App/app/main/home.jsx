@@ -363,7 +363,7 @@ export default function Home() {
           {/* Checkmark for created outfits */}
           {user && user.createdImages && user.createdImages.find(ci => ci.outfitId === item.id) && (
             <View style={styles.checkmarkContainer}>
-              <Ionicons name="checkmark-circle" size={32} color="#8A2BE2" />
+              <Ionicons name="checkmark-circle" size={24} color="#8A2BE2" />
             </View>
           )}
         </View>
@@ -1251,11 +1251,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 15, // Adjusted top position
     left: '50%', // Center horizontally
-    transform: [{ translateX: -14 }], // Adjust for icon size (28/2 = 14)
-    backgroundColor: 'transparent', // More subtle background
-    borderRadius: 16, // Keep for potential future background
-    padding: 0, // No padding if background is transparent
-    // To ensure it's above other elements if necessary, but usually not needed with absolute positioning
-    // zIndex: 1, 
+    transform: [{ translateX: -16 }], // For 24px icon, moved 4px left of center: -(24/2) - 4 = -16
+    backgroundColor: 'transparent',
+    // Glow effect
+    shadowColor: '#8A2BE2',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.7,
+    shadowRadius: 5,
+    elevation: 5, // For Android shadow
+    // No padding or border radius needed if the container itself isn't visible
   }
 });
