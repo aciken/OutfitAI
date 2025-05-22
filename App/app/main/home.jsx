@@ -22,36 +22,18 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { BlurView } from 'expo-blur';
-// import { BlurView } from 'expo-blur'; // No longer needed
+// Import data from the new apparelData.js file
+import { predefinedOutfits, getOutfitDetailsForNavigation } from '../data/apparelData';
+import PlusIconImage from '../../assets/PlusIcon2.png'; // Keep this as it's UI specific
+// import HangerIconImage from '../../assets/HangerIcon.png'; // This seems unused, removing unless specified
 
 // Create an animated version of FlatList
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
-// Import outfit images
-import HoodieImage from '../../assets/outfits/hoodie1.png';
-import PantsImage from '../../assets/outfits/pants1.png';
-import ShoesImage from '../../assets/outfits/shoes1.png';
-// Import new images
-import DressImage from '../../assets/outfits/dress1.png';
-import HealsImage from '../../assets/outfits/heals1.png';
-// Import new images for outfit 3
-import Jeans2Image from '../../assets/outfits/jeans2.png'; 
-import Shirt2Image from '../../assets/outfits/shirt2.png';
-import Shoes2Image from '../../assets/outfits/shoes2.png';
-// Import new images for outfit 4
-import PoloImage from '../../assets/outfits/Polo.png';
-import TrousersImage from '../../assets/outfits/trousers.png';
-import Shoes3Image from '../../assets/outfits/Shoes3.png';
-// Placeholder import for the mannequin image for outfit 3 - PLEASE REPLACE with your actual image
-import MannequinOutfit3Image from '../../assets/outfits/outfit3.png'; 
-// Placeholder import for the mannequin image for outfit 1 - PLEASE REPLACE with your actual image
-import MannequinOutfit1Image from '../../assets/outfits/outfit1.png';
-// Placeholder import for the mannequin image for outfit 2 - PLEASE REPLACE with your actual image
-import MannequinOutfit2Image from '../../assets/outfits/outfit2.png';
-// Placeholder import for the mannequin image for outfit 4 - PLEASE REPLACE with your actual image
-import MannequinOutfit4Image from '../../assets/outfits/outfit4.png';
-import PlusIconImage from '../../assets/PlusIcon2.png'; // Import the new PlusIcon
-import HangerIconImage from '../../assets/HangerIcon.png'; // Import the hanger icon
+// Remove individual image imports as they are now handled in apparelData.js
+// import HoodieImage from '../../assets/outfits/hoodie1.png';
+// import PantsImage from '../../assets/outfits/pants1.png';
+// ... and so on for all other outfit item and mannequin images
 
 // Get screen dimensions for responsive sizing
 const { width, height } = Dimensions.get('window');
@@ -85,68 +67,23 @@ export default function Home() {
   const styleSectionHeight = useRef(new Animated.Value(expandedSection === 'style' ? 1 : 0)).current;
   const occasionSectionHeight = useRef(new Animated.Value(expandedSection === 'occasion' ? 1 : 0)).current;
   
-  // Updated sample data structure for cards
+  // Updated sample data structure for cards using imported data
   const [cards] = useState([
     { 
       id: 'create', 
       type: 'create', 
       title: 'Create your outfit' 
     },
-    {
-      id: 'outfit1', 
+    // Map predefined outfits to card structure
+    ...predefinedOutfits.map(outfit => ({
+      id: outfit.id,
       type: 'outfit',
       // Display a single mannequin image on the card
-      items: [
-        { source: MannequinOutfit1Image, height: 300 }
+      items: [ // This structure is for the card display, using the previewImage
+        { source: outfit.previewImage, height: 300 } // Keep height for preview consistency
       ],
-      // Store original items for the detail view
-      detailedItems: [
-        { source: HoodieImage, height: 100, label: 'Cozy Hoodie' }, 
-        { source: PantsImage, height: 100, label: 'Casual Pants' }, 
-        { source: ShoesImage, height: 80, label: 'Sneakers' }
-      ]
-    },
-    {
-      id: 'outfit2',
-      type: 'outfit',
-      // Display a single mannequin image on the card
-      items: [
-        { source: MannequinOutfit2Image, height: 300 }
-      ],
-      // Store original items for the detail view
-      detailedItems: [
-        { source: DressImage, height: 200, label: 'Summer Dress' },
-        { source: HealsImage, height: 150, label: 'Stylish Heels' }
-      ]
-    },
-    {
-      id: 'outfit3', // New outfit ID
-      type: 'outfit',
-      // Display a single mannequin image on the card
-      items: [
-        { source: MannequinOutfit3Image, height: 300 } // Increased height again
-      ],
-      // Store original items for the detail view
-      detailedItems: [
-        { source: Shirt2Image, height: 100, label: 'Graphic Tee' },
-        { source: Jeans2Image, height: 100, label: 'Denim Jeans' },
-        { source: Shoes2Image, height: 80, label: 'High Tops' }
-      ]
-    },
-    {
-      id: 'outfit4',
-      type: 'outfit',
-      // Display a single mannequin image on the card
-      items: [
-        { source: MannequinOutfit4Image, height: 300 }
-      ],
-      // Store original items for the detail view
-      detailedItems: [
-        { source: PoloImage, height: 100, label: 'Classic Polo' },
-        { source: TrousersImage, height: 110, label: 'Tailored Trousers' },
-        { source: Shoes3Image, height: 80, label: 'Formal Shoes' }
-      ]
-    }
+      // detailedItems are now fetched via getOutfitDetailsForNavigation on press
+    }))
   ]);
 
   // Remove filtered cards logic based on search, directly use cards
@@ -397,16 +334,17 @@ export default function Home() {
       cardContent = (
         <View className="flex-1 justify-center items-center w-full">
           <View className="p-4 justify-center items-center">
+            {/* This now directly uses the preview image from the mapped card item */}
             {item.items.map((itemData, imgIndex) => {
-              const rotation = imgIndex % 2 === 0 ? '-1.5deg' : '1.5deg';
+              const rotation = imgIndex % 2 === 0 ? '-1.5deg' : '1.5deg'; // Kept for consistency if needed
               return (
-                <View key={`${item.id}-item-${imgIndex}`} className="items-center mb-2">
+                <View key={`${item.id}-preview-${imgIndex}`} className="items-center mb-2">
                   <Image
-                    source={itemData.source}
+                    source={itemData.source} // This is outfit.previewImage
                     className="rounded-lg"
                     style={{
                       width: CARD_WIDTH * 0.8,
-                      height: itemData.height,
+                      height: itemData.height, // Using predefined height for preview
                       shadowColor: "#000",
                       shadowOffset: { width: 0, height: 4 },
                       shadowOpacity: 0.15,
@@ -415,11 +353,7 @@ export default function Home() {
                     }}
                     resizeMode="contain"
                   />
-                  {itemData.label && (
-                    <Text className="mt-2 text-xs font-semibold text-gray-200" style={{ transform: [{ rotate: rotation }] }}>
-                      {itemData.label}
-                    </Text>
-                  )}
+                  {/* No individual labels for preview images on the card */}
                 </View>
               );
             })}
@@ -449,11 +383,17 @@ export default function Home() {
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             if (item.type === 'outfit') {
-              let itemsToPass = item.detailedItems ? item.detailedItems : item.items;
-              router.push({
-                pathname: `/outfit/${item.id}`,
-                params: { items: JSON.stringify(itemsToPass) },
-              });
+              // Fetch detailed items for navigation using the new helper
+              const detailedItemsForNav = getOutfitDetailsForNavigation(item.id);
+              if (detailedItemsForNav) {
+                router.push({
+                  pathname: `/outfit/${item.id}`,
+                  params: { items: JSON.stringify(detailedItemsForNav) },
+                });
+              } else {
+                console.warn(`No details found for outfit ID: ${item.id}`);
+                // Optionally, show an alert to the user
+              }
             }   else if (item.type === 'create') {
     // Navigate to the outfit creation page
     router.push('/outfit/create');

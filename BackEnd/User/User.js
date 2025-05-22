@@ -13,6 +13,7 @@ const UserSchema = new mongoose.Schema({
     isGoogle: {type: Boolean, default: false},
     verification: String,
     fileId: String,
+    createdImages: Array,
 });
 
 module.exports = mongoose.model('User', UserSchema);
