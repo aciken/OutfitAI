@@ -25,6 +25,7 @@ import { BlurView } from 'expo-blur';
 // Import data from the new apparelData.js file
 import { predefinedOutfits, getOutfitDetailsForNavigation } from '../data/apparelData';
 import PlusIconImage from '../../assets/PlusIcon2.png'; // Keep this as it's UI specific
+import { useGlobalContext } from '../context/GlobalProvider'; // Added import
 // import HangerIconImage from '../../assets/HangerIcon.png'; // This seems unused, removing unless specified
 
 // Create an animated version of FlatList
@@ -50,6 +51,7 @@ export default function Home() {
   const [activeCardIndex, setActiveCardIndex] = useState(0);
   const [prevActiveIndex, setPrevActiveIndex] = useState(0);
   const [showScrollToStart, setShowScrollToStart] = useState(false);
+  const { user } = useGlobalContext(); // Get user from context
   
   // Animation values for button appearance
   const buttonOpacity = useRef(new Animated.Value(0)).current;
@@ -358,6 +360,12 @@ export default function Home() {
               );
             })}
           </View>
+          {/* Checkmark for created outfits */}
+          {user && user.createdImages && user.createdImages.find(ci => ci.outfitId === item.id) && (
+            <View style={styles.checkmarkContainer}>
+              <Ionicons name="checkmark-circle" size={32} color="#8A2BE2" />
+            </View>
+          )}
         </View>
       );
     } else {
@@ -1239,4 +1247,15 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
   },
+  checkmarkContainer: {
+    position: 'absolute',
+    top: 15, // Adjusted top position
+    left: '50%', // Center horizontally
+    transform: [{ translateX: -14 }], // Adjust for icon size (28/2 = 14)
+    backgroundColor: 'transparent', // More subtle background
+    borderRadius: 16, // Keep for potential future background
+    padding: 0, // No padding if background is transparent
+    // To ensure it's above other elements if necessary, but usually not needed with absolute positioning
+    // zIndex: 1, 
+  }
 });
