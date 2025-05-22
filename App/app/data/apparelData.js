@@ -24,6 +24,8 @@ export const predefinedOutfits = [
     name: 'Casual Comfort',
     previewImage: require('../../assets/outfits/outfit1.png'),
     keywords: ['casual', 'comfort', 'everyday', 'hoodie', 'pants', 'sneakers', 'relaxed'],
+    style: ['Street Style', 'Sporty'],
+    occasion: ['Casual Day', ],
     items: [
       { itemId: 'item_hoodie1', label: 'Cozy Hoodie' },
       { itemId: 'item_pants1', label: 'Casual Pants' },
@@ -35,6 +37,8 @@ export const predefinedOutfits = [
     name: 'Summer Elegance',
     previewImage: require('../../assets/outfits/outfit2.png'),
     keywords: ['summer', 'elegance', 'dress', 'heels', 'party', 'formal', 'stylish'],
+    style: ['Classic'],
+    occasion: ['Special Event', 'Evening Out'],
     items: [
       { itemId: 'item_dress1', label: 'Summer Dress' },
       { itemId: 'item_heals1', label: 'Stylish Heels' }
@@ -45,6 +49,8 @@ export const predefinedOutfits = [
     name: 'Street Vibe',
     previewImage: require('../../assets/outfits/outfit3.png'),
     keywords: ['street', 'vibe', 'casual', 'tee', 'jeans', 'sneakers', 'urban', 'graphic'],
+    style: ['Minimalist'],
+    occasion: ['Casual Day'],
     items: [
       { itemId: 'item_shirt2', label: 'Graphic Tee' },
       { itemId: 'item_jeans2', label: 'Denim Jeans' },
@@ -55,7 +61,9 @@ export const predefinedOutfits = [
     id: 'outfit4',
     name: 'Smart Casual',
     previewImage: require('../../assets/outfits/outfit4.png'),
-    keywords: ['smart casual', 'polo', 'trousers', 'formal shoes', 'business casual', 'work'],
+    keywords: ['smart casual', 'polo', 'trousers', 'formal shoes', 'business casual', 'work', 'white'],
+    style: ['Vintage', 'Classic'],
+    occasion: ['Evening Out', 'Special Event'],
     items: [
       { itemId: 'item_polo1', label: 'Classic Polo' },
       { itemId: 'item_trousers1', label: 'Tailored Trousers' },

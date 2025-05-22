@@ -658,7 +658,9 @@ export default function Home() {
         >
           {/* Inner View to center the icon and text */}
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-            <Ionicons name="search" size={20} color={isSearching ? '#FFFFFF' : '#D0D0D0'} style={{ marginRight: 8 }} /> 
+            {!isSearching && (
+              <Ionicons name="search" size={20} color={'#D0D0D0'} style={{ marginRight: 8 }} /> 
+            )}
             <Text className={`text-base ${isSearching ? 'text-white font-semibold' : 'text-gray-100'}`}>
               {isSearching ? 'Search Active' : 'Start your search'}
             </Text>
@@ -731,34 +733,42 @@ export default function Home() {
           colors={['#1A0D2E', '#3B1F78', '#1A0D2E']} // Dark, "fantastic" gradient
           style={StyleSheet.absoluteFill}
         />
-        <AnimatedFlatList
-          ref={flatListRef}
-          data={currentCards}
-          renderItem={renderCard}
-          keyExtractor={(item) => item.id}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingHorizontal: (width - CARD_WIDTH) / 2 - CARD_SPACING / 2,
-            alignItems: 'center',
-            paddingVertical: 30,
-          }}
-          snapToInterval={CARD_WIDTH + CARD_SPACING}
-          snapToAlignment="center"
-          decelerationRate={0.75}
-          onViewableItemsChanged={onViewableItemsChanged}
-          viewabilityConfig={viewabilityConfig.current}
-          pagingEnabled={false}
-          disableIntervalMomentum={true}
-          snapToOffsets={currentCards.map((_, i) => 
-            i * (CARD_WIDTH + CARD_SPACING)
-          )}
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-            { useNativeDriver: true }
-          )}
-          scrollEventThrottle={16}
-        />
+        {isSearching && currentCards.length === 0 ? (
+          <View style={styles.noResultsContainer}>
+            <Ionicons name="sad-outline" size={48} color="#888" />
+            <Text style={styles.noResultsText}>No outfits found for "{searchQuery}"</Text>
+            <Text style={styles.noResultsSubText}>Try a different search term.</Text>
+          </View>
+        ) : (
+          <AnimatedFlatList
+            ref={flatListRef}
+            data={currentCards}
+            renderItem={renderCard}
+            keyExtractor={(item) => item.id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingHorizontal: (width - CARD_WIDTH) / 2 - CARD_SPACING / 2,
+              alignItems: 'center',
+              paddingVertical: 30,
+            }}
+            snapToInterval={CARD_WIDTH + CARD_SPACING}
+            snapToAlignment="center"
+            decelerationRate={0.75}
+            onViewableItemsChanged={onViewableItemsChanged}
+            viewabilityConfig={viewabilityConfig.current}
+            pagingEnabled={false}
+            disableIntervalMomentum={true}
+            snapToOffsets={currentCards.map((_, i) => 
+              i * (CARD_WIDTH + CARD_SPACING)
+            )}
+            onScroll={Animated.event(
+              [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+              { useNativeDriver: true }
+            )}
+            scrollEventThrottle={16}
+          />
+        )}
       </View>
       
       {/* History button at bottom of screen */}
@@ -1378,5 +1388,24 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 5, // For Android shadow
     // No padding or border radius needed if the container itself isn't visible
+  },
+  noResultsContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  noResultsText: {
+    marginTop: 12,
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#C0C0C0',
+    textAlign: 'center',
+  },
+  noResultsSubText: {
+    marginTop: 6,
+    fontSize: 14,
+    color: '#888',
+    textAlign: 'center',
   }
 });
