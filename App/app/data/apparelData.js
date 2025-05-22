@@ -2,19 +2,19 @@
 
 // Individual Outfit Items
 export const allOutfitItems = [
-  { id: 'item_hoodie1', name: 'Cozy Hoodie', category: 'Tops', source: require('../../assets/outfits/hoodie1.png') },
-  { id: 'item_pants1', name: 'Casual Pants', category: 'Bottoms', source: require('../../assets/outfits/pants1.png') },
-  { id: 'item_shoes1', name: 'Sneakers', category: 'Shoes', source: require('../../assets/outfits/shoes1.png') },
-  { id: 'item_dress1', name: 'Summer Dress', category: 'Dresses', source: require('../../assets/outfits/dress1.png') },
-  { id: 'item_heals1', name: 'Stylish Heels', category: 'Shoes', source: require('../../assets/outfits/heals1.png') },
-  { id: 'item_jeans2', name: 'Denim Jeans', category: 'Bottoms', source: require('../../assets/outfits/jeans2.png') },
-  { id: 'item_shirt2', name: 'Graphic Tee', category: 'Tops', source: require('../../assets/outfits/shirt2.png') },
-  { id: 'item_shoes2', name: 'High Tops', category: 'Shoes', source: require('../../assets/outfits/shoes2.png') },
-  { id: 'item_polo1', name: 'Classic Polo', category: 'Tops', source: require('../../assets/outfits/Polo.png') },
-  { id: 'item_trousers1', name: 'Tailored Trousers', category: 'Bottoms', source: require('../../assets/outfits/trousers.png') },
-  { id: 'item_shoes3', name: 'Formal Shoes', category: 'Shoes', source: require('../../assets/outfits/Shoes3.png') },
+  { id: 'item_hoodie1', name: 'Cozy Hoodie', category: 'Tops', source: require('../../assets/outfits/hoodie1.png'), keywords: ['hoodie', 'cozy', 'casual', 'top', 'winter', 'sweatshirt'] },
+  { id: 'item_pants1', name: 'Casual Pants', category: 'Bottoms', source: require('../../assets/outfits/pants1.png'), keywords: ['pants', 'casual', 'bottoms', 'trousers', 'everyday'] },
+  { id: 'item_shoes1', name: 'Sneakers', category: 'Shoes', source: require('../../assets/outfits/shoes1.png'), keywords: ['sneakers', 'shoes', 'casual', 'sport', 'trainers'] },
+  { id: 'item_dress1', name: 'Summer Dress', category: 'Dresses', source: require('../../assets/outfits/dress1.png'), keywords: ['dress', 'summer', 'light', 'floral', 'casual'] },
+  { id: 'item_heals1', name: 'Stylish Heels', category: 'Shoes', source: require('../../assets/outfits/heals1.png'), keywords: ['heels', 'shoes', 'stylish', 'formal', 'party'] },
+  { id: 'item_jeans2', name: 'Denim Jeans', category: 'Bottoms', source: require('../../assets/outfits/jeans2.png'), keywords: ['jeans', 'denim', 'bottoms', 'casual', 'pants'] },
+  { id: 'item_shirt2', name: 'Graphic Tee', category: 'Tops', source: require('../../assets/outfits/shirt2.png'), keywords: ['shirt', 'tee', 'graphic', 'casual', 'top'] },
+  { id: 'item_shoes2', name: 'High Tops', category: 'Shoes', source: require('../../assets/outfits/shoes2.png'), keywords: ['shoes', 'high tops', 'sneakers', 'casual', 'streetwear'] },
+  { id: 'item_polo1', name: 'Classic Polo', category: 'Tops', source: require('../../assets/outfits/Polo.png'), keywords: ['polo', 'shirt', 'classic', 'smart casual', 'top'] },
+  { id: 'item_trousers1', name: 'Tailored Trousers', category: 'Bottoms', source: require('../../assets/outfits/trousers.png'), keywords: ['trousers', 'pants', 'tailored', 'formal', 'smart casual', 'bottoms'] },
+  { id: 'item_shoes3', name: 'Formal Shoes', category: 'Shoes', source: require('../../assets/outfits/Shoes3.png'), keywords: ['shoes', 'formal', 'dress shoes', 'smart', 'leather'] },
   // Add more items as discovered or needed from assets/outfits
-  // Example: { id: 'item_belt1', name: 'Leather Belt', category: 'Accessories', source: require('../../assets/outfits/belt1.png') },
+  // Example: { id: 'item_belt1', name: 'Leather Belt', category: 'Accessories', source: require('../../assets/outfits/belt1.png'), keywords: ['belt', 'leather', 'accessory'] },
 ];
 
 // Predefined Outfits for Home Page
@@ -23,6 +23,7 @@ export const predefinedOutfits = [
     id: 'outfit1',
     name: 'Casual Comfort',
     previewImage: require('../../assets/outfits/outfit1.png'),
+    keywords: ['casual', 'comfort', 'everyday', 'hoodie', 'pants', 'sneakers', 'relaxed'],
     items: [
       { itemId: 'item_hoodie1', label: 'Cozy Hoodie' },
       { itemId: 'item_pants1', label: 'Casual Pants' },
@@ -33,6 +34,7 @@ export const predefinedOutfits = [
     id: 'outfit2',
     name: 'Summer Elegance',
     previewImage: require('../../assets/outfits/outfit2.png'),
+    keywords: ['summer', 'elegance', 'dress', 'heels', 'party', 'formal', 'stylish'],
     items: [
       { itemId: 'item_dress1', label: 'Summer Dress' },
       { itemId: 'item_heals1', label: 'Stylish Heels' }
@@ -42,6 +44,7 @@ export const predefinedOutfits = [
     id: 'outfit3',
     name: 'Street Vibe',
     previewImage: require('../../assets/outfits/outfit3.png'),
+    keywords: ['street', 'vibe', 'casual', 'tee', 'jeans', 'sneakers', 'urban', 'graphic'],
     items: [
       { itemId: 'item_shirt2', label: 'Graphic Tee' },
       { itemId: 'item_jeans2', label: 'Denim Jeans' },
@@ -52,6 +55,7 @@ export const predefinedOutfits = [
     id: 'outfit4',
     name: 'Smart Casual',
     previewImage: require('../../assets/outfits/outfit4.png'),
+    keywords: ['smart casual', 'polo', 'trousers', 'formal shoes', 'business casual', 'work'],
     items: [
       { itemId: 'item_polo1', label: 'Classic Polo' },
       { itemId: 'item_trousers1', label: 'Tailored Trousers' },

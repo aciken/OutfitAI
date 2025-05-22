@@ -23,7 +23,7 @@ import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { BlurView } from 'expo-blur';
 // Import data from the new apparelData.js file
-import { predefinedOutfits, getOutfitDetailsForNavigation } from '../data/apparelData';
+import { predefinedOutfits, getOutfitDetailsForNavigation, allOutfitItems } from '../data/apparelData';
 import PlusIconImage from '../../assets/PlusIcon2.png'; // Keep this as it's UI specific
 import { useGlobalContext } from '../context/GlobalProvider'; // Added import
 import AsyncStorage from '@react-native-async-storage/async-storage'; // Added AsyncStorage
@@ -53,7 +53,13 @@ export default function Home() {
   const [prevActiveIndex, setPrevActiveIndex] = useState(0);
   const [showScrollToStart, setShowScrollToStart] = useState(false);
   const { user } = useGlobalContext(); // Get user from context
-  const [createdOutfitIds, setCreatedOutfitIds] = useState(new Set()); // New state for created outfit IDs
+  const [createdOutfitIds, setCreatedOutfitIds] = useState(new Set());
+  
+  // State for search
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [originalCards, setOriginalCards] = useState([]); // To store the initial set of cards
+  const [currentCards, setCurrentCards] = useState([]); // Cards to be displayed
   
   // Animation values for button appearance
   const buttonOpacity = useRef(new Animated.Value(0)).current;
@@ -102,6 +108,33 @@ export default function Home() {
 
     loadCreatedOutfitIds();
   }, [user]); // Re-run if user context changes (e.g., login/logout)
+
+  useEffect(() => {
+    const initialCards = [
+      { 
+        id: 'create', 
+        type: 'create', 
+        title: 'Create your outfit',
+        keywords: ['create', 'new', 'custom', 'design'] // Added keywords for the create card
+      },
+      ...predefinedOutfits.map(outfit => ({
+        id: outfit.id,
+        type: 'outfit',
+        items: [{ source: outfit.previewImage, height: 300 }],
+        keywords: outfit.keywords || [], // Ensure keywords exist
+        // Include item keywords for searching within outfits
+        itemKeywords: outfit.items.reduce((acc, itemRef) => {
+          const itemDetail = allOutfitItems.find(i => i.id === itemRef.itemId);
+          if (itemDetail && itemDetail.keywords) {
+            return acc.concat(itemDetail.keywords);
+          }
+          return acc;
+        }, [])
+      }))
+    ];
+    setOriginalCards(initialCards);
+    setCurrentCards(initialCards);
+  }, []); // Runs once on mount
 
   // Updated sample data structure for cards using imported data
   const [cards] = useState([
@@ -283,6 +316,50 @@ export default function Home() {
       }, 100);
       
       setExpandedSection(section);
+    }
+  };
+
+  // Function to handle the search logic
+  const handleSearch = () => {
+    if (!searchQuery.trim()) {
+      // If search query is empty, reset to original cards and turn off searching state
+      setCurrentCards(originalCards);
+      setIsSearching(false);
+      handleCloseSearchModal();
+      return;
+    }
+
+    const lowerCaseQuery = searchQuery.toLowerCase();
+    const filtered = originalCards.filter(card => {
+      // Always include the create card if it's explicitly searched for by its title or assigned keywords
+      if (card.type === 'create') {
+        const createCardTitleMatch = card.title.toLowerCase().includes(lowerCaseQuery);
+        const createCardKeywordMatch = card.keywords && card.keywords.some(k => k.toLowerCase().includes(lowerCaseQuery));
+        return createCardTitleMatch || createCardKeywordMatch;
+      }
+      // For outfit cards, check outfit keywords and item keywords
+      const outfitKeywordMatch = card.keywords && card.keywords.some(k => k.toLowerCase().includes(lowerCaseQuery));
+      const itemKeywordMatch = card.itemKeywords && card.itemKeywords.some(k => k.toLowerCase().includes(lowerCaseQuery));
+      return outfitKeywordMatch || itemKeywordMatch;
+    });
+
+    setCurrentCards(filtered);
+    setIsSearching(true);
+    handleCloseSearchModal();
+    // Scroll to the beginning of the list after search
+    if (flatListRef.current) {
+      flatListRef.current.scrollToOffset({ animated: true, offset: 0 });
+    }
+  };
+
+  // Function to clear the search
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    setCurrentCards(originalCards);
+    setIsSearching(false);
+    // Optionally close the modal if it's open, though usually called from within modal
+    if (isSearchModalVisible) {
+        handleCloseSearchModal();
     }
   };
 
@@ -567,7 +644,7 @@ export default function Home() {
         {/* Search Button - Styled like the image, dark theme */}
         <TouchableOpacity 
           ref={searchButtonRef}
-          className="flex-1 bg-[#201030] rounded-full px-4 py-3.5 shadow-md" 
+          className={`flex-1 rounded-full px-4 py-3.5 shadow-md ${isSearching ? 'bg-purple-700' : 'bg-[#201030]'}`}
           activeOpacity={0.8}
           onPress={handleOpenSearchModal}
           style={{
@@ -581,9 +658,9 @@ export default function Home() {
         >
           {/* Inner View to center the icon and text */}
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-            <Ionicons name="search" size={20} color="#D0D0D0" style={{ marginRight: 8 }} /> 
-            <Text className="text-base text-gray-100">
-              Start your search
+            <Ionicons name="search" size={20} color={isSearching ? '#FFFFFF' : '#D0D0D0'} style={{ marginRight: 8 }} /> 
+            <Text className={`text-base ${isSearching ? 'text-white font-semibold' : 'text-gray-100'}`}>
+              {isSearching ? 'Search Active' : 'Start your search'}
             </Text>
           </View>
         </TouchableOpacity>
@@ -656,7 +733,7 @@ export default function Home() {
         />
         <AnimatedFlatList
           ref={flatListRef}
-          data={filteredCards}
+          data={currentCards}
           renderItem={renderCard}
           keyExtractor={(item) => item.id}
           horizontal
@@ -673,7 +750,7 @@ export default function Home() {
           viewabilityConfig={viewabilityConfig.current}
           pagingEnabled={false}
           disableIntervalMomentum={true}
-          snapToOffsets={filteredCards.map((_, i) => 
+          snapToOffsets={currentCards.map((_, i) => 
             i * (CARD_WIDTH + CARD_SPACING)
           )}
           onScroll={Animated.event(
@@ -771,7 +848,14 @@ export default function Home() {
                   <View style={{ padding: 20, paddingBottom: 0 }}>
                     <View style={styles.searchInputContainer}>
                       <Ionicons name="search" size={22} color="#A0A0A0" style={{ marginHorizontal: 12 }} />
-                      <TextInput style={styles.searchInput} placeholder="Search clothing items" placeholderTextColor="#A0A0A0" autoCapitalize="none" />
+                      <TextInput 
+                        style={styles.searchInput} 
+                        placeholder="Search clothing items" 
+                        placeholderTextColor="#A0A0A0" 
+                        autoCapitalize="none"
+                        value={searchQuery}
+                        onChangeText={setSearchQuery} // Connect to searchQuery state
+                      />
                     </View>
                   </View>
 
@@ -1016,10 +1100,10 @@ export default function Home() {
               opacity: modalAnimation
             }
           ]}>
-            <TouchableOpacity onPress={() => console.log('Clear all filters')} activeOpacity={0.6}>
+            <TouchableOpacity onPress={handleClearSearch} activeOpacity={0.6}>
               <Text style={styles.clearAllText}>Clear all</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.searchModalButton} activeOpacity={0.8} onPress={() => { console.log('Search with filters'); handleCloseSearchModal(); }}>
+            <TouchableOpacity style={styles.searchModalButton} activeOpacity={0.8} onPress={handleSearch}>
               <Ionicons name="search" size={18} color="#FFF" style={{ marginRight: 8 }} />
               <Text style={styles.searchModalButtonText}>Search</Text>
             </TouchableOpacity>
