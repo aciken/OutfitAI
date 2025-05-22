@@ -659,14 +659,14 @@ export default function History() {
                 {focusedImage && (
                   <>
                     <Image
-                      source={focusedImage.image}
+                      source={{ uri: focusedImage.appwriteImageUrl }}
                       style={styles.focusedImage}
                       resizeMode="contain"
                     />
                     <View style={styles.outfitItemsContainer}>
                       <Text style={styles.outfitItemsTitle}>Outfit Items Used</Text>
                       <FlatList
-                        data={focusedImage.outfitItems}
+                        data={focusedImage.detailedOutfitItems}
                         renderItem={renderOutfitItem}
                         keyExtractor={(item) => item.id}
                         horizontal
