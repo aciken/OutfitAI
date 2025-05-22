@@ -20,7 +20,7 @@ import axios from 'axios';
 const IMAGE_MAX_DIMENSION = 512;
 
 export default function OutfitDetailsPage() {
-  const { user } = useGlobalContext();
+  const { user, setUser } = useGlobalContext();
   const router = useRouter();
   const params = useLocalSearchParams();
   const { id } = params;
@@ -44,6 +44,51 @@ export default function OutfitDetailsPage() {
   }
 
   useEffect(() => {
+    const loadOutfitImage = async () => {
+      console.log("Loading outfit image for outfit ID:", params.id);
+      let imageSetFromCreated = false;
+      try {
+        const storedUserString = await AsyncStorage.getItem('user');
+        if (storedUserString) {
+          const parsedUser = JSON.parse(storedUserString);
+          console.log("Parsed user:", parsedUser);
+          console.log('params.id', params.id)
+          console.log(parsedUser, parsedUser.createdImages, parsedUser.createdImages > 0, params.id)
+          if (parsedUser && parsedUser.createdImages && parsedUser.createdImages.length > 0 && params.id) {
+            const foundImage = parsedUser.createdImages.find(img => img.outfitId === params.id);
+            if (foundImage && foundImage.imageId) {
+              console.log("Found image in AsyncStorage:", foundImage);
+              try {
+                const client = new Client()
+                  .setEndpoint('https://fra.cloud.appwrite.io/v1')
+                  .setProject('682371f4001597e0b4a7');
+                const storage = new Storage(client);
+                const result = storage.getFileDownload(
+                  '6823720b001cdc257539', // Assuming same bucket ID
+                  foundImage.imageId
+                );
+                setGeneratedImageUrl(result.href); // Display as the main generated/preview image
+                setDisplayImageUri(result.href);   // Also set this to ensure consistency
+                console.log("Loaded previously generated image for outfit from AsyncStorage user:", result.href);
+                imageSetFromCreated = true;
+              } catch (error) {
+                console.error("Error loading previously generated image from Appwrite (AsyncStorage user):", error);
+                setErrorMsg("Failed to load previous outfit image.");
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Error reading user from AsyncStorage in loadOutfitImage:", e);
+        // Continue to fallback if AsyncStorage read fails
+      }
+
+      if (!imageSetFromCreated) {
+        // Fallback to fetching the default user image if no specific outfit image was found/loaded
+        fetchUserImage();
+      }
+    };
+
     const fetchUserImage = async () => {
       try {
         const storedUser = await AsyncStorage.getItem('user');
@@ -68,7 +113,8 @@ export default function OutfitDetailsPage() {
         setErrorMsg("Failed to load image.");
       }
     };
-    fetchUserImage();
+
+    loadOutfitImage(); // Call the new orchestrating function
 
     (async () => {
       if (Platform.OS !== 'web') {
@@ -82,7 +128,7 @@ export default function OutfitDetailsPage() {
         }
       }
     })();
-  }, []);
+  }, [user]);
 
   const handleChangeDisplayImage = async () => {
     Alert.alert(
@@ -160,7 +206,7 @@ export default function OutfitDetailsPage() {
       formData.append('prompt', 'Dress the person in the main image using the provided outfit item images. Ensure the outfit looks natural and cohesive. Full body of the person must be visible. Without making the person look weird or deformed, make the person look good in the outfit, without making even a slight change in the persons face, reapat you CANT MAKE ANY CHANGES TO THE FACE IT NEEDS TO LOOK EXACTLY LIKE IN THE PHOTO, same with the new clothes that person wears.');
       formData.append('size', '1024x1024');
       formData.append('n', '1');
-      formData.append('quality', 'low');
+      formData.append('quality', 'high');
       formData.append('image[]', {
         uri: userImageFileUri,
         name: 'user.png',
@@ -293,8 +339,8 @@ export default function OutfitDetailsPage() {
                        userID, imageID, outfitId
                    })
                    .then(backendResponse => {
-                       console.log("Backend update success (fallback user ID):", backendResponse.data);
-                       Alert.alert("Success", "Outfit image saved!");
+                    AsyncStorage.setItem('user', JSON.stringify(backendResponse.data));
+                    setUser(backendResponse.data);
                    })
                    .catch(backendError => {
                        console.log("Backend update error (fallback user ID):", backendError.response ? backendError.response.data : backendError.message);
@@ -325,6 +371,8 @@ export default function OutfitDetailsPage() {
           .then(backendResponse => {
             console.log("Backend update success:", backendResponse.data);
             Alert.alert("Success", "Outfit image saved!");
+            AsyncStorage.setItem('user', JSON.stringify(backendResponse.data));
+            setUser(backendResponse.data);
           })
           .catch(backendError => {
             console.log("Backend update error:", backendError.response ? backendError.response.data : backendError.message);
