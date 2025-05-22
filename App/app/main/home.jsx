@@ -26,6 +26,7 @@ import { BlurView } from 'expo-blur';
 import { predefinedOutfits, getOutfitDetailsForNavigation } from '../data/apparelData';
 import PlusIconImage from '../../assets/PlusIcon2.png'; // Keep this as it's UI specific
 import { useGlobalContext } from '../context/GlobalProvider'; // Added import
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Added AsyncStorage
 // import HangerIconImage from '../../assets/HangerIcon.png'; // This seems unused, removing unless specified
 
 // Create an animated version of FlatList
@@ -52,6 +53,7 @@ export default function Home() {
   const [prevActiveIndex, setPrevActiveIndex] = useState(0);
   const [showScrollToStart, setShowScrollToStart] = useState(false);
   const { user } = useGlobalContext(); // Get user from context
+  const [createdOutfitIds, setCreatedOutfitIds] = useState(new Set()); // New state for created outfit IDs
   
   // Animation values for button appearance
   const buttonOpacity = useRef(new Animated.Value(0)).current;
@@ -69,6 +71,38 @@ export default function Home() {
   const styleSectionHeight = useRef(new Animated.Value(expandedSection === 'style' ? 1 : 0)).current;
   const occasionSectionHeight = useRef(new Animated.Value(expandedSection === 'occasion' ? 1 : 0)).current;
   
+  useEffect(() => {
+    const loadCreatedOutfitIds = async () => {
+      let ids = new Set();
+      try {
+        const storedUserString = await AsyncStorage.getItem('user');
+        if (storedUserString) {
+          const parsedUser = JSON.parse(storedUserString);
+          if (parsedUser && parsedUser.createdImages && parsedUser.createdImages.length > 0) {
+            parsedUser.createdImages.forEach(img => ids.add(img.outfitId));
+            console.log("Home: Loaded createdOutfitIds from AsyncStorage");
+          }
+        }
+      } catch (e) {
+        console.error("Home: Failed to load user from AsyncStorage for checkmarks:", e);
+        // Optionally, could fallback to context user here if AsyncStorage fails
+        // For now, if AsyncStorage fails, it might mean no checkmarks or checkmarks based on context user if implemented below
+      }
+
+      // Fallback or primary load from context if AsyncStorage didn't populate (or as an additional check)
+      // This logic ensures that if AsyncStorage is empty/fails, context can still provide data.
+      // And if both have data, AsyncStorage is preferred by the order of operations.
+      if (ids.size === 0 && user && user.createdImages && user.createdImages.length > 0) {
+         console.log("Home: Loading createdOutfitIds from GlobalContext as fallback or primary if AsyncStorage empty");
+         user.createdImages.forEach(img => ids.add(img.outfitId));
+      }
+      
+      setCreatedOutfitIds(ids);
+    };
+
+    loadCreatedOutfitIds();
+  }, [user]); // Re-run if user context changes (e.g., login/logout)
+
   // Updated sample data structure for cards using imported data
   const [cards] = useState([
     { 
@@ -360,8 +394,8 @@ export default function Home() {
               );
             })}
           </View>
-          {/* Checkmark for created outfits */}
-          {user && user.createdImages && user.createdImages.find(ci => ci.outfitId === item.id) && (
+          {/* Checkmark for created outfits using createdOutfitIds state */}
+          {createdOutfitIds.has(item.id) && (
             <View style={styles.checkmarkContainer}>
               <Ionicons name="checkmark-circle" size={24} color="#8A2BE2" />
             </View>

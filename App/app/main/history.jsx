@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   View,
   SafeAreaView,
@@ -14,12 +14,17 @@ import {
   Pressable,
   PanResponder,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { BlurView } from 'expo-blur';
+import { useGlobalContext } from '../context/GlobalProvider';
+import { Client, Storage } from 'react-native-appwrite';
+import { getPredefinedOutfitById } from '../data/apparelData';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Create an animated version of FlatList
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
@@ -75,6 +80,7 @@ const getRandomOutfitItems = (count = 3) => {
 
 export default function History() {
   const router = useRouter();
+  const { user } = useGlobalContext();
   const [activeCardIndex, setActiveCardIndex] = useState(0);
   const [sortBy, setSortBy] = useState('newest');
   const [focusedImage, setFocusedImage] = useState(null);
@@ -98,6 +104,10 @@ export default function History() {
     showDate: true,
     showItemCount: true,
   });
+
+  const [processedHistoryItems, setProcessedHistoryItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState(null);
 
   // Create pan responder for gesture handling
   const panResponder = useRef(
@@ -226,36 +236,83 @@ export default function History() {
     })
   ).current;
 
-  // Sample data for history items with outfit items
-  const [historyItems] = useState([
-    {
-      id: '1',
-      date: '2024-03-20',
-      image: TestImage,
-      outfitItems: getRandomOutfitItems(4),
-    },
-    {
-      id: '2',
-      date: '2024-03-19',
-      image: TestImage,
-      outfitItems: getRandomOutfitItems(3),
-    },
-    {
-      id: '3',
-      date: '2024-03-18',
-      image: TestImage,
-      outfitItems: getRandomOutfitItems(5),
-    },
-  ]);
+  useEffect(() => {
+    const fetchHistoryData = async () => {
+      setIsLoading(true);
+      setErrorMessage(null);
+      let imagesToProcess = null;
 
-  // Sort items based on selected option
-  const sortedItems = [...historyItems].sort((a, b) => {
-    if (sortBy === 'newest') {
-      return new Date(b.date) - new Date(a.date);
-    } else {
-      return new Date(a.date) - new Date(b.date);
-    }
-  });
+      try {
+        const storedUserString = await AsyncStorage.getItem('user');
+        if (storedUserString) {
+          const parsedUser = JSON.parse(storedUserString);
+          if (parsedUser && parsedUser.createdImages && parsedUser.createdImages.length > 0) {
+            imagesToProcess = parsedUser.createdImages;
+            console.log("History: Loaded createdImages from AsyncStorage");
+          }
+        }
+      } catch (e) {
+        console.error("History: Failed to load user from AsyncStorage:", e);
+        // Fallback to context user if AsyncStorage fails
+      }
+
+      // Fallback to user from context if not found in AsyncStorage or if AsyncStorage read failed
+      if (!imagesToProcess && user && user.createdImages && user.createdImages.length > 0) {
+        imagesToProcess = user.createdImages;
+        console.log("History: Loaded createdImages from GlobalContext as fallback");
+      }
+
+      if (!imagesToProcess || imagesToProcess.length === 0) {
+        setProcessedHistoryItems([]);
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const client = new Client()
+          .setEndpoint('https://fra.cloud.appwrite.io/v1')
+          .setProject('682371f4001597e0b4a7');
+        const storage = new Storage(client);
+        const BUCKET_ID = '6823720b001cdc257539'; // Your Appwrite bucket ID
+
+        // Sort by createdAt descending (newest first)
+        const sortedCreatedImages = [...imagesToProcess].sort((a, b) => 
+          new Date(b.createdAt) - new Date(a.createdAt)
+        );
+
+        const itemsWithDetails = await Promise.all(
+          sortedCreatedImages.map(async (createdImg) => {
+            let appwriteImageUrl = null;
+            try {
+              const imageFile = storage.getFileView(BUCKET_ID, createdImg.imageId);
+              appwriteImageUrl = imageFile.href; 
+            } catch (e) {
+              console.error(`Failed to get Appwrite URL for imageId ${createdImg.imageId}:`, e);
+              // Keep appwriteImageUrl as null if fetching fails
+            }
+
+            const outfitDetails = getPredefinedOutfitById(createdImg.outfitId);
+            
+            return {
+              id: createdImg.imageId, // Use imageId as unique key for the list
+              appwriteImageUrl,
+              createdAt: createdImg.createdAt,
+              outfitId: createdImg.outfitId,
+              detailedOutfitItems: outfitDetails ? outfitDetails.detailedItems : [],
+            };
+          })
+        );
+        setProcessedHistoryItems(itemsWithDetails);
+      } catch (error) {
+        console.error('Failed to fetch history data:', error);
+        setErrorMessage('Could not load history. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchHistoryData();
+  }, [user]); // Re-run if user object changes
 
   const viewabilityConfig = useRef({
     itemVisiblePercentThreshold: 25,
@@ -407,6 +464,29 @@ export default function History() {
       opacity,
     };
 
+    let cardClasses = "h-[400px] rounded-2xl overflow-hidden bg-gray-800";
+    let cardContent = (
+      <View className="flex-1 justify-center items-center w-full">
+        {item.appwriteImageUrl ? (
+          <Image 
+            source={{ uri: item.appwriteImageUrl }}
+            style={styles.historyImage} 
+            resizeMode="cover" 
+          />
+        ) : (
+          <View style={styles.imagePlaceholder}>
+            <Ionicons name="image-outline" size={60} color="#555" />
+            <Text style={styles.placeholderText}>Image not available</Text>
+          </View>
+        )}
+        {settings.showDate && (
+          <View style={styles.dateOverlay}>
+            <Text style={styles.dateText}>Created: {new Date(item.createdAt).toLocaleDateString()}</Text>
+          </View>
+        )}
+      </View>
+    );
+
     return (
       <Animated.View
         style={[
@@ -415,7 +495,7 @@ export default function History() {
         ]}
       >
         <TouchableOpacity
-          className="h-[400px] rounded-2xl overflow-hidden"
+          className={cardClasses}
           style={{
             shadowColor: '#8A2BE2',
             shadowOffset: { width: 0, height: 6 },
@@ -429,32 +509,7 @@ export default function History() {
             handleImagePress(item);
           }}
         >
-          <Image
-            source={item.image}
-            style={{
-              width: '100%',
-              height: '100%',
-              borderRadius: 16,
-            }}
-            resizeMode="cover"
-          />
-          <LinearGradient
-            colors={['transparent', 'rgba(0,0,0,0.7)']}
-            style={{
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              padding: 16,
-            }}
-          >
-            <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '500' }}>
-              Generated on {item.date}
-            </Text>
-            <Text style={{ color: '#FFFFFF', fontSize: 12, marginTop: 4 }}>
-              {item.outfitItems.length} items used
-            </Text>
-          </LinearGradient>
+          {cardContent}
         </TouchableOpacity>
       </Animated.View>
     );
@@ -462,14 +517,40 @@ export default function History() {
 
   const renderOutfitItem = ({ item }) => (
     <View style={styles.outfitItemContainer}>
-      <Image
-        source={item.image}
-        style={styles.outfitItemImage}
-        resizeMode="contain"
-      />
-      <Text style={styles.outfitItemName}>{item.name}</Text>
+      <Image source={item.source} style={styles.outfitItemImage} resizeMode="contain" />
+      <Text style={styles.outfitItemName} numberOfLines={2}>{item.label || item.name}</Text>
     </View>
   );
+
+  // Conditional rendering for loading, error, or empty states
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.centeredMessageContainer}>
+        <ActivityIndicator size="large" color="#C07EFF" />
+        <Text style={styles.loadingText}>Loading History...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (errorMessage) {
+    return (
+      <SafeAreaView style={styles.centeredMessageContainer}>
+        <Ionicons name="alert-circle-outline" size={48} color="#FF6B6B" />
+        <Text style={styles.errorText}>{errorMessage}</Text>
+        {/* TODO: Add a retry button? */}
+      </SafeAreaView>
+    );
+  }
+
+  if (!processedHistoryItems || processedHistoryItems.length === 0) {
+    return (
+      <SafeAreaView style={styles.centeredMessageContainer}>
+        <Ionicons name="archive-outline" size={48} color="#888" />
+        <Text style={styles.emptyText}>No history yet.</Text>
+        <Text style={styles.emptySubText}>Create some outfits to see them here!</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-[#1A0D2E]">
@@ -515,7 +596,7 @@ export default function History() {
         />
         <AnimatedFlatList
           ref={flatListRef}
-          data={sortedItems}
+          data={processedHistoryItems}
           renderItem={renderCard}
           keyExtractor={(item) => item.id}
           horizontal
@@ -532,7 +613,7 @@ export default function History() {
           viewabilityConfig={viewabilityConfig.current}
           pagingEnabled={false}
           disableIntervalMomentum={true}
-          snapToOffsets={sortedItems.map((_, i) => 
+          snapToOffsets={processedHistoryItems.map((_, i) => 
             i * (CARD_WIDTH + CARD_SPACING)
           )}
           onScroll={Animated.event(
@@ -606,6 +687,74 @@ export default function History() {
           </BlurView>
         </Animated.View>
       </Modal>
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <Modal
+          visible={showSettings}
+          transparent={true}
+          animationType="none"
+          onRequestClose={handleCloseSettings}
+        >
+          <Animated.View 
+            style={[
+              styles.settingsOverlay,
+              {
+                opacity: settingsOpacity,
+              }
+            ]}
+          >
+            <BlurView intensity={20} style={StyleSheet.absoluteFill}>
+              <Animated.View 
+                style={[
+                  styles.settingsContent,
+                  {
+                    transform: [
+                      { translateY: settingsTranslateY },
+                      { scale: settingsScale }
+                    ],
+                  }
+                ]}
+                {...settingsPanResponder.panHandlers}
+              >
+                <ScrollView 
+                  style={styles.settingsScrollView}
+                  contentContainerStyle={styles.settingsScrollContent}
+                >
+                  <Text style={styles.settingsTitle}>Settings</Text>
+                  <View style={styles.settingItem}>
+                    <Text style={styles.settingLabel}>Show Outfit Items</Text>
+                    <Switch
+                      value={settings.showOutfitItems}
+                      onValueChange={(value) => toggleSetting('showOutfitItems')}
+                    />
+                  </View>
+                  <View style={styles.settingItem}>
+                    <Text style={styles.settingLabel}>Show Date</Text>
+                    <Switch
+                      value={settings.showDate}
+                      onValueChange={(value) => toggleSetting('showDate')}
+                    />
+                  </View>
+                  <View style={styles.settingItem}>
+                    <Text style={styles.settingLabel}>Show Item Count</Text>
+                    <Switch
+                      value={settings.showItemCount}
+                      onValueChange={(value) => toggleSetting('showItemCount')}
+                    />
+                  </View>
+                </ScrollView>
+                <TouchableOpacity
+                  style={styles.closeSettingsButton}
+                  onPress={handleCloseSettings}
+                >
+                  <Ionicons name="close" size={24} color="#FFFFFF" />
+                </TouchableOpacity>
+              </Animated.View>
+            </BlurView>
+          </Animated.View>
+        </Modal>
+      )}
     </SafeAreaView>
   );
 }
@@ -676,6 +825,112 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 12,
     marginTop: 8,
+    textAlign: 'center',
+  },
+  settingsOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  settingsContent: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  settingsScrollView: {
+    flex: 1,
+    width: '100%',
+  },
+  settingsScrollContent: {
+    alignItems: 'center',
+    paddingBottom: 40,
+  },
+  settingsTitle: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 16,
+  },
+  settingItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+  },
+  settingLabel: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  closeSettingsButton: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    padding: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 20,
+  },
+  dateOverlay: {
+    position: 'absolute',
+    bottom: 10,
+    left: 10,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  dateText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  historyImage: {
+    width: '100%',
+    height: '100%',
+  },
+  imagePlaceholder: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#2C1B4A',
+  },
+  placeholderText: {
+    marginTop: 8,
+    color: '#888',
+    fontSize: 14,
+  },
+  centeredMessageContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#1A0D2E',
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#E0E0E0',
+  },
+  errorText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#FFD1D1',
+    textAlign: 'center',
+  },
+  emptyText: {
+    marginTop: 12,
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#C0C0C0',
+  },
+  emptySubText: {
+    marginTop: 6,
+    fontSize: 14,
+    color: '#888',
     textAlign: 'center',
   },
 });
