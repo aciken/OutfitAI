@@ -71,6 +71,44 @@ const OCCASION_OPTIONS = [
   { id: 'sport_activity', name: 'Sport Activity', icon: 'basketball-outline' },
 ];
 
+// Helper function to shuffle an array (Fisher-Yates)
+const shuffleArray = (array) => {
+  let currentIndex = array.length, randomIndex;
+  const newArray = [...array]; // Create a copy to avoid mutating the original
+  while (currentIndex !== 0) {
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+    [newArray[currentIndex], newArray[randomIndex]] = [
+      newArray[randomIndex], newArray[currentIndex]];
+  }
+  return newArray;
+};
+
+// Helper function to build the cards array
+const buildCardsArray = (outfitsToMap) => {
+  return [
+    {
+      id: 'create',
+      type: 'create',
+      title: 'Create your outfit',
+      keywords: ['create', 'new', 'custom', 'design']
+    },
+    ...outfitsToMap.map(outfit => ({
+      id: outfit.id,
+      type: 'outfit',
+      items: [{ source: outfit.previewImage, height: 300 }],
+      keywords: outfit.keywords || [],
+      itemKeywords: outfit.items.reduce((acc, itemRef) => {
+        const itemDetail = allOutfitItems.find(i => i.id === itemRef.itemId);
+        if (itemDetail && itemDetail.keywords) {
+          return acc.concat(itemDetail.keywords);
+        }
+        return acc;
+      }, [])
+    }))
+  ];
+};
+
 export default function Home() {
   const router = useRouter();
   const [activeCardIndex, setActiveCardIndex] = useState(0);
@@ -138,54 +176,11 @@ export default function Home() {
   }, [user]); // Re-run if user context changes (e.g., login/logout)
 
   useEffect(() => {
-    const initialCards = [
-      { 
-        id: 'create', 
-        type: 'create', 
-        title: 'Create your outfit',
-        keywords: ['create', 'new', 'custom', 'design'] // Added keywords for the create card
-      },
-      ...predefinedOutfits.map(outfit => ({
-        id: outfit.id,
-        type: 'outfit',
-        items: [{ source: outfit.previewImage, height: 300 }],
-        keywords: outfit.keywords || [], // Ensure keywords exist
-        // Include item keywords for searching within outfits
-        itemKeywords: outfit.items.reduce((acc, itemRef) => {
-          const itemDetail = allOutfitItems.find(i => i.id === itemRef.itemId);
-          if (itemDetail && itemDetail.keywords) {
-            return acc.concat(itemDetail.keywords);
-          }
-          return acc;
-        }, [])
-      }))
-    ];
-    setOriginalCards(initialCards);
-    setCurrentCards(initialCards);
-  }, []); // Runs once on mount
-
-  // Updated sample data structure for cards using imported data
-  const [cards] = useState([
-    { 
-      id: 'create', 
-      type: 'create', 
-      title: 'Create your outfit' 
-    },
-    // Map predefined outfits to card structure
-    ...predefinedOutfits.map(outfit => ({
-      id: outfit.id,
-      type: 'outfit',
-      // Display a single mannequin image on the card
-      items: [ // This structure is for the card display, using the previewImage
-        { source: outfit.previewImage, height: 300 } // Keep height for preview consistency
-      ],
-      // detailedItems are now fetched via getOutfitDetailsForNavigation on press
-    }))
-  ]);
-
-  // Remove filtered cards logic based on search, directly use cards
-  // const filteredCards = cards.filter(card => { ... });
-  const filteredCards = cards; // Simplified
+    const shuffledOutfits = shuffleArray(predefinedOutfits); // Shuffle on initial load
+    const initialCardsData = buildCardsArray(shuffledOutfits);
+    setOriginalCards(initialCardsData);
+    setCurrentCards(initialCardsData);
+  }, []);
 
   // Reference to the FlatList to programmatically control it
   const flatListRef = React.useRef();
@@ -442,14 +437,27 @@ export default function Home() {
   };
 
   const handleReload = () => {
-    console.log("Reload button pressed");
-    setCurrentCards(originalCards); // Reset to the initial set of cards
+    console.log("Reload button pressed, shuffling outfits...");
+    const shuffledOutfits = shuffleArray(predefinedOutfits); // Get a fresh shuffle
+    const newCardData = buildCardsArray(shuffledOutfits);
+
+    setOriginalCards(newCardData); // Update originalCards to the new shuffled set
+    setCurrentCards(newCardData);   // Display the new shuffled set
+
+    // Clear any search/filter states
     setSearchQuery('');
     setSelectedStyles(new Set());
     setSelectedOccasions(new Set());
     setIsSearching(false);
+
     if (flatListRef.current) {
-      flatListRef.current.scrollToOffset({ animated: true, offset: 0 });
+      // Scroll to the first outfit card (index 1), if cards exist beyond 'create'
+      if (newCardData.length > 1) {
+        flatListRef.current.scrollToIndex({ index: 1, animated: true, viewPosition: 0.5 });
+      } else {
+        // Fallback to index 0 if only 'create' card exists (shouldn't happen with predefinedOutfits)
+        flatListRef.current.scrollToOffset({ animated: true, offset: 0 });
+      }
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   };
