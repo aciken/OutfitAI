@@ -335,7 +335,7 @@ export default function OutfitDetailsPage() {
                    const userID = parsedUser._id;
                    const outfitId = params.id; // id from useLocalSearchParams
                    
-                   axios.put('https://1f54-109-245-193-150.ngrok-free.app/createdImage', {
+                   axios.put('https://a4ec-109-245-193-150.ngrok-free.app/createdImage', {
                        userID, imageID, outfitId
                    })
                    .then(backendResponse => {
@@ -363,7 +363,7 @@ export default function OutfitDetailsPage() {
 
           console.log("Sending data to backend:", { userID, imageID, outfitId });
 
-          axios.put('https://1f54-109-245-193-150.ngrok-free.app/createdImage', {
+          axios.put('https://a4ec-109-245-193-150.ngrok-free.app/createdImage', {
             userID,
             imageID,
             outfitId
@@ -442,7 +442,6 @@ export default function OutfitDetailsPage() {
                 {items.map((item, index) => (
                   <View key={index} style={styles.itemCard}>
                     <Image source={item.source} style={styles.itemImageInCard} />
-                    {item.label && <Text style={styles.itemLabel}>{item.label}</Text>}
                   </View>
                 ))}
               </ScrollView>
@@ -499,13 +498,22 @@ const styles = StyleSheet.create({
   itemsSectionContainer: { width: '95%', marginBottom: 20 },
   itemsTitle: { fontSize: 18, fontWeight: '600', marginBottom: 10, color: '#E0E0E0' },
   itemCard: {
-    width: 100, height: 130, borderRadius: 10, marginRight: 12,
+    width: 100,
+    height: 100,
+    borderRadius: 10,
+    marginRight: 12,
     backgroundColor: 'rgba(44,27,74,0.8)',
-    alignItems: 'center', padding: 5,
-    borderWidth: 1, borderColor: 'rgba(192,126,255,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(192,126,255,0.25)',
   },
-  itemImageInCard: { width: '100%', height: 80, resizeMode: 'contain' },
-  itemLabel: { fontSize: 11, color: '#E0E0E0', textAlign: 'center', marginTop: 5 },
+  itemImageInCard: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain'
+  },
   continueButton: {
     position: 'absolute', bottom: 30, left: '5%', right: '5%',
     borderRadius: 30, overflow: 'hidden', elevation: 6,
