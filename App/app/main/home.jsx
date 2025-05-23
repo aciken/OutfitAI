@@ -143,6 +143,20 @@ export default function Home() {
   const styleSectionHeight = useRef(new Animated.Value(expandedSection === 'style' ? 1 : 0)).current;
   const occasionSectionHeight = useRef(new Animated.Value(expandedSection === 'occasion' ? 1 : 0)).current;
   
+  const flatListRef = React.useRef();
+  const listOpacity = useRef(new Animated.Value(1)).current;
+  const listScale = useRef(new Animated.Value(1)).current;
+  const rotationValue = useRef(new Animated.Value(0)).current;
+  const [isShuffling, setIsShuffling] = useState(false);
+  const rotationAnimationLoop = useRef(null);
+
+  // Calculate the ShuffleIndicator opacity to be inverse of listOpacity
+  const shuffleIndicatorOpacity = listOpacity.interpolate({
+    inputRange: [0.1, 1], // From faded out list to fully visible list
+    outputRange: [0.9, 0], // Indicator fully visible to fully transparent
+    extrapolate: 'clamp',
+  });
+
   useEffect(() => {
     const loadCreatedOutfitIds = async () => {
       let ids = new Set();
@@ -181,9 +195,6 @@ export default function Home() {
     setOriginalCards(initialCardsData);
     setCurrentCards(initialCardsData);
   }, []);
-
-  // Reference to the FlatList to programmatically control it
-  const flatListRef = React.useRef();
 
   // Add scroll offset for more granular animation control
   const scrollX = React.useRef(new Animated.Value(0)).current;
@@ -429,37 +440,81 @@ export default function Home() {
     setSearchQuery('');
     setSelectedStyles(new Set());
     setSelectedOccasions(new Set());
-    setCurrentCards(originalCards);
+    // Reset to originalCards which holds the current shuffled order before search
+    setCurrentCards(originalCards); 
     setIsSearching(false);
-    if (isSearchModalVisible) {
-        handleCloseSearchModal();
-    }
+    if (isSearchModalVisible) handleCloseSearchModal();
   };
 
   const handleReload = () => {
-    console.log("Reload button pressed, shuffling outfits...");
-    const shuffledOutfits = shuffleArray(predefinedOutfits); // Get a fresh shuffle
-    const newCardData = buildCardsArray(shuffledOutfits);
-
-    setOriginalCards(newCardData); // Update originalCards to the new shuffled set
-    setCurrentCards(newCardData);   // Display the new shuffled set
-
-    // Clear any search/filter states
-    setSearchQuery('');
-    setSelectedStyles(new Set());
-    setSelectedOccasions(new Set());
-    setIsSearching(false);
-
-    if (flatListRef.current) {
-      // Scroll to the first outfit card (index 1), if cards exist beyond 'create'
-      if (newCardData.length > 1) {
-        flatListRef.current.scrollToIndex({ index: 1, animated: true, viewPosition: 0.5 });
-      } else {
-        // Fallback to index 0 if only 'create' card exists (shouldn't happen with predefinedOutfits)
-        flatListRef.current.scrollToOffset({ animated: true, offset: 0 });
-      }
-    }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setIsShuffling(true);
+
+    rotationValue.setValue(0);
+    rotationAnimationLoop.current = Animated.loop(
+      Animated.timing(rotationValue, {
+        toValue: 1,
+        duration: 800,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    );
+    rotationAnimationLoop.current.start();
+
+    Animated.parallel([
+      Animated.timing(listOpacity, {
+        toValue: 0.1,
+        duration: 200,
+        useNativeDriver: true,
+        easing: Easing.in(Easing.ease),
+      }),
+      Animated.timing(listScale, {
+        toValue: 0.85,
+        duration: 200,
+        useNativeDriver: true,
+        easing: Easing.in(Easing.ease),
+      })
+    ]).start(() => {
+      const shuffledOutfits = shuffleArray(predefinedOutfits);
+      const newCardData = buildCardsArray(shuffledOutfits);
+
+      setOriginalCards(newCardData);
+      setCurrentCards(newCardData);
+
+      setSearchQuery('');
+      setSelectedStyles(new Set());
+      setSelectedOccasions(new Set());
+      setIsSearching(false);
+
+      setTimeout(() => {
+        if (flatListRef.current) {
+          if (newCardData.length > 1) {
+            flatListRef.current.scrollToIndex({ index: 1, animated: false, viewPosition: 0.5 });
+          } else {
+            flatListRef.current.scrollToOffset({ animated: false, offset: 0 });
+          }
+        }
+        Animated.parallel([
+          Animated.spring(listScale, {
+            toValue: 1,
+            tension: 40,
+            friction: 5,
+            useNativeDriver: true,
+          }),
+          Animated.timing(listOpacity, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true,
+          })
+        ]).start(() => {
+          setIsShuffling(false);
+          if (rotationAnimationLoop.current) {
+            rotationAnimationLoop.current.stop();
+          }
+          // rotationValue.setValue(0); // No need to reset if it's hidden
+        });
+      }, 75);
+    });
   };
 
   const renderCard = ({ item, index }) => {
@@ -844,6 +899,7 @@ export default function Home() {
             keyExtractor={(item) => item.id}
             horizontal
             showsHorizontalScrollIndicator={false}
+            style={{ opacity: listOpacity, transform: [{ scale: listScale }] }} // Apply opacity and scale
             contentContainerStyle={{
               paddingHorizontal: (width - CARD_WIDTH) / 2 - CARD_SPACING / 2,
               alignItems: 'center',
@@ -867,6 +923,29 @@ export default function Home() {
           />
         )}
       </View>
+
+      {/* Shuffle Animation Indicator */}
+      {isShuffling && (
+          <Animated.View
+            style={[
+              styles.shuffleIndicatorContainer,
+              {
+                opacity: shuffleIndicatorOpacity, // Controlled by list's opacity
+                transform: [
+                  {
+                    rotate: rotationValue.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['0deg', '360deg'],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
+            {/* Using a sleeker icon */}
+            <Ionicons name="sync-outline" size={48} color="#FFFFFF" />
+          </Animated.View>
+      )}
       
       {/* History button at bottom of screen */}
       <View 
@@ -1451,5 +1530,15 @@ const styles = StyleSheet.create({
     color: '#E0E0E0',
     fontSize: 13,
     fontWeight: '600',
+  },
+  shuffleIndicatorContainer: {
+    position: 'absolute',
+    // Center it over the FlatList area (adjust top/bottom if header/footer changes)
+    top: height * 0.3, // Approximate vertical center of list area
+    left: 0,
+    right: 0,
+    alignItems: 'center', // Center the icon horizontally
+    zIndex: 9999, // Above the list but below modal/header potentially
+    // No background, to make it feel lighter
   },
 });
