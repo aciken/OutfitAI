@@ -441,6 +441,19 @@ export default function Home() {
     }
   };
 
+  const handleReload = () => {
+    console.log("Reload button pressed");
+    setCurrentCards(originalCards); // Reset to the initial set of cards
+    setSearchQuery('');
+    setSelectedStyles(new Set());
+    setSelectedOccasions(new Set());
+    setIsSearching(false);
+    if (flatListRef.current) {
+      flatListRef.current.scrollToOffset({ animated: true, offset: 0 });
+    }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  };
+
   const renderCard = ({ item, index }) => {
     let cardContent;
     let cardClasses;
@@ -746,7 +759,7 @@ export default function Home() {
         </TouchableOpacity>
       </View>
       
-      {/* Create Your Outfit Button - animated appearance/disappearance */}
+      {/* Create Your Outfit Button & Reload Button - animated appearance/disappearance */}
       {buttonVisible && (
         <Animated.View 
           style={{
@@ -767,38 +780,36 @@ export default function Home() {
             ]
           }}
         >
-          <TouchableOpacity
-            style={{
-              paddingHorizontal: 14,
-              paddingVertical: 8,
-              borderRadius: 18,
-              flexDirection: 'row',
-              alignItems: 'center',
-              shadowColor: '#C07EFF',
-              shadowOffset: { width: 0, height: 1 },
-              shadowOpacity: 0.4, 
-              shadowRadius: 3,
-              elevation: 4,
-              overflow: 'hidden',
-              backgroundColor: 'rgba(40, 20, 70, 0.85)',
-              borderWidth: 1,
-              borderColor: 'rgba(192, 126, 255, 0.5)',
-            }}
-            onPress={() => {
-              flatListRef.current?.scrollToIndex({
-                index: 0, 
-                animated: true,
-                viewPosition: 0.5
-              });
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            }}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="chevron-back" size={18} color="#E0E0E0" style={{ marginRight: 6 }} />
-            <Text style={{ color: '#E0E0E0', fontSize: 13, fontWeight: '600' }}>
-              Create Your Outfit
-            </Text>
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            {/* Create Your Outfit Button */}
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => {
+                flatListRef.current?.scrollToIndex({
+                  index: 0, 
+                  animated: true,
+                  viewPosition: 0.5
+                });
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="chevron-back" size={18} color="#E0E0E0" style={{ marginRight: 6 }} />
+              <Text style={styles.actionButtonText}>
+                Create Your Outfit
+              </Text>
+            </TouchableOpacity>
+            {/* Spacer View */}
+            <View style={{ width: 12 }} />
+            {/* Reload Button */}
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={handleReload}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="refresh-outline" size={18} color="#E0E0E0" />
+            </TouchableOpacity>
+          </View>
         </Animated.View>
       )}
       
@@ -1411,5 +1422,26 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#888',
     textAlign: 'center',
-  }
+  },
+  actionButton: { // New shared style for Create Outfit and Reload buttons
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#C07EFF',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.4, 
+    shadowRadius: 3,
+    elevation: 4,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(40, 20, 70, 0.85)',
+    borderWidth: 1,
+    borderColor: 'rgba(192, 126, 255, 0.5)',
+  },
+  actionButtonText: { // Style for the text within the action buttons
+    color: '#E0E0E0',
+    fontSize: 13,
+    fontWeight: '600',
+  },
 });
