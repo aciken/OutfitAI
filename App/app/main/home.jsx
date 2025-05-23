@@ -930,7 +930,7 @@ export default function Home() {
             style={[
               styles.shuffleIndicatorContainer,
               {
-                opacity: shuffleIndicatorOpacity, // Controlled by list's opacity
+                opacity: shuffleIndicatorOpacity,
                 transform: [
                   {
                     rotate: rotationValue.interpolate({
@@ -942,8 +942,8 @@ export default function Home() {
               },
             ]}
           >
-            {/* Using a sleeker icon */}
-            <Ionicons name="sync-outline" size={48} color="#FFFFFF" />
+            {/* Icon directly within the animated container */}
+            <Ionicons name="sync-outline" size={56} color="#FFFFFF" />
           </Animated.View>
       )}
       
@@ -1533,12 +1533,18 @@ const styles = StyleSheet.create({
   },
   shuffleIndicatorContainer: {
     position: 'absolute',
-    // Center it over the FlatList area (adjust top/bottom if header/footer changes)
-    top: height * 0.3, // Approximate vertical center of list area
+    top: height * 0.42, // Position remains the same
     left: 0,
     right: 0,
-    alignItems: 'center', // Center the icon horizontally
-    zIndex: 9999, // Above the list but below modal/header potentially
-    // No background, to make it feel lighter
+    alignItems: 'center',
+    justifyContent: 'center', // Ensure icon is centered if container has implicit size
+    zIndex: 9999,
+    // No explicit width/height, it will size to the icon + any shadow padding
+    // Subtle shadow for the icon itself
+    shadowColor: '#000000', 
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.22, 
+    shadowRadius: 2.22,
+    elevation: 3, // Minimal elevation for Android
   },
 });
