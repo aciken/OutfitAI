@@ -1114,8 +1114,8 @@ const styles = StyleSheet.create({
   sectionHeader: {
     paddingVertical: 16,
     paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    borderBottomWidth: 0.5,
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
     position: 'relative',
     overflow: 'hidden',
     backgroundColor: 'transparent',
@@ -1127,18 +1127,19 @@ const styles = StyleSheet.create({
   },
   
   collapsedHeader: {
-    backgroundColor: 'rgba(30, 20, 50, 0.5)',
+    backgroundColor: 'rgba(30, 20, 50, 0.7)', // Increased opacity
   },
   
   sectionHeaderContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   
   sectionHeaderText: {
     color: '#FFFFFF',
     fontWeight: '500',
-    textAlign: 'left',
+    textAlign: 'center',
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
@@ -1156,8 +1157,8 @@ const styles = StyleSheet.create({
     color: '#C9C9C9',
     fontSize: 12,
     marginTop: 4,
-    marginLeft: 30,
     fontStyle: 'italic',
+    textAlign: 'center',
   },
   
   footerContainer: {
@@ -1258,19 +1259,19 @@ const styles = StyleSheet.create({
     marginLeft: 'auto', // Pushes checkmark to the right
     paddingLeft: 10, // Some space before the checkmark
   },
-  searchPanelBlurView: { // Added for search panels if not already in a centralized style object
+  searchPanelBlurView: {
     borderRadius: 40,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(192, 126, 255, 0.3)',
+    borderWidth: 0.5,
+    borderColor: 'rgba(192, 126, 255, 0.15)',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 15,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 20,
     marginBottom: 15,
   },
-  footerActionsContainer: { // Style for the footer container
+  footerActionsContainer: {
     position: 'absolute',
     left: 20,
     right: 20,
@@ -1279,13 +1280,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  clearAllText: { // Style for "Clear all" text
+  clearAllText: {
     fontSize: 16,
     color: '#FFFFFF',
     fontWeight: '500',
     textDecorationLine: 'underline',
   },
-  searchModalButton: { // Style for the Search button in modal
+  searchModalButton: {
     backgroundColor: '#7B2CBF',
     paddingVertical: 12,
     paddingHorizontal: 24,
@@ -1298,7 +1299,7 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 3,
   },
-  searchModalButtonText: { // Style for Search button text
+  searchModalButtonText: {
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
