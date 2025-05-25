@@ -13,6 +13,10 @@ export const allOutfitItems = [
   { id: 'item_polo1', name: 'Classic Polo', category: 'Tops', source: require('../../assets/outfits/Polo.png'), keywords: ['polo', 'shirt', 'classic', 'smart casual', 'top', 'work', 'business casual'] },
   { id: 'item_trousers1', name: 'Tailored Trousers', category: 'Bottoms', source: require('../../assets/outfits/trousers.png'), keywords: ['trousers', 'pants', 'tailored', 'formal', 'smart casual', 'bottoms', 'work', 'business casual', 'elegant'] },
   { id: 'item_shoes3', name: 'Formal Shoes', category: 'Shoes', source: require('../../assets/outfits/Shoes3.png'), keywords: ['shoes', 'formal', 'dress shoes', 'smart', 'leather', 'work', 'business', 'elegant'] },
+  { id: 'item_nikeShoes1', name: 'Nike Shoes', category: 'Shoes', source: require('../../assets/outfits/nikeShoes.png'), keywords: ['nike', 'shoes', 'sporty', 'casual', 'sneakers', 'athletic'] },
+  { id: 'item_shirtLaS1', name: 'Long Sleeve Shirt', category: 'Tops', source: require('../../assets/outfits/shirtLaS.png'), keywords: ['shirt', 'long sleeve', 'top', 'casual', 'everyday'] },
+  { id: 'item_shorts1', name: 'Casual Shorts', category: 'Bottoms', source: require('../../assets/outfits/shorts.png'), keywords: ['shorts', 'bottoms', 'casual', 'summer', 'sporty'] },
+
   // Example: { id: 'item_belt1', name: 'Leather Belt', category: 'Accessories', source: require('../../assets/outfits/belt1.png'), keywords: ['belt', 'leather', 'accessory', 'formal', 'casual'] },
 ];
 
@@ -67,6 +71,19 @@ export const predefinedOutfits = [
       { itemId: 'item_polo1', label: 'Classic Polo' },
       { itemId: 'item_trousers1', label: 'Tailored Trousers' },
       { itemId: 'item_shoes3', label: 'Formal Shoes' }
+    ]
+  },
+  {
+    id: 'outfit5',
+    name: 'Sporty Vibe',
+    previewImage: require('../../assets/outfits/outfit5.png'),
+    keywords: ['sporty', 'casual', 'nike', 'shorts', 'active', 'everyday'],
+    style: ['Sporty', 'Street Style'],
+    occasion: ['Casual Day', 'Workout'],
+    items: [
+      { itemId: 'item_shirtLaS1', label: 'Long Sleeve Shirt' },
+      { itemId: 'item_shorts1', label: 'Casual Shorts' },
+      { itemId: 'item_nikeShoes1', label: 'Nike Shoes' }
     ]
   }
 ];

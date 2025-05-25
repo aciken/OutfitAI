@@ -118,6 +118,7 @@ export default function SettingsScreen() {
         <SectionHeader title="Account" />
         <View className="space-y-2">
           <SettingOption icon="person-outline" text="Edit Profile" />
+          <SettingOption icon="image-outline" text="Change Image" onPress={() => router.push('/modal/changeProfileImage')} />
           <SettingOption icon="key-outline" text="Change Password" />
         </View>
 

@@ -17,6 +17,7 @@ export default function ModalLayout() {
       <Stack.Screen name="preferences" />
       <Stack.Screen name="options" />
       <Stack.Screen name="OutfitItemAdd" />
+      <Stack.Screen name="changeProfileImage" />
     </Stack>
   );
 }
