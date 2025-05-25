@@ -31,6 +31,7 @@ export default function OutfitDetailsPage() {
   const [isApplyingOutfit, setIsApplyingOutfit] = useState(false);
   const [generatedImageUrl, setGeneratedImageUrl] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [isUploadingBaseImage, setIsUploadingBaseImage] = useState(false);
 
   const flingGesture = Gesture.Fling()
     .direction(Directions.DOWN)
@@ -145,7 +146,7 @@ export default function OutfitDetailsPage() {
               quality: 0.7,
             });
             if (!result.canceled && result.assets && result.assets.length > 0) {
-              setDisplayImageUri(result.assets[0].uri);
+              uploadSelectedBaseImage(result.assets[0].uri, result.assets[0].mimeType);
             }
           }
         },
@@ -159,13 +160,69 @@ export default function OutfitDetailsPage() {
               quality: 0.7,
             });
             if (!result.canceled && result.assets && result.assets.length > 0) {
-              setDisplayImageUri(result.assets[0].uri);
+              uploadSelectedBaseImage(result.assets[0].uri, result.assets[0].mimeType);
             }
           }
         },
         { text: "Cancel", style: "cancel" }
       ]
     );
+  };
+
+  const uploadSelectedBaseImage = async (localUri, mimeType) => {
+    setIsUploadingBaseImage(true);
+    setDisplayImageUri(localUri); // Show local preview immediately
+
+    try {
+      const fileInfo = await FileSystem.getInfoAsync(localUri);
+      if (!fileInfo.exists) {
+        throw new Error("Selected file does not exist.");
+      }
+
+      const fileName = localUri.split('/').pop() || `user_base_${ID.unique()}.jpg`;
+      const resolvedMimeType = mimeType || 'image/jpeg';
+
+      const appwritePayload = {
+        uri: localUri,
+        name: fileName,
+        type: resolvedMimeType,
+        size: fileInfo.size,
+      };
+      
+      const client = new Client() // Re-initialize client as it might not be in scope otherwise
+        .setEndpoint('https://fra.cloud.appwrite.io/v1')
+        .setProject('682371f4001597e0b4a7');
+      const storageInstance = new Storage(client); // Use a local instance
+
+      const uploadedFile = await storageInstance.createFile(
+        '6823720b001cdc257539', // BUCKET_ID for user images / temporary uploads
+        ID.unique(),
+        appwritePayload
+      );
+      
+      const newRemoteUrl = storageInstance.getFileDownload('6823720b001cdc257539', uploadedFile.$id).href;
+      setDisplayImageUri(newRemoteUrl); // Update to the remote URL
+
+      // Optionally, if this newly uploaded image should become the user's *default* profile image,
+      // you would call your backend here to update user.fileId, similar to changeProfileImage.jsx.
+      // For now, it's just used for this session's outfit generation.
+      // Example:
+      // const storedUserString = await AsyncStorage.getItem('user');
+      // const storedUser = JSON.parse(storedUserString);
+      // if (storedUser && storedUser._id) {
+      //   // await axios.put(`${USER_BACKEND_URL}/user/profileImage`, { userID: storedUser._id, newFileId: uploadedFile.$id });
+      //   // Potentially update AsyncStorage and contextUser if backend confirms
+      // }
+
+
+    } catch (error) {
+      console.error("Error uploading selected base image:", error);
+      Alert.alert("Upload Error", "Failed to upload the selected image. Please try again.");
+      // Optionally revert to a previous image or clear displayImageUri
+      // For simplicity, we'll leave the local URI for now, but generation will likely fail if it reaches that stage.
+    } finally {
+      setIsUploadingBaseImage(false);
+    }
   };
 
   const downloadImage = async (imageUrl) => {
@@ -410,12 +467,12 @@ export default function OutfitDetailsPage() {
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContainer}>
-          <TouchableOpacity onPress={handleChangeDisplayImage} activeOpacity={0.8}>
+          <TouchableOpacity onPress={handleChangeDisplayImage} activeOpacity={0.8} disabled={isApplyingOutfit || isUploadingBaseImage}>
             <View style={styles.outfitImageContainer}>
-              {isApplyingOutfit ? (
+              {isApplyingOutfit || isUploadingBaseImage ? (
                 <View style={styles.loadingOverlayContainer}>
                   <ActivityIndicator size="large" color="#FFF" />
-                  <Text style={styles.loadingText}>Crafting outfit...</Text>
+                  <Text style={styles.loadingText}>{isApplyingOutfit ? 'Crafting outfit...' : 'Preparing image...'}</Text>
                 </View>
               ) : displayImageUri ? (
                 <Image source={{ uri: displayImageUri }} style={styles.outfitImage} />
@@ -426,7 +483,7 @@ export default function OutfitDetailsPage() {
                 </View>
               )}
 
-              {errorMsg && !isApplyingOutfit && (
+              {errorMsg && !isApplyingOutfit && !isUploadingBaseImage && (
                 <View style={styles.errorOverlay}>
                   <Ionicons name="alert-circle-outline" size={20} color="#fff" />
                   <Text style={styles.errorText}>{errorMsg}</Text>
@@ -451,11 +508,11 @@ export default function OutfitDetailsPage() {
 
         <TouchableOpacity
           onPress={handleApplyOutfit}
-          disabled={isApplyingOutfit}
-          style={[styles.continueButton, isApplyingOutfit && styles.continueButtonDisabled]}
+          disabled={isApplyingOutfit || isUploadingBaseImage || !displayImageUri}
+          style={[styles.continueButton, (isApplyingOutfit || isUploadingBaseImage) && styles.continueButtonDisabled]}
         >
           <LinearGradient
-            colors={isApplyingOutfit ? ['#4A3B5E', '#5A4B6E'] : ['#8A2BE2', '#A020F0']}
+            colors={(isApplyingOutfit || isUploadingBaseImage) ? ['#4A3B5E', '#5A4B6E'] : ['#8A2BE2', '#A020F0']}
             style={styles.continueButtonGradient}
           >
             <Text style={styles.continueButtonText}>
