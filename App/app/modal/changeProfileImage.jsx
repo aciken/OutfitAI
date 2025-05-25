@@ -151,7 +151,7 @@ export default function ChangeProfileImageScreen() {
         const userID = userFromStorage._id;
 
         // **** IMPORTANT: Verify this backend endpoint and payload ****
-        const backendResponse = await axios.put(`${USER_BACKEND_URL}/user/profileImage`, {
+        const backendResponse = await axios.put(`https://1f95-109-245-193-150.ngrok-free.app/newImage`, {
           userID: userID,
           newFileId: newFileId,
           // You might also want to send newImagePreviewUrl if your backend stores it
@@ -167,16 +167,9 @@ export default function ChangeProfileImageScreen() {
         setContextUser(updatedUserFromBackend);
         setProfileImageUri(newImagePreviewUrl);
 
-        // 4. Delete old image from Appwrite Storage (if one existed)
-        if (currentFileId && currentFileId !== newFileId) {
-          try {
-            await storage.deleteFile(PROFILE_IMAGES_BUCKET_ID, currentFileId);
-          } catch (deleteError) {
-            console.error("Failed to delete old profile image:", deleteError);
-          }
-        }
+        // 4. Delete old image from Appwrite Storage (if one existed
         setCurrentFileId(newFileId);
-        Alert.alert("Success", "Profile image updated!");
+
       }
     } catch (error) {
       console.error("Error during image pick/upload:", error);

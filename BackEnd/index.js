@@ -9,6 +9,7 @@ const Signup = require('./Auth/Signup');
 const Signin = require('./Auth/signin');
 const Verify = require('./Auth/verify');
 const createdImage = require('./Image/createdImage');
+const newImage = require('./Image/newImage');
 
 
 app.get('/', (req, res) => {
@@ -20,6 +21,7 @@ app.get('/', (req, res) => {
   app.post('/signin', Signin);
   app.put('/verify', Verify);
   app.put('/createdImage', createdImage);
+  app.put('/newImage', newImage);
   
   app.listen(port, () => {
     console.log(`App listening at http://localhost:${port}`);
