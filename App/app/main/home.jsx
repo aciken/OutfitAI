@@ -118,8 +118,8 @@ export default function Home() {
   const [selectedOccasions, setSelectedOccasions] = useState(new Set());
   
   // State for General Search Settings
-  const [selectedGender, setSelectedGender] = useState(null); // null, 'male', 'female', 'unisex'
-  const [showOnlyGenerated, setShowOnlyGenerated] = useState(false);
+  const [selectedGender, setSelectedGender] = useState(null); // null, 'male', 'female' (unisex removed)
+  const [generatedFilterStatus, setGeneratedFilterStatus] = useState('all'); // 'all', 'generated', 'not_generated'
   
   // Animation values for button appearance
   const buttonOpacity = useRef(new Animated.Value(0)).current;
@@ -368,9 +368,8 @@ export default function Home() {
     const query = searchQuery.trim().toLowerCase();
     const occasionsSelected = selectedOccasions.size > 0;
     const genderSelected = selectedGender !== null;
-    const onlyGeneratedSelected = showOnlyGenerated;
 
-    if (!query && !occasionsSelected && !genderSelected && !onlyGeneratedSelected) {
+    if (!query && !occasionsSelected && !genderSelected && generatedFilterStatus === 'all') {
       // If no search query and no filters, reset to original cards
       setCurrentCards(originalCards);
       setIsSearching(false);
@@ -400,24 +399,34 @@ export default function Home() {
         (card.itemKeywords && card.itemKeywords.some(k => k.toLowerCase() === selectedGender.toLowerCase()))
         : true; // If no gender selected, gender match is true
 
-      // Show only generated filter
-      const generatedMatch = onlyGeneratedSelected ?
-        createdOutfitIds.has(card.id) 
-        : true; // If not selected, show all
+      // Show only generated filter - updated logic
+      let generatedOutfitMatch = true;
+      if (card.type === 'outfit') { // Ensure this logic only applies to outfit cards
+        if (generatedFilterStatus === 'generated') {
+          generatedOutfitMatch = createdOutfitIds.has(card.id);
+        } else if (generatedFilterStatus === 'not_generated') {
+          generatedOutfitMatch = !createdOutfitIds.has(card.id);
+        }
+      }
 
-      if (onlyGeneratedSelected && card.type === 'outfit') {
-        console.log(`Filtering generated: card.id=${card.id}, createdOutfitIds:`, Array.from(createdOutfitIds), `onlyGeneratedSelected: ${onlyGeneratedSelected}, match: ${createdOutfitIds.has(card.id)}`);
+      if (card.type === 'outfit' && (generatedFilterStatus === 'generated' || generatedFilterStatus === 'not_generated')) {
+        console.log(`Filtering: card.id=${card.id}, status=${generatedFilterStatus}, createdOutfitIds:`, Array.from(createdOutfitIds), `match: ${generatedFilterStatus === 'generated' ? createdOutfitIds.has(card.id) : !createdOutfitIds.has(card.id)}`);
       }
       
-      // Create card handling: only filter by text query, ignore style/occasion for it unless explicitly keyworded for them
+      // Handle 'create' card separately first
       if (card.type === 'create') {
-        return query ? (
-          (card.title && card.title.toLowerCase().includes(query)) ||
-          (card.keywords && card.keywords.some(k => k.toLowerCase().includes(query)))
-        ) : !(occasionsSelected || genderSelected || onlyGeneratedSelected); // If query is empty, show create card only if no filters are active
+        if (query) {
+          return (
+            (card.title && card.title.toLowerCase().includes(query)) ||
+            (card.keywords && card.keywords.some(k => k.toLowerCase().includes(query)))
+          );
+        } else {
+          // Show create card if no text query AND no other filters are active (occasion, gender, or specific generated status)
+          return !occasionsSelected && !genderSelected && generatedFilterStatus === 'all';
+        }
       }
-
-      return keywordMatch && occasionMatch && genderMatch && generatedMatch; // Added genderMatch and generatedMatch
+      
+      return keywordMatch && occasionMatch && genderMatch && generatedOutfitMatch; // Added genderMatch and generatedMatch
     });
 
     setCurrentCards(filtered);
@@ -433,7 +442,7 @@ export default function Home() {
     setSearchQuery('');
     setSelectedOccasions(new Set());
     setSelectedGender(null); // Clear gender
-    setShowOnlyGenerated(false); // Clear show only generated
+    setGeneratedFilterStatus('all'); // Reset generated filter to 'all'
     // Reset to originalCards which holds the current shuffled order before search
     setCurrentCards(originalCards); 
     setIsSearching(false);
@@ -1158,31 +1167,48 @@ export default function Home() {
                     {/* Gender Selection */}
                     <Text style={styles.sectionTitle}>Gender</Text>
                     <View style={styles.genderOptionsContainer}>
-                      {[{id: 'male', name: 'Male', icon: 'male-outline'}, {id: 'female', name: 'Female', icon: 'female-outline'}, {id: 'unisex', name: 'Unisex', icon: 'male-female-outline'}].map((gender) => (
+                      {([
+                        { id: null, name: 'All Genders', icon: 'people-outline' }, // null id for 'All'
+                        { id: 'male', name: 'Male', icon: 'male-outline' }, 
+                        { id: 'female', name: 'Female', icon: 'female-outline' }
+                      ]).map((gender) => (
                         <TouchableOpacity
-                          key={gender.id}
+                          key={gender.id === null ? 'all' : gender.id} // Handle null key
                           style={[styles.genderOption, selectedGender === gender.id && styles.genderOptionSelected]}
-                          onPress={() => setSelectedGender(selectedGender === gender.id ? null : gender.id)}
+                          onPress={() => setSelectedGender(gender.id)}
                         >
-                          <Ionicons name={gender.icon} size={20} color={selectedGender === gender.id ? '#FFFFFF' : '#C07EFF'} style={{ marginRight: 8 }} />
+                          <Ionicons name={gender.icon} size={20} color={selectedGender === gender.id ? '#FFFFFF' : '#E0E0E0'} style={{ marginRight: 8 }} />
                           <Text style={[styles.genderOptionText, selectedGender === gender.id && styles.genderOptionTextSelected]}>{gender.name}</Text>
                         </TouchableOpacity>
                       ))}
                     </View>
 
-                    {/* Show Only Generated Outfits Toggle */}
-                    <View style={styles.toggleOptionContainer}>
-                      <View style={styles.toggleTextContainer}>
-                        <Ionicons name="image-outline" size={22} color="#C07EFF" style={{ marginRight: 10 }}/>
-                        <Text style={styles.optionTitle}>Show Generated Outfits Only</Text>
-                      </View>
-                      <TouchableOpacity 
-                        style={[styles.switchBase, showOnlyGenerated && styles.switchBaseActive]}
-                        onPress={() => setShowOnlyGenerated(!showOnlyGenerated)}
-                        activeOpacity={0.8}
-                      >
-                        <Animated.View style={[styles.switchToggle, showOnlyGenerated && styles.switchToggleActive]} />
-                      </TouchableOpacity>
+                    {/* Generated Outfits Filter */}
+                    <Text style={styles.sectionTitle}>Filter Generated Outfits</Text>
+                    <View style={styles.generatedFilterContainer}>
+                      {([
+                        { id: 'all', name: 'All Outfits' },
+                        { id: 'generated', name: 'Generated Only' },
+                        { id: 'not_generated', name: 'Not Generated Only' },
+                      ]).map((option) => (
+                        <TouchableOpacity
+                          key={option.id}
+                          style={[
+                            styles.generatedFilterOption,
+                            generatedFilterStatus === option.id && styles.generatedFilterOptionSelected,
+                          ]}
+                          onPress={() => setGeneratedFilterStatus(option.id)}
+                        >
+                          <Text 
+                            style={[
+                              styles.generatedFilterOptionText,
+                              generatedFilterStatus === option.id && styles.generatedFilterOptionTextSelected
+                            ]}
+                          >
+                            {option.name}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
                     </View>
                   </ScrollView>
                 </View>
@@ -1594,52 +1620,37 @@ const styles = StyleSheet.create({
     fontWeight: '600', // Bolder text for selected
   },
 
-  // Styles for Toggle Switch
-  toggleOptionContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  // Styles for Toggle Switch (Now Generated Filter Options)
+  generatedFilterContainer: {
+    flexDirection: 'column',
     marginBottom: 16,
-    backgroundColor: 'rgba(44, 27, 74, 0.65)', // Slightly more opaque background
-    borderRadius: 10,
-    paddingHorizontal: 16, // Consistent horizontal padding
-    paddingVertical: 18, // Increased vertical padding for better touch area
+  },
+  generatedFilterOption: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    backgroundColor: 'rgba(44, 27, 74, 0.65)',
     borderWidth: 1,
-    borderColor: 'rgba(192, 126, 255, 0.25)', // Slightly more visible border
+    borderColor: 'rgba(192, 126, 255, 0.25)',
+    marginBottom: 8, // Space between options
+    alignItems: 'center', // Center text
   },
-  toggleTextContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1, 
+  generatedFilterOptionSelected: {
+    backgroundColor: '#7B2CBF',
+    borderColor: '#C07EFF',
+    shadowColor: '#C07EFF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 5,
+    elevation: 5,
   },
-  switchBase: {
-    width: 52, 
-    height: 30, 
-    borderRadius: 15, 
-    backgroundColor: 'rgba(0, 0, 0, 0.25)', // Darker off state
-    justifyContent: 'center',
-    paddingHorizontal: 2, 
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)', // Subtle border for the base
+  generatedFilterOptionText: {
+    color: '#E0E0E0',
+    fontSize: 15,
+    fontWeight: '500',
   },
-  switchBaseActive: {
-    backgroundColor: '#7B2CBF', 
-    borderColor: '#A020F0', // Border color for active state
-  },
-  switchToggle: {
-    width: 26, 
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: '#E0E0E0', // Lighter toggle for off state
-    alignSelf: 'flex-start', 
-    shadowColor: '#000', // Add shadow to the toggle
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
-    shadowRadius: 1,
-    elevation: 2,
-  },
-  switchToggleActive: {
-    alignSelf: 'flex-end', 
-    backgroundColor: '#FFFFFF', // Bright white toggle for on state
+  generatedFilterOptionTextSelected: {
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
 });
