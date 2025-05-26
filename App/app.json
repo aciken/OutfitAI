@@ -6,7 +6,6 @@
     "orientation": "portrait",
     "icon": "./assets/outfitaiIcon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "splash": {
       "image": "./assets/outfitaiIcon.png",
       "resizeMode": "contain",

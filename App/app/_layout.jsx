@@ -4,6 +4,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { GlobalProvider } from './context/GlobalProvider';
 
 
+
 export default function RootLayout() {
     return (
         <SafeAreaProvider style={{ flex: 1 }}>
