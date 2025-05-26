@@ -24,7 +24,7 @@ import axios from 'axios'; // For backend calls
 const APPWRITE_ENDPOINT = 'https://fra.cloud.appwrite.io/v1';
 const APPWRITE_PROJECT_ID = '682371f4001597e0b4a7';
 const PROFILE_IMAGES_BUCKET_ID = '6823720b001cdc257539'; // Assuming same bucket as in [id].jsx
-const USER_BACKEND_URL = 'https://1f95-109-245-193-150.ngrok-free.app'; // Base URL for your backend
+const USER_BACKEND_URL = 'https://dc8b-109-245-193-150.ngrok-free.app'; // Base URL for your backend
 
 const client = new Client()
   .setEndpoint(APPWRITE_ENDPOINT)
@@ -151,7 +151,7 @@ export default function ChangeProfileImageScreen() {
         const userID = userFromStorage._id;
 
         // **** IMPORTANT: Verify this backend endpoint and payload ****
-        const backendResponse = await axios.put(`https://1f95-109-245-193-150.ngrok-free.app/newImage`, {
+        const backendResponse = await axios.put(`https://dc8b-109-245-193-150.ngrok-free.app/newImage`, {
           userID: userID,
           newFileId: newFileId,
           // You might also want to send newImagePreviewUrl if your backend stores it
