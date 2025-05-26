@@ -47,18 +47,8 @@ const CARD_SPACING = 16;
 const ANIMATION_SPEED = 200;
 const INACTIVE_SCALE = 0.90; // Adjusted for a noticeable but not too drastic scale change
 
-// Define selectable options for Style and Occasion
-const STYLE_OPTIONS = [
-  { id: 'minimalist', name: 'Minimalist', icon: 'apps-outline' },
-  { id: 'street', name: 'Street Style', icon: 'walk-outline' },
-  { id: 'classic', name: 'Classic', icon: 'diamond-outline' },
-  { id: 'bohemian', name: 'Bohemian', icon: 'flower-outline' },
-  { id: 'sporty', name: 'Sporty', icon: 'fitness-outline' },
-  { id: 'vintage', name: 'Vintage', icon: 'time-outline' },
-  { id: 'chic', name: 'Chic', icon: 'star-outline' },
-  { id: 'preppy', name: 'Preppy', icon: 'school-outline' },
-  { id: 'edgy', name: 'Edgy', icon: 'flash-outline' },
-];
+// Define selectable options for Occasion (STYLE_OPTIONS removed)
+// const STYLE_OPTIONS = [...]; // Removed
 
 const OCCASION_OPTIONS = [
   { id: 'casual_day', name: 'Casual Day', icon: 'sunny-outline' },
@@ -123,9 +113,13 @@ export default function Home() {
   const [originalCards, setOriginalCards] = useState([]); // To store the initial set of cards
   const [currentCards, setCurrentCards] = useState([]); // Cards to be displayed
   
-  // State for style and occasion filters
-  const [selectedStyles, setSelectedStyles] = useState(new Set());
+  // State for occasion filters (selectedStyles removed)
+  // const [selectedStyles, setSelectedStyles] = useState(new Set()); // Removed
   const [selectedOccasions, setSelectedOccasions] = useState(new Set());
+  
+  // State for General Search Settings
+  const [selectedGender, setSelectedGender] = useState(null); // null, 'male', 'female', 'unisex'
+  const [showOnlyGenerated, setShowOnlyGenerated] = useState(false);
   
   // Animation values for button appearance
   const buttonOpacity = useRef(new Animated.Value(0)).current;
@@ -138,10 +132,11 @@ export default function Home() {
   const [buttonPosition, setButtonPosition] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const modalAnimation = useRef(new Animated.Value(0)).current;
   
-  // Animation values for each section's expansion
+  // Animation values for each section's expansion (styleSectionHeight removed)
   const searchSectionHeight = useRef(new Animated.Value(expandedSection === 'search' ? 1 : 0)).current;
-  const styleSectionHeight = useRef(new Animated.Value(expandedSection === 'style' ? 1 : 0)).current;
+  // const styleSectionHeight = useRef(new Animated.Value(expandedSection === 'style' ? 1 : 0)).current; // Removed
   const occasionSectionHeight = useRef(new Animated.Value(expandedSection === 'occasion' ? 1 : 0)).current;
+  const generalSectionHeight = useRef(new Animated.Value(expandedSection === 'general' ? 1 : 0)).current; // New animation value for general
   
   const flatListRef = React.useRef();
   const listOpacity = useRef(new Animated.Value(1)).current;
@@ -322,10 +317,10 @@ export default function Home() {
       };
       if (expandedSection === 'search') {
         Animated.spring(searchSectionHeight, collapseConfig).start();
-      } else if (expandedSection === 'style') {
-        Animated.spring(styleSectionHeight, collapseConfig).start();
-      } else if (expandedSection === 'occasion') {
+      } else if (expandedSection === 'occasion') { // Removed 'style' case
         Animated.spring(occasionSectionHeight, collapseConfig).start();
+      } else if (expandedSection === 'general') { // New case for general
+        Animated.spring(generalSectionHeight, collapseConfig).start();
       }
       
       // Expand new section after a short delay with spring animation
@@ -342,10 +337,10 @@ export default function Home() {
       setTimeout(() => {
         if (section === 'search') {
           Animated.spring(searchSectionHeight, expandConfig).start();
-        } else if (section === 'style') {
-          Animated.spring(styleSectionHeight, expandConfig).start();
-        } else if (section === 'occasion') {
+        } else if (section === 'occasion') { // Removed 'style' case
           Animated.spring(occasionSectionHeight, expandConfig).start();
+        } else if (section === 'general') { // New case for general
+          Animated.spring(generalSectionHeight, expandConfig).start();
         }
       }, 100);
       
@@ -353,18 +348,8 @@ export default function Home() {
     }
   };
 
-  // Toggle functions for style and occasion
-  const toggleStyle = (styleId) => {
-    setSelectedStyles(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(styleId)) {
-        newSet.delete(styleId);
-      } else {
-        newSet.add(styleId);
-      }
-      return newSet;
-    });
-  };
+  // Toggle functions for occasion (toggleStyle removed)
+  // const toggleStyle = (styleId) => { ... }; // Removed
 
   const toggleOccasion = (occasionId) => {
     setSelectedOccasions(prev => {
@@ -381,10 +366,11 @@ export default function Home() {
   // Function to handle the search logic
   const handleSearch = () => {
     const query = searchQuery.trim().toLowerCase();
-    const stylesSelected = selectedStyles.size > 0;
     const occasionsSelected = selectedOccasions.size > 0;
+    const genderSelected = selectedGender !== null;
+    const onlyGeneratedSelected = showOnlyGenerated;
 
-    if (!query && !stylesSelected && !occasionsSelected) {
+    if (!query && !occasionsSelected && !genderSelected && !onlyGeneratedSelected) {
       // If no search query and no filters, reset to original cards
       setCurrentCards(originalCards);
       setIsSearching(false);
@@ -400,14 +386,6 @@ export default function Home() {
         (card.itemKeywords && card.itemKeywords.some(k => k.toLowerCase().includes(query)))
       ) : true; // If no query, keyword match is true by default
 
-      // Style filter
-      const styleMatch = stylesSelected ? 
-        Array.from(selectedStyles).some(styleId => 
-          (card.keywords && card.keywords.some(k => k.toLowerCase().includes(styleId.toLowerCase()))) ||
-          (card.itemKeywords && card.itemKeywords.some(k => k.toLowerCase().includes(styleId.toLowerCase())))
-        ) 
-        : true; // If no styles selected, style match is true
-
       // Occasion filter
       const occasionMatch = occasionsSelected ? 
         Array.from(selectedOccasions).some(occasionId => 
@@ -416,15 +394,30 @@ export default function Home() {
         ) 
         : true; // If no occasions selected, occasion match is true
       
+      // Gender filter
+      const genderMatch = genderSelected ?
+        (card.keywords && card.keywords.some(k => k.toLowerCase() === selectedGender.toLowerCase())) ||
+        (card.itemKeywords && card.itemKeywords.some(k => k.toLowerCase() === selectedGender.toLowerCase()))
+        : true; // If no gender selected, gender match is true
+
+      // Show only generated filter
+      const generatedMatch = onlyGeneratedSelected ?
+        createdOutfitIds.has(card.id) 
+        : true; // If not selected, show all
+
+      if (onlyGeneratedSelected && card.type === 'outfit') {
+        console.log(`Filtering generated: card.id=${card.id}, createdOutfitIds:`, Array.from(createdOutfitIds), `onlyGeneratedSelected: ${onlyGeneratedSelected}, match: ${createdOutfitIds.has(card.id)}`);
+      }
+      
       // Create card handling: only filter by text query, ignore style/occasion for it unless explicitly keyworded for them
       if (card.type === 'create') {
         return query ? (
           (card.title && card.title.toLowerCase().includes(query)) ||
           (card.keywords && card.keywords.some(k => k.toLowerCase().includes(query)))
-        ) : !(stylesSelected || occasionsSelected); // If query is empty, show create card only if no filters are active
+        ) : !(occasionsSelected || genderSelected || onlyGeneratedSelected); // If query is empty, show create card only if no filters are active
       }
 
-      return keywordMatch && styleMatch && occasionMatch;
+      return keywordMatch && occasionMatch && genderMatch && generatedMatch; // Added genderMatch and generatedMatch
     });
 
     setCurrentCards(filtered);
@@ -438,8 +431,9 @@ export default function Home() {
   // Function to clear the search
   const handleClearSearch = () => {
     setSearchQuery('');
-    setSelectedStyles(new Set());
     setSelectedOccasions(new Set());
+    setSelectedGender(null); // Clear gender
+    setShowOnlyGenerated(false); // Clear show only generated
     // Reset to originalCards which holds the current shuffled order before search
     setCurrentCards(originalCards); 
     setIsSearching(false);
@@ -482,7 +476,6 @@ export default function Home() {
       setCurrentCards(newCardData);
 
       setSearchQuery('');
-      setSelectedStyles(new Set());
       setSelectedOccasions(new Set());
       setIsSearching(false);
 
@@ -1077,62 +1070,14 @@ export default function Home() {
             </BlurView>
           </Animated.View>
 
-          {/* Style Preferences Panel */}
-          <Animated.View style={{
-            marginHorizontal: 20, marginBottom: 15,
-            transform: [
-              { translateY: modalAnimation.interpolate({ inputRange: [0, 1], outputRange: [buttonPosition.y, 0] }) },
-              { scale: modalAnimation.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1] }) }
-            ],
-            opacity: modalAnimation,
-          }}>
-            <BlurView intensity={90} tint="dark" style={styles.searchPanelBlurView}> 
-              <TouchableOpacity style={[styles.sectionHeader, expandedSection === 'style' ? styles.expandedHeader : styles.collapsedHeader]} activeOpacity={0.8} onPress={() => toggleSection('style')}>
-                <View style={styles.sectionHeaderContent}>
-                  <Ionicons name="brush-outline" size={expandedSection === 'style' ? 24 : 20} color="#FFF" style={{ marginRight: 8 }} />
-                  <Text style={[styles.sectionHeaderText, expandedSection === 'style' ? styles.expandedHeaderText : styles.collapsedHeaderText]}>Style Preferences</Text>
-                </View>
-                {expandedSection !== 'style' && <Text style={styles.sectionSubtext}>Choose your fashion style</Text>}
-              </TouchableOpacity>
-              <Animated.View style={{
-                  maxHeight: styleSectionHeight.interpolate({ inputRange: [0, 1], outputRange: [0, 350] }),
-                  height: styleSectionHeight.interpolate({ inputRange: [0, 1], outputRange: [0, 350] }),
-                  opacity: styleSectionHeight,
-                  overflow: 'hidden',
-                  transform: [{ scale: styleSectionHeight.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] }) }]
-              }}>
-                <View style={{ padding: 20, height: 330 }}>
-                  <ScrollView style={{ maxHeight: 310 }}>
-                    {STYLE_OPTIONS.map((option) => (
-                      <TouchableOpacity 
-                        key={option.id} 
-                        style={[styles.optionContainer, selectedStyles.has(option.id) && styles.optionSelected]} 
-                        activeOpacity={0.8}
-                        onPress={() => toggleStyle(option.id)}
-                      >
-                        <View style={[styles.iconContainer, selectedStyles.has(option.id) ? styles.iconContainerSelected : styles.iconContainerDefault]}>
-                          <Ionicons name={option.icon} size={24} color={selectedStyles.has(option.id) ? '#FFFFFF' : '#C07EFF'} />
-                        </View>
-                        <View style={styles.optionTextContainer}>
-                          <Text style={[styles.optionTitle, selectedStyles.has(option.id) && styles.optionTextSelected]}>{option.name}</Text>
-                          {/* Add subtitle if you have it in STYLE_OPTIONS */}
-                        </View>
-                        {selectedStyles.has(option.id) && (
-                          <Ionicons name="checkmark-circle" size={24} color="#FFFFFF" style={styles.selectedCheckmark} />
-                        )}
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-                </View>
-              </Animated.View>
-            </BlurView>
-          </Animated.View>
+          {/* Style Preferences Panel (REMOVED) */}
+          {/* <Animated.View style={{...}}> ... </Animated.View> */}
 
-          {/* Occasion Panel */}
+          {/* Occasion Panel (Moved up, animation adjusted) */}
           <Animated.View style={{
             marginHorizontal: 20, marginBottom: 15,
             transform: [
-              { translateY: modalAnimation.interpolate({ inputRange: [0, 1], outputRange: [buttonPosition.y + 50, 0] }) },
+              { translateY: modalAnimation.interpolate({ inputRange: [0, 1], outputRange: [buttonPosition.y, 0] }) }, // Adjusted from buttonPosition.y + 50
               { scale: modalAnimation.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1] }) }
             ],
             opacity: modalAnimation,
@@ -1142,7 +1087,7 @@ export default function Home() {
                 <View style={styles.sectionHeaderContent}>
                   <Ionicons name="calendar-outline" size={expandedSection === 'occasion' ? 24 : 20} color="#FFF" style={{ marginRight: 8 }} />
                   <Text style={[styles.sectionHeaderText, expandedSection === 'occasion' ? styles.expandedHeaderText : styles.collapsedHeaderText]}>Occasion</Text>
-                </View>
+                  </View>
                 {expandedSection !== 'occasion' && <Text style={styles.sectionSubtext}>Select the event or occasion</Text>}
               </TouchableOpacity>
               <Animated.View style={{
@@ -1173,6 +1118,72 @@ export default function Home() {
                         )}
                       </TouchableOpacity>
                     ))}
+                  </ScrollView>
+                </View>
+              </Animated.View>
+            </BlurView>
+          </Animated.View>
+          
+          {/* General Search Settings Panel (NEW) */}
+          <Animated.View style={{
+            marginHorizontal: 20, marginBottom: 15,
+            transform: [
+              // Ensure this animates after the occasion panel
+              { translateY: modalAnimation.interpolate({ inputRange: [0, 1], outputRange: [buttonPosition.y + 100, 0] }) }, 
+              { scale: modalAnimation.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1] }) }
+            ],
+            opacity: modalAnimation,
+          }}>
+            <BlurView intensity={90} tint="dark" style={styles.searchPanelBlurView}>
+              <TouchableOpacity 
+                style={[styles.sectionHeader, expandedSection === 'general' ? styles.expandedHeader : styles.collapsedHeader]} 
+                activeOpacity={0.8} 
+                onPress={() => toggleSection('general')}
+              >
+                <View style={styles.sectionHeaderContent}>
+                  <Ionicons name="options-outline" size={expandedSection === 'general' ? 24 : 20} color="#FFF" style={{ marginRight: 8 }} />
+                  <Text style={[styles.sectionHeaderText, expandedSection === 'general' ? styles.expandedHeaderText : styles.collapsedHeaderText]}>General Settings</Text>
+                </View>
+                {expandedSection !== 'general' && <Text style={styles.sectionSubtext}>Filter by gender or generated status</Text>}
+              </TouchableOpacity>
+              <Animated.View style={{
+                  maxHeight: generalSectionHeight.interpolate({ inputRange: [0, 1], outputRange: [0, 350] }),
+                  height: generalSectionHeight.interpolate({ inputRange: [0, 1], outputRange: [0, 350] }),
+                  opacity: generalSectionHeight,
+                  overflow: 'hidden',
+                  transform: [{ scale: generalSectionHeight.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] }) }]
+              }}>
+                <View style={{ padding: 20, height: 330 }}>
+                  <ScrollView style={{ maxHeight: 310 }}>
+                    {/* Gender Selection */}
+                    <Text style={styles.sectionTitle}>Gender</Text>
+                    <View style={styles.genderOptionsContainer}>
+                      {[{id: 'male', name: 'Male', icon: 'male-outline'}, {id: 'female', name: 'Female', icon: 'female-outline'}, {id: 'unisex', name: 'Unisex', icon: 'male-female-outline'}].map((gender) => (
+                        <TouchableOpacity
+                          key={gender.id}
+                          style={[styles.genderOption, selectedGender === gender.id && styles.genderOptionSelected]}
+                          onPress={() => setSelectedGender(selectedGender === gender.id ? null : gender.id)}
+                        >
+                          <Ionicons name={gender.icon} size={20} color={selectedGender === gender.id ? '#FFFFFF' : '#C07EFF'} style={{ marginRight: 8 }} />
+                          <Text style={[styles.genderOptionText, selectedGender === gender.id && styles.genderOptionTextSelected]}>{gender.name}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+
+                    {/* Show Only Generated Outfits Toggle */}
+                    <View style={styles.toggleOptionContainer}>
+                      <View style={styles.toggleTextContainer}>
+                        <Ionicons name="image-outline" size={22} color="#C07EFF" style={{ marginRight: 10 }}/>
+                        <Text style={styles.optionTitle}>Show Generated Outfits Only</Text>
+                      </View>
+                      <TouchableOpacity 
+                        style={[styles.switchBase, showOnlyGenerated && styles.switchBaseActive]}
+                        onPress={() => setShowOnlyGenerated(!showOnlyGenerated)}
+                        activeOpacity={0.8}
+                      >
+                        <Animated.View style={[styles.switchToggle, showOnlyGenerated && styles.switchToggleActive]} />
+                      </TouchableOpacity>
+                    </View>
                   </ScrollView>
                 </View>
               </Animated.View>
@@ -1546,5 +1557,89 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.22, 
     shadowRadius: 2.22,
     elevation: 3, // Minimal elevation for Android
+  },
+  // Styles for Gender Selection
+  genderOptionsContainer: {
+    flexDirection: 'column', // Stack items vertically
+    marginBottom: 24,
+    marginTop: 8,
+  },
+  genderOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12, // Increased padding
+    paddingHorizontal: 16, // Increased padding
+    borderRadius: 10, // Slightly less rounded for a more 'button' feel
+    borderWidth: 1,
+    borderColor: 'rgba(192, 126, 255, 0.3)',
+    backgroundColor: 'rgba(192, 126, 255, 0.1)',
+    marginBottom: 10, // Add space between stacked options
+  },
+  genderOptionSelected: {
+    backgroundColor: '#7B2CBF',
+    borderColor: '#C07EFF',
+    shadowColor: '#C07EFF', // Add a glow effect
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  genderOptionText: {
+    color: '#E0E0E0', // Lighter text for unselected
+    fontSize: 15, // Slightly larger
+    fontWeight: '500',
+  },
+  genderOptionTextSelected: {
+    color: '#FFFFFF',
+    fontWeight: '600', // Bolder text for selected
+  },
+
+  // Styles for Toggle Switch
+  toggleOptionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    backgroundColor: 'rgba(44, 27, 74, 0.65)', // Slightly more opaque background
+    borderRadius: 10,
+    paddingHorizontal: 16, // Consistent horizontal padding
+    paddingVertical: 18, // Increased vertical padding for better touch area
+    borderWidth: 1,
+    borderColor: 'rgba(192, 126, 255, 0.25)', // Slightly more visible border
+  },
+  toggleTextContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1, 
+  },
+  switchBase: {
+    width: 52, 
+    height: 30, 
+    borderRadius: 15, 
+    backgroundColor: 'rgba(0, 0, 0, 0.25)', // Darker off state
+    justifyContent: 'center',
+    paddingHorizontal: 2, 
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)', // Subtle border for the base
+  },
+  switchBaseActive: {
+    backgroundColor: '#7B2CBF', 
+    borderColor: '#A020F0', // Border color for active state
+  },
+  switchToggle: {
+    width: 26, 
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#E0E0E0', // Lighter toggle for off state
+    alignSelf: 'flex-start', 
+    shadowColor: '#000', // Add shadow to the toggle
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 1,
+    elevation: 2,
+  },
+  switchToggleActive: {
+    alignSelf: 'flex-end', 
+    backgroundColor: '#FFFFFF', // Bright white toggle for on state
   },
 });
