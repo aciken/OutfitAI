@@ -7,37 +7,23 @@ import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { useGlobalContext } from '../context/GlobalProvider';
-
-// This is a placeholder. In a real app, you might get this list dynamically
-// or have a more sophisticated way of managing assets.
-const outfitAssets = [
-  { id: '1', name: 'Polo', source: require('../../assets/outfits/Polo.png') },
-  { id: '2', name: 'Trousers', source: require('../../assets/outfits/trousers.png') },
-  { id: '3', name: 'Shirt 2', source: require('../../assets/outfits/shirt2.png') },
-  { id: '4', name: 'Shoes 1', source: require('../../assets/outfits/shoes1.png') },
-  { id: '5', name: 'Shoes 2', source: require('../../assets/outfits/shoes2.png') },
-  { id: '6', name: 'Shoes 3', source: require('../../assets/outfits/Shoes3.png') },
-  { id: '7', name: 'Jeans 2', source: require('../../assets/outfits/jeans2.png') },
-  { id: '8', name: 'Heals 1', source: require('../../assets/outfits/heals1.png') },
-  { id: '9', name: 'Dress 1', source: require('../../assets/outfits/dress1.png') },
-  { id: '10', name: 'Hoodie 1', source: require('../../assets/outfits/hoodie1.png') },
-  { id: '11', name: 'Pants 1', source: require('../../assets/outfits/pants1.png') },
-  // Add more items as needed, matching the files in your assets/outfits folder
-];
+import { allOutfitItems } from '../data/apparelData';
 
 export default function OutfitItemAdd() {
   const router = useRouter();
   const { addSelectedOutfitItem } = useGlobalContext();
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredAssets, setFilteredAssets] = useState(outfitAssets);
+  const [filteredAssets, setFilteredAssets] = useState(allOutfitItems);
 
   useEffect(() => {
     if (searchQuery.trim() === '') {
-      setFilteredAssets(outfitAssets);
+      setFilteredAssets(allOutfitItems);
     } else {
       const lowercasedQuery = searchQuery.toLowerCase();
-      const filtered = outfitAssets.filter(item => 
-        item.name.toLowerCase().includes(lowercasedQuery)
+      const filtered = allOutfitItems.filter(item => 
+        item.name.toLowerCase().includes(lowercasedQuery) ||
+        item.category.toLowerCase().includes(lowercasedQuery) ||
+        item.keywords.some(keyword => keyword.toLowerCase().includes(lowercasedQuery))
       );
       setFilteredAssets(filtered);
     }
@@ -60,6 +46,7 @@ export default function OutfitItemAdd() {
     <TouchableOpacity style={styles.itemContainer} onPress={() => handleSelectItem(item)}>
       <Image source={item.source} style={styles.itemImage} resizeMode="contain" />
       <Text style={styles.itemName}>{item.name}</Text>
+      <Text style={styles.itemCategory}>{item.category}</Text>
     </TouchableOpacity>
   );
 
@@ -181,6 +168,12 @@ const styles = StyleSheet.create({
     color: '#EAE0FF', // Brighter text
     fontSize: 14, // Slightly larger font
     fontWeight: '600', // Bolder
+    textAlign: 'center',
+  },
+  itemCategory: {
+    color: '#AAA',
+    fontSize: 12,
+    fontWeight: '400',
     textAlign: 'center',
   },
   noItemsContainer: {
