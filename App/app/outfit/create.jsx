@@ -535,3 +535,93 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 }); 
+
+
+
+  // useEffect(() => {
+  //   const loadOutfitImage = async () => {
+  //     console.log("Loading outfit image for outfit ID:", params.id);
+  //     let imageSetFromCreated = false;
+  //     try {
+  //       const storedUserString = await AsyncStorage.getItem('user');
+  //       console.log("Stored user string:", storedUserString);
+  //       if (storedUserString) {
+  //         const parsedUser = JSON.parse(storedUserString);
+  //         console.log("Parsed user:", parsedUser);
+  //         console.log('params.id', params.id)
+  //         console.log(parsedUser, parsedUser.createdImages, parsedUser.createdImages > 0, params.id)
+  //         if (parsedUser && parsedUser.createdImages && parsedUser.createdImages.length > 0 && params.id) {
+  //           const foundImage = parsedUser.createdImages.find(img => img.outfitId === params.id);
+  //           if (foundImage && foundImage.imageId) {
+  //             console.log("Found image in AsyncStorage:", foundImage);
+  //             try {
+  //               const client = new Client()
+  //                 .setEndpoint('https://fra.cloud.appwrite.io/v1')
+  //                 .setProject('682371f4001597e0b4a7');
+  //               const storage = new Storage(client);
+  //               const result = storage.getFileDownload(
+  //                 '6823720b001cdc257539', // Assuming same bucket ID
+  //                 foundImage.imageId
+  //               );
+  //               setGeneratedImageUrl(result.href); // Display as the main generated/preview image
+  //               setDisplayImageUri(result.href);   // Also set this to ensure consistency
+  //               console.log("Loaded previously generated image for outfit from AsyncStorage user:", result.href);
+  //               imageSetFromCreated = true;
+  //             } catch (error) {
+  //               console.error("Error loading previously generated image from Appwrite (AsyncStorage user):", error);
+  //               setErrorMsg("Failed to load previous outfit image.");
+  //             }
+  //           }
+  //         }
+  //       }
+  //     } catch (e) {
+  //       console.error("Error reading user from AsyncStorage in loadOutfitImage:", e);
+  //       // Continue to fallback if AsyncStorage read fails
+  //     }
+
+  //     if (!imageSetFromCreated) {
+  //       // Fallback to fetching the default user image if no specific outfit image was found/loaded
+  //       fetchUserImage();
+  //     }
+  //   };
+
+  //   const fetchUserImage = async () => {
+  //     try {
+  //       const storedUser = await AsyncStorage.getItem('user');
+  //       if (storedUser) {
+  //         const parsedUser = JSON.parse(storedUser);
+  //         if (parsedUser?.fileId) {
+  //           const client = new Client()
+  //             .setEndpoint('https://fra.cloud.appwrite.io/v1')
+  //             .setProject('682371f4001597e0b4a7');
+  //           const storage = new Storage(client);
+  //           const result = storage.getFileDownload(
+  //             '6823720b001cdc257539',
+  //             parsedUser.fileId,
+  //           );
+  //           setAppwriteImage(result);
+  //           setDisplayImageUri(result.href);
+  //           console.log(result);
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.error("Error loading image:", error);
+  //       setErrorMsg("Failed to load image.");
+  //     }
+  //   };
+
+  //   loadOutfitImage(); // Call the new orchestrating function
+
+  //   (async () => {
+  //     if (Platform.OS !== 'web') {
+  //       const libraryStatus = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  //       if (libraryStatus.status !== 'granted') {
+  //         Alert.alert('Permission Denied', 'Camera roll access is needed to select images.');
+  //       }
+  //       const cameraStatus = await ImagePicker.requestCameraPermissionsAsync();
+  //       if (cameraStatus.status !== 'granted') {
+  //         Alert.alert('Permission Denied', 'Camera access is needed to take photos.');
+  //       }
+  //     }
+  //   })();
+  // }, [user]);

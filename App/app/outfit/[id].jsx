@@ -10,7 +10,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Client, Storage, ID } from 'react-native-appwrite';
 import { useGlobalContext } from '../context/GlobalProvider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { GestureDetector, Gesture, Directions } from 'react-native-gesture-handler';
+
 import * as FileSystem from 'expo-file-system';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
@@ -33,9 +33,7 @@ export default function OutfitDetailsPage() {
   const [errorMsg, setErrorMsg] = useState(null);
   const [isUploadingBaseImage, setIsUploadingBaseImage] = useState(false);
 
-  const flingGesture = Gesture.Fling()
-    .direction(Directions.DOWN)
-    .onEnd(() => router.back());
+
 
   try {
     if (params.items) items = JSON.parse(params.items);
@@ -44,12 +42,17 @@ export default function OutfitDetailsPage() {
     setErrorMsg("Failed to load outfit items.");
   }
 
+
+
   useEffect(() => {
     const loadOutfitImage = async () => {
       console.log("Loading outfit image for outfit ID:", params.id);
       let imageSetFromCreated = false;
+
       try {
         const storedUserString = await AsyncStorage.getItem('user');
+        console.log("Stored user string:", storedUserString);
+        
         if (storedUserString) {
           const parsedUser = JSON.parse(storedUserString);
           console.log("Parsed user:", parsedUser);
@@ -77,7 +80,7 @@ export default function OutfitDetailsPage() {
                 setErrorMsg("Failed to load previous outfit image.");
               }
             }
-          }
+          } else {}
         }
       } catch (e) {
         console.error("Error reading user from AsyncStorage in loadOutfitImage:", e);
@@ -88,7 +91,7 @@ export default function OutfitDetailsPage() {
         // Fallback to fetching the default user image if no specific outfit image was found/loaded
         fetchUserImage();
       }
-    };
+    }
 
     const fetchUserImage = async () => {
       try {
@@ -109,27 +112,104 @@ export default function OutfitDetailsPage() {
             console.log(result);
           }
         }
-      } catch (error) {
-        console.error("Error loading image:", error);
-        setErrorMsg("Failed to load image.");
+      } catch (e) {
+        console.error("Error reading user from AsyncStorage in fetchUserImage:", e);
+        // Continue to fallback if AsyncStorage read fails
       }
     };
 
-    loadOutfitImage(); // Call the new orchestrating function
 
-    (async () => {
-      if (Platform.OS !== 'web') {
-        const libraryStatus = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (libraryStatus.status !== 'granted') {
-          Alert.alert('Permission Denied', 'Camera roll access is needed to select images.');
-        }
-        const cameraStatus = await ImagePicker.requestCameraPermissionsAsync();
-        if (cameraStatus.status !== 'granted') {
-          Alert.alert('Permission Denied', 'Camera access is needed to take photos.');
-        }
-      }
-    })();
+
+    loadOutfitImage();
   }, [user]);
+
+  // useEffect(() => {
+  //   const loadOutfitImage = async () => {
+  //     console.log("Loading outfit image for outfit ID:", params.id);
+  //     let imageSetFromCreated = false;
+  //     try {
+  //       const storedUserString = await AsyncStorage.getItem('user');
+  //       console.log("Stored user string:", storedUserString);
+  //       if (storedUserString) {
+  //         const parsedUser = JSON.parse(storedUserString);
+  //         console.log("Parsed user:", parsedUser);
+  //         console.log('params.id', params.id)
+  //         console.log(parsedUser, parsedUser.createdImages, parsedUser.createdImages > 0, params.id)
+  //         if (parsedUser && parsedUser.createdImages && parsedUser.createdImages.length > 0 && params.id) {
+  //           const foundImage = parsedUser.createdImages.find(img => img.outfitId === params.id);
+  //           if (foundImage && foundImage.imageId) {
+  //             console.log("Found image in AsyncStorage:", foundImage);
+  //             try {
+  //               const client = new Client()
+  //                 .setEndpoint('https://fra.cloud.appwrite.io/v1')
+  //                 .setProject('682371f4001597e0b4a7');
+  //               const storage = new Storage(client);
+  //               const result = storage.getFileDownload(
+  //                 '6823720b001cdc257539', // Assuming same bucket ID
+  //                 foundImage.imageId
+  //               );
+  //               setGeneratedImageUrl(result.href); // Display as the main generated/preview image
+  //               setDisplayImageUri(result.href);   // Also set this to ensure consistency
+  //               console.log("Loaded previously generated image for outfit from AsyncStorage user:", result.href);
+  //               imageSetFromCreated = true;
+  //             } catch (error) {
+  //               console.error("Error loading previously generated image from Appwrite (AsyncStorage user):", error);
+  //               setErrorMsg("Failed to load previous outfit image.");
+  //             }
+  //           }
+  //         }
+  //       }
+  //     } catch (e) {
+  //       console.error("Error reading user from AsyncStorage in loadOutfitImage:", e);
+  //       // Continue to fallback if AsyncStorage read fails
+  //     }
+
+  //     if (!imageSetFromCreated) {
+  //       // Fallback to fetching the default user image if no specific outfit image was found/loaded
+  //       fetchUserImage();
+  //     }
+  //   };
+
+  //   const fetchUserImage = async () => {
+  //     try {
+  //       const storedUser = await AsyncStorage.getItem('user');
+  //       if (storedUser) {
+  //         const parsedUser = JSON.parse(storedUser);
+  //         if (parsedUser?.fileId) {
+  //           const client = new Client()
+  //             .setEndpoint('https://fra.cloud.appwrite.io/v1')
+  //             .setProject('682371f4001597e0b4a7');
+  //           const storage = new Storage(client);
+  //           const result = storage.getFileDownload(
+  //             '6823720b001cdc257539',
+  //             parsedUser.fileId,
+  //           );
+  //           setAppwriteImage(result);
+  //           setDisplayImageUri(result.href);
+  //           console.log(result);
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.error("Error loading image:", error);
+  //       setErrorMsg("Failed to load image.");
+  //     }
+  //   };
+
+  //   loadOutfitImage(); // Call the new orchestrating function
+
+  //   (async () => {
+  //     if (Platform.OS !== 'web') {
+  //       const libraryStatus = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  //       if (libraryStatus.status !== 'granted') {
+  //         Alert.alert('Permission Denied', 'Camera roll access is needed to select images.');
+  //       }
+  //       const cameraStatus = await ImagePicker.requestCameraPermissionsAsync();
+  //       if (cameraStatus.status !== 'granted') {
+  //         Alert.alert('Permission Denied', 'Camera access is needed to take photos.');
+  //       }
+  //     }
+  //   })();
+  // }, [user]);
 
   const handleChangeDisplayImage = async () => {
     Alert.alert(
@@ -263,7 +343,7 @@ export default function OutfitDetailsPage() {
       formData.append('prompt', 'Dress the person in the main image using the provided outfit item images. Ensure the outfit looks natural and cohesive. Full body of the person must be visible. Without making the person look weird or deformed, make the person look good in the outfit, without making even a slight change in the persons face, reapat you CANT MAKE ANY CHANGES TO THE FACE IT NEEDS TO LOOK EXACTLY LIKE IN THE PHOTO, same with the new clothes that person wears.');
       formData.append('size', '1024x1024');
       formData.append('n', '1');
-      formData.append('quality', 'high');
+      formData.append('quality', 'medium');
       formData.append('image[]', {
         uri: userImageFileUri,
         name: 'user.png',
@@ -392,7 +472,7 @@ export default function OutfitDetailsPage() {
                    const userID = parsedUser._id;
                    const outfitId = params.id; // id from useLocalSearchParams
                    
-                   axios.put('https://dc8b-109-245-193-150.ngrok-free.app/createdImage', {
+                   axios.put('https://47f1-109-245-193-150.ngrok-free.app/createdImage', {
                        userID, imageID, outfitId
                    })
                    .then(backendResponse => {
@@ -420,7 +500,7 @@ export default function OutfitDetailsPage() {
 
           console.log("Sending data to backend:", { userID, imageID, outfitId });
 
-          axios.put('https://dc8b-109-245-193-150.ngrok-free.app/createdImage', {
+          axios.put('https://47f1-109-245-193-150.ngrok-free.app/createdImage', {
             userID,
             imageID,
             outfitId
@@ -455,7 +535,6 @@ export default function OutfitDetailsPage() {
   };
 
   return (
-    <GestureDetector gesture={flingGesture}>
       <SafeAreaView style={styles.safeArea}>
         <StatusBar style="light" backgroundColor="#1A0D2E" />
         <Stack.Screen options={{ headerShown: false }} />
@@ -521,7 +600,6 @@ export default function OutfitDetailsPage() {
           </LinearGradient>
         </TouchableOpacity>
       </SafeAreaView>
-    </GestureDetector>
   );
 }
 

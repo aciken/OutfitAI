@@ -25,7 +25,15 @@
       "favicon": "./assets/outfitaiIcon.png"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow OutfitAI to access your photos so you can select images for your outfits and profile.",
+          "cameraPermission": "Allow OutfitAI to access your camera so you can take photos for your outfits and profile.",
+          "microphonePermission": "Allow OutfitAI to access your microphone if you intend to capture video with audio."
+        }
+      ]
     ],
     "extra": {
       "router": {},

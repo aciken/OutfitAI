@@ -46,6 +46,11 @@ export default function ImageUploadPage() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [isOptionsModalVisible, setIsOptionsModalVisible] = useState(false);
 
+
+
+
+  
+
   const handleChooseFromLibrary = async () => {
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

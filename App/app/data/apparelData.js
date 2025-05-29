@@ -16,7 +16,11 @@ export const allOutfitItems = [
   { id: 'item_nikeShoes1', name: 'Nike Shoes', category: 'Shoes', source: require('../../assets/outfits/nikeShoes.png'), keywords: ['nike', 'shoes', 'sporty', 'casual', 'sneakers', 'athletic'] },
   { id: 'item_shirtLaS1', name: 'Long Sleeve Shirt', category: 'Tops', source: require('../../assets/outfits/shirtLaS.png'), keywords: ['shirt', 'long sleeve', 'top', 'casual', 'everyday'] },
   { id: 'item_shorts1', name: 'Casual Shorts', category: 'Bottoms', source: require('../../assets/outfits/shorts.png'), keywords: ['shorts', 'bottoms', 'casual', 'summer', 'sporty'] },
-
+  { id: 'item_whiteshirt1', name: 'Crisp White Shirt', category: 'Tops', source: require('../../assets/outfits/whiteShirt.png'), keywords: ['shirt', 'white shirt', 'formal', 'top', 'business', 'dress shirt', 'classic', 'elegant', 'professional'] },
+  { id: 'item_suitjacket1', name: 'Classic Suit Jacket', category: 'Tops', source: require('../../assets/outfits/suitJacket.png'), keywords: ['suit', 'jacket', 'formal', 'top', 'business', 'event', 'wedding', 'professional', 'classic', 'elegant'] },
+  { id: 'item_suitpants1', name: 'Formal Suit Pants', category: 'Bottoms', source: require('../../assets/outfits/suitPants.png'), keywords: ['suit', 'pants', 'formal', 'bottoms', 'trousers', 'business', 'event', 'wedding', 'professional', 'classic', 'elegant'] },
+  { id: 'item_tie1', name: 'Silk Tie', category: 'Accessories', source: require('../../assets/outfits/tie.png'), keywords: ['tie', 'silk', 'accessory', 'formal', 'business', 'necktie', 'elegant', 'professional'] },
+  { id: 'item_shoes4', name: 'Brown Shoes', category: 'Shoes', source: require('../../assets/outfits/brownShoes.png'), keywords: ['shoes', 'brown', 'shoes', 'casual', 'everyday', 'comfort', 'loungewear'] },
   // Example: { id: 'item_belt1', name: 'Leather Belt', category: 'Accessories', source: require('../../assets/outfits/belt1.png'), keywords: ['belt', 'leather', 'accessory', 'formal', 'casual'] },
 ];
 
@@ -84,6 +88,21 @@ export const predefinedOutfits = [
       { itemId: 'item_shirtLaS1', label: 'Long Sleeve Shirt' },
       { itemId: 'item_shorts1', label: 'Casual Shorts' },
       { itemId: 'item_nikeShoes1', label: 'Nike Shoes' }
+    ]
+  },
+  {
+    id: 'outfit6',
+    name: 'Formal Attire',
+    previewImage: require('../../assets/outfits/outfit6.png'),
+    keywords: ['formal', 'suit', 'business', 'event', 'wedding', 'professional', 'classic', 'elegant', 'attire', 'black tie'],
+    style: ['Classic', 'Formal'],
+    occasion: ['Special Event', 'Business Formal', 'Wedding Guest'],
+    items: [
+      { itemId: 'item_whiteshirt1', label: 'Crisp White Shirt' },
+      { itemId: 'item_suitjacket1', label: 'Classic Suit Jacket' },
+      { itemId: 'item_suitpants1', label: 'Formal Suit Pants' },
+      { itemId: 'item_tie1', label: 'Silk Tie' },
+      { itemId: 'item_shoes4', label: 'Brown Shoes' }
     ]
   }
 ];
