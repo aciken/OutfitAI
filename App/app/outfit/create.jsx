@@ -7,7 +7,7 @@ import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Client, Storage } from 'react-native-appwrite';
+import { Client, Storage, ID } from 'react-native-appwrite';
 import { useGlobalContext } from '../context/GlobalProvider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GestureDetector, Gesture, Directions } from 'react-native-gesture-handler';
@@ -21,7 +21,7 @@ const IMAGE_MAX_DIMENSION = 512;
 // const ITEM_IMAGE_SIZE = 100; // No longer explicitly needed here, defined in styles
 
 export default function OutfitCreationPage() {
-  const { user } = useGlobalContext();
+  const { user, selectedOutfitItem, clearSelectedOutfitItem } = useGlobalContext();
   const router = useRouter();
 
   const [outfitItems, setOutfitItems] = useState([]);
@@ -30,6 +30,7 @@ export default function OutfitCreationPage() {
   const [generatedImageUrl, setGeneratedImageUrl] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [isAddItemModalVisible, setIsAddItemModalVisible] = useState(false);
+  const [isUploadingBaseImage, setIsUploadingBaseImage] = useState(false);
 
   const flingGesture = Gesture.Fling()
     .direction(Directions.DOWN)
@@ -75,6 +76,24 @@ export default function OutfitCreationPage() {
       }
     })();
   }, []);
+
+  // Listen for selected items from global context
+  useEffect(() => {
+    if (selectedOutfitItem) {
+      setOutfitItems(prevItems => {
+        // Check if item already exists to avoid duplicates
+        const itemExists = prevItems.some(item => 
+          item.label === selectedOutfitItem.label && item.isAsset === selectedOutfitItem.isAsset
+        );
+        if (!itemExists) {
+          return [...prevItems, selectedOutfitItem];
+        }
+        return prevItems;
+      });
+      // Clear the selected item from global context
+      clearSelectedOutfitItem();
+    }
+  }, [selectedOutfitItem, clearSelectedOutfitItem]);
 
   const downloadImage = async (imageUrl) => {
     const localUri = FileSystem.cacheDirectory + `img_${Date.now()}.png`;
@@ -207,6 +226,86 @@ export default function OutfitCreationPage() {
     </View>
   );
 
+  const handleChangeDisplayImage = async () => {
+    Alert.alert(
+      "Change Image",
+      "Select new image source",
+      [
+        {
+          text: "Take Photo",
+          onPress: async () => {
+            const result = await ImagePicker.launchCameraAsync({
+              mediaTypes: ImagePicker.MediaTypeOptions.Images,
+              allowsEditing: true,
+              aspect: [1, 1],
+              quality: 0.7,
+            });
+            if (!result.canceled && result.assets && result.assets.length > 0) {
+              uploadSelectedBaseImage(result.assets[0].uri, result.assets[0].mimeType);
+            }
+          }
+        },
+        {
+          text: "Choose from Library",
+          onPress: async () => {
+            const result = await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: ImagePicker.MediaTypeOptions.Images,
+              allowsEditing: true,
+              aspect: [1, 1],
+              quality: 0.7,
+            });
+            if (!result.canceled && result.assets && result.assets.length > 0) {
+              uploadSelectedBaseImage(result.assets[0].uri, result.assets[0].mimeType);
+            }
+          }
+        },
+        { text: "Cancel", style: "cancel" }
+      ]
+    );
+  };
+
+  const uploadSelectedBaseImage = async (localUri, mimeType) => {
+    setIsUploadingBaseImage(true);
+    setAppwriteImage({ href: localUri }); // Show local preview immediately
+
+    try {
+      const fileInfo = await FileSystem.getInfoAsync(localUri);
+      if (!fileInfo.exists) {
+        throw new Error("Selected file does not exist.");
+      }
+
+      const fileName = localUri.split('/').pop() || `user_base_${ID.unique()}.jpg`;
+      const resolvedMimeType = mimeType || 'image/jpeg';
+
+      const appwritePayload = {
+        uri: localUri,
+        name: fileName,
+        type: resolvedMimeType,
+        size: fileInfo.size,
+      };
+      
+      const client = new Client()
+        .setEndpoint('https://fra.cloud.appwrite.io/v1')
+        .setProject('682371f4001597e0b4a7');
+      const storage = new Storage(client);
+
+      const uploadedFile = await storage.createFile(
+        '6823720b001cdc257539',
+        ID.unique(),
+        appwritePayload
+      );
+      
+      const newRemoteUrl = storage.getFileDownload('6823720b001cdc257539', uploadedFile.$id).href;
+      setAppwriteImage({ href: newRemoteUrl });
+
+    } catch (error) {
+      console.error("Error uploading selected base image:", error);
+      Alert.alert("Upload Error", "Failed to upload the selected image. Please try again.");
+    } finally {
+      setIsUploadingBaseImage(false);
+    }
+  };
+
   return (
     <GestureDetector gesture={flingGesture}>
       <SafeAreaView style={styles.safeArea}>
@@ -220,30 +319,32 @@ export default function OutfitCreationPage() {
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContainer}>
-          <View style={styles.outfitImageContainer}>
-            {isApplyingOutfit ? (
-              <View style={styles.loadingOverlayContainer}>
-                <ActivityIndicator size="large" color="#FFF" />
-                <Text style={styles.loadingText}>Crafting outfit...</Text>
-              </View>
-            ) : generatedImageUrl ? (
-              <Image source={{ uri: generatedImageUrl }} style={styles.outfitImage} />
-            ) : appwriteImage?.href ? (
-              <Image source={{ uri: appwriteImage.href }} style={styles.outfitImage} />
-            ) : (
-              <View style={styles.placeholderContainer}>
-                <Ionicons name="image-outline" size={60} color="#888" />
-                <Text style={styles.placeholderText}>Your outfit preview will appear here.</Text>
-              </View>
-            )}
+          <TouchableOpacity onPress={handleChangeDisplayImage} activeOpacity={0.8} disabled={isApplyingOutfit || isUploadingBaseImage}>
+            <View style={styles.outfitImageContainer}>
+              {isApplyingOutfit || isUploadingBaseImage ? (
+                <View style={styles.loadingOverlayContainer}>
+                  <ActivityIndicator size="large" color="#FFF" />
+                  <Text style={styles.loadingText}>{isApplyingOutfit ? 'Crafting outfit...' : 'Preparing image...'}</Text>
+                </View>
+              ) : generatedImageUrl ? (
+                <Image source={{ uri: generatedImageUrl }} style={styles.outfitImage} />
+              ) : appwriteImage?.href ? (
+                <Image source={{ uri: appwriteImage.href }} style={styles.outfitImage} />
+              ) : (
+                <View style={styles.placeholderContainer}>
+                  <Ionicons name="image-outline" size={60} color="#888" />
+                  <Text style={styles.placeholderText}>Your outfit preview will appear here.</Text>
+                </View>
+              )}
 
-            {errorMsg && !isApplyingOutfit && (
-              <View style={styles.errorOverlay}>
-                <Ionicons name="alert-circle-outline" size={20} color="#fff" />
-                <Text style={styles.errorText}>{errorMsg}</Text>
-              </View>
-            )}
-          </View>
+              {errorMsg && !isApplyingOutfit && !isUploadingBaseImage && (
+                <View style={styles.errorOverlay}>
+                  <Ionicons name="alert-circle-outline" size={20} color="#fff" />
+                  <Text style={styles.errorText}>{errorMsg}</Text>
+                </View>
+              )}
+            </View>
+          </TouchableOpacity>
 
           <View style={styles.itemsSectionContainer}>
             <Text style={styles.itemsTitle}>Outfit Items</Text>
@@ -269,7 +370,6 @@ export default function OutfitCreationPage() {
               {outfitItems.map((item, index) => (
                  <View key={item.id} style={styles.addedItemCard}>
                     <Image source={item.source} style={styles.itemImageInCard} />
-                    {item.label && <Text style={styles.itemLabel} numberOfLines={1}>{item.label}</Text>}
                     <TouchableOpacity onPress={() => handleRemoveItem(item.id)} style={styles.removeButton}>
                         <Ionicons name="close-circle" size={22} color="#FF7F7F" />
                     </TouchableOpacity>
@@ -329,14 +429,14 @@ export default function OutfitCreationPage() {
 
         <TouchableOpacity
           onPress={handleApplyOutfit}
-          disabled={isApplyingOutfit || outfitItems.length === 0}
+          disabled={isApplyingOutfit || outfitItems.length === 0 || isUploadingBaseImage}
           style={[
             styles.continueButton,
-            (isApplyingOutfit || outfitItems.length === 0) && styles.continueButtonDisabled
+            (isApplyingOutfit || outfitItems.length === 0 || isUploadingBaseImage) && styles.continueButtonDisabled
           ]}
         >
           <LinearGradient
-            colors={(isApplyingOutfit || outfitItems.length === 0) ? ['#4A3B5E', '#5A4B6E'] : ['#8A2BE2', '#A020F0']}
+            colors={(isApplyingOutfit || outfitItems.length === 0 || isUploadingBaseImage) ? ['#4A3B5E', '#5A4B6E'] : ['#8A2BE2', '#A020F0']}
             style={styles.continueButtonGradient}
           >
             <Text style={styles.continueButtonText}>
@@ -382,7 +482,7 @@ const styles = StyleSheet.create({
   
   addItemCard: {
     width: 100,
-    height: 130,
+    height: 100,
     borderRadius: 10,
     marginRight: 12,
     overflow: 'hidden',
@@ -405,12 +505,11 @@ const styles = StyleSheet.create({
   },
   
   plusIconContainer: {
-    width: 70,
-    height: 70,
+    width: 50,
+    height: 50,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 5,
-    // Add glow effect to the icon
     shadowColor: '#C07EFF',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.6,
@@ -418,44 +517,46 @@ const styles = StyleSheet.create({
   },
   
   addItemLabel: {
-    fontSize: 14,
-    color: '#D8BFD8', // Lighter text color for better contrast against dark background
+    fontSize: 12,
+    color: '#D8BFD8',
     textAlign: 'center',
     fontWeight: '600',
   },
   
   addedItemCard: {
     width: 100,
-    height: 130,
+    height: 100,
     borderRadius: 10,
     marginRight: 12,
-    backgroundColor: 'rgba(54,37,84,0.9)', // Slightly different background for added items
+    backgroundColor: 'rgba(44,27,74,0.8)',
     borderWidth: 1,
-    borderColor: 'rgba(192,126,255,0.35)',
+    borderColor: 'rgba(192,126,255,0.25)',
     alignItems: 'center',
-    padding: 8, // Adjusted padding
+    justifyContent: 'center',
+    padding: 8,
     position: 'relative',
   },
   itemImageInCard: { 
     width: '100%', 
-    height: 75, // Adjusted height
-    resizeMode: 'cover', // Changed to cover for better fill
-    borderRadius: 6, // Rounded corners for the image itself
-    marginBottom: 6,
+    height: '100%',
+    resizeMode: 'contain',
+    borderRadius: 6,
   },
   itemLabel: { 
     fontSize: 11, 
-    color: '#D8BFD8', // Lighter purple for label
+    color: '#D8BFD8',
     textAlign: 'center', 
     fontWeight: '500',
+    position: 'absolute',
+    bottom: 2,
+    left: 2,
+    right: 2,
   },
   removeButton: {
     position: 'absolute',
-    top: 2, // Adjusted for better placement
-    right: 2, // Adjusted for better placement
+    top: 2,
+    right: 2,
     padding: 3,
-    // backgroundColor: 'rgba(0,0,0,0.3)', // Optional subtle background for button
-    // borderRadius: 11, 
   },
   continueButton: {
     position: 'absolute', bottom: 30, left: '5%', right: '5%',
@@ -535,93 +636,3 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 }); 
-
-
-
-  // useEffect(() => {
-  //   const loadOutfitImage = async () => {
-  //     console.log("Loading outfit image for outfit ID:", params.id);
-  //     let imageSetFromCreated = false;
-  //     try {
-  //       const storedUserString = await AsyncStorage.getItem('user');
-  //       console.log("Stored user string:", storedUserString);
-  //       if (storedUserString) {
-  //         const parsedUser = JSON.parse(storedUserString);
-  //         console.log("Parsed user:", parsedUser);
-  //         console.log('params.id', params.id)
-  //         console.log(parsedUser, parsedUser.createdImages, parsedUser.createdImages > 0, params.id)
-  //         if (parsedUser && parsedUser.createdImages && parsedUser.createdImages.length > 0 && params.id) {
-  //           const foundImage = parsedUser.createdImages.find(img => img.outfitId === params.id);
-  //           if (foundImage && foundImage.imageId) {
-  //             console.log("Found image in AsyncStorage:", foundImage);
-  //             try {
-  //               const client = new Client()
-  //                 .setEndpoint('https://fra.cloud.appwrite.io/v1')
-  //                 .setProject('682371f4001597e0b4a7');
-  //               const storage = new Storage(client);
-  //               const result = storage.getFileDownload(
-  //                 '6823720b001cdc257539', // Assuming same bucket ID
-  //                 foundImage.imageId
-  //               );
-  //               setGeneratedImageUrl(result.href); // Display as the main generated/preview image
-  //               setDisplayImageUri(result.href);   // Also set this to ensure consistency
-  //               console.log("Loaded previously generated image for outfit from AsyncStorage user:", result.href);
-  //               imageSetFromCreated = true;
-  //             } catch (error) {
-  //               console.error("Error loading previously generated image from Appwrite (AsyncStorage user):", error);
-  //               setErrorMsg("Failed to load previous outfit image.");
-  //             }
-  //           }
-  //         }
-  //       }
-  //     } catch (e) {
-  //       console.error("Error reading user from AsyncStorage in loadOutfitImage:", e);
-  //       // Continue to fallback if AsyncStorage read fails
-  //     }
-
-  //     if (!imageSetFromCreated) {
-  //       // Fallback to fetching the default user image if no specific outfit image was found/loaded
-  //       fetchUserImage();
-  //     }
-  //   };
-
-  //   const fetchUserImage = async () => {
-  //     try {
-  //       const storedUser = await AsyncStorage.getItem('user');
-  //       if (storedUser) {
-  //         const parsedUser = JSON.parse(storedUser);
-  //         if (parsedUser?.fileId) {
-  //           const client = new Client()
-  //             .setEndpoint('https://fra.cloud.appwrite.io/v1')
-  //             .setProject('682371f4001597e0b4a7');
-  //           const storage = new Storage(client);
-  //           const result = storage.getFileDownload(
-  //             '6823720b001cdc257539',
-  //             parsedUser.fileId,
-  //           );
-  //           setAppwriteImage(result);
-  //           setDisplayImageUri(result.href);
-  //           console.log(result);
-  //         }
-  //       }
-  //     } catch (error) {
-  //       console.error("Error loading image:", error);
-  //       setErrorMsg("Failed to load image.");
-  //     }
-  //   };
-
-  //   loadOutfitImage(); // Call the new orchestrating function
-
-  //   (async () => {
-  //     if (Platform.OS !== 'web') {
-  //       const libraryStatus = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  //       if (libraryStatus.status !== 'granted') {
-  //         Alert.alert('Permission Denied', 'Camera roll access is needed to select images.');
-  //       }
-  //       const cameraStatus = await ImagePicker.requestCameraPermissionsAsync();
-  //       if (cameraStatus.status !== 'granted') {
-  //         Alert.alert('Permission Denied', 'Camera access is needed to take photos.');
-  //       }
-  //     }
-  //   })();
-  // }, [user]);

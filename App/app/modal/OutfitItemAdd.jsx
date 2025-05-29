@@ -6,6 +6,7 @@ import {
 import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
+import { useGlobalContext } from '../context/GlobalProvider';
 
 // This is a placeholder. In a real app, you might get this list dynamically
 // or have a more sophisticated way of managing assets.
@@ -26,6 +27,7 @@ const outfitAssets = [
 
 export default function OutfitItemAdd() {
   const router = useRouter();
+  const { addSelectedOutfitItem } = useGlobalContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredAssets, setFilteredAssets] = useState(outfitAssets);
 
@@ -42,12 +44,16 @@ export default function OutfitItemAdd() {
   }, [searchQuery]);
 
   const handleSelectItem = (item) => {
-    // For now, just log and go back. 
-    // You'll need to implement logic to pass this item back to create.jsx
-    console.log("Selected item:", item.name);
-    Alert.alert("Item Selected", `You selected ${item.name}. Add it to your outfit from the previous screen.`);
-    // Ideally, you'd pass this data back or use a global state/context
-    router.back(); 
+    // Add item to global context and go back to previous page
+    const selectedItem = {
+      id: Date.now().toString(),
+      source: item.source,
+      label: item.name,
+      isAsset: true
+    };
+    
+    addSelectedOutfitItem(selectedItem);
+    router.back();
   };
 
   const renderAsset = ({ item }) => (

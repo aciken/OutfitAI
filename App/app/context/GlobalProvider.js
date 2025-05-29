@@ -13,6 +13,7 @@ export const GlobalProvider = ({ children }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [error, setError] = useState(null);
+    const [selectedOutfitItem, setSelectedOutfitItem] = useState(null);
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -55,9 +56,30 @@ export const GlobalProvider = ({ children }) => {
         setIsAuthenticated(false);
         setUser(null);
     };  
+
+    const addSelectedOutfitItem = (item) => {
+        setSelectedOutfitItem(item);
+    };
+
+    const clearSelectedOutfitItem = () => {
+        setSelectedOutfitItem(null);
+    };
     
     return (
-        <GlobalContext.Provider value={{ user, isAuthenticated, error, setError, setIsAuthenticated, setUser, login, logout, signup }}>
+        <GlobalContext.Provider value={{ 
+            user, 
+            isAuthenticated, 
+            error, 
+            setError, 
+            setIsAuthenticated, 
+            setUser, 
+            login, 
+            logout, 
+            signup,
+            selectedOutfitItem,
+            addSelectedOutfitItem,
+            clearSelectedOutfitItem
+        }}>
             {children}
         </GlobalContext.Provider>
     );
