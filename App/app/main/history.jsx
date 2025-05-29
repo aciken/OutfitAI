@@ -108,6 +108,7 @@ export default function History() {
   const [processedHistoryItems, setProcessedHistoryItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState(null);
+  const [currentItemIndex, setCurrentItemIndex] = useState(0);
 
   // Create pan responder for gesture handling
   const panResponder = useRef(
@@ -655,6 +656,9 @@ export default function History() {
               <ScrollView 
                 style={styles.modalScrollView}
                 contentContainerStyle={styles.modalScrollContent}
+                scrollEventThrottle={16}
+                directionalLockEnabled={true}
+                showsVerticalScrollIndicator={false}
               >
                 {focusedImage && (
                   <>
@@ -664,15 +668,68 @@ export default function History() {
                       resizeMode="contain"
                     />
                     <View style={styles.outfitItemsContainer}>
-                      <Text style={styles.outfitItemsTitle}>Outfit Items Used</Text>
-                      <FlatList
-                        data={focusedImage.detailedOutfitItems}
-                        renderItem={renderOutfitItem}
-                        keyExtractor={(item) => item.id}
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={styles.outfitItemsList}
-                      />
+                      <Text style={styles.outfitItemsTitle}>Outfit Items Used ({focusedImage.detailedOutfitItems.length})</Text>
+                      
+                      {focusedImage.detailedOutfitItems.length > 0 && (
+                        <View style={styles.carouselContainer}>
+                          {/* Navigation arrows */}
+                          <TouchableOpacity 
+                            style={[styles.navButton, styles.prevButton, {opacity: currentItemIndex === 0 ? 0.3 : 1}]}
+                            onPress={() => {
+                              if (currentItemIndex > 0) {
+                                setCurrentItemIndex(currentItemIndex - 1);
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                              }
+                            }}
+                            disabled={currentItemIndex === 0}
+                          >
+                            <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+                          </TouchableOpacity>
+
+                          {/* Current item display */}
+                          <View style={styles.currentItemDisplay}>
+                            <View style={styles.outfitItemCard}>
+                              <Image 
+                                source={focusedImage.detailedOutfitItems[currentItemIndex].source} 
+                                style={styles.carouselItemImage} 
+                                resizeMode="contain" 
+                              />
+                              <Text style={styles.carouselItemName} numberOfLines={2}>
+                                {focusedImage.detailedOutfitItems[currentItemIndex].label || focusedImage.detailedOutfitItems[currentItemIndex].name}
+                              </Text>
+                            </View>
+                          </View>
+
+                          <TouchableOpacity 
+                            style={[styles.navButton, styles.nextButton, {opacity: currentItemIndex === focusedImage.detailedOutfitItems.length - 1 ? 0.3 : 1}]}
+                            onPress={() => {
+                              if (currentItemIndex < focusedImage.detailedOutfitItems.length - 1) {
+                                setCurrentItemIndex(currentItemIndex + 1);
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                              }
+                            }}
+                            disabled={currentItemIndex === focusedImage.detailedOutfitItems.length - 1}
+                          >
+                            <Ionicons name="chevron-forward" size={24} color="#FFFFFF" />
+                          </TouchableOpacity>
+                        </View>
+                      )}
+
+                      {/* Pagination dots */}
+                      {focusedImage.detailedOutfitItems.length > 1 && (
+                        <View style={styles.paginationContainer}>
+                          {focusedImage.detailedOutfitItems.map((_, index) => (
+                            <TouchableOpacity
+                              key={index}
+                              style={[styles.paginationDot, {opacity: index === currentItemIndex ? 1 : 0.4}]}
+                              onPress={() => {
+                                setCurrentItemIndex(index);
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                              }}
+                            />
+                          ))}
+                        </View>
+                      )}
                     </View>
                   </>
                 )}
@@ -805,27 +862,31 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 16,
   },
-  outfitItemsList: {
-    paddingRight: 20,
+  outfitItemsGrid: {
+    width: '100%',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
   },
   outfitItemContainer: {
     alignItems: 'center',
-    marginRight: 20,
+    marginRight: 15,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 12,
-    padding: 12,
-    width: 100,
+    padding: 8,
+    width: 80,
+    minWidth: 80,
   },
   outfitItemImage: {
-    width: 60,
-    height: 60,
+    width: 64,
+    height: 64,
     borderRadius: 8,
   },
   outfitItemName: {
     color: '#FFFFFF',
-    fontSize: 12,
-    marginTop: 8,
+    fontSize: 11,
+    marginTop: 6,
     textAlign: 'center',
+    flexWrap: 'wrap',
   },
   settingsOverlay: {
     flex: 1,
@@ -932,5 +993,70 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#888',
     textAlign: 'center',
+  },
+  showMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
+  },
+  showMoreText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    marginRight: 10,
+  },
+  carouselContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 10,
+  },
+  navButton: {
+    padding: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 20,
+  },
+  prevButton: {
+    marginRight: 10,
+  },
+  nextButton: {
+    marginLeft: 10,
+  },
+  currentItemDisplay: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  outfitItemCard: {
+    width: 100,
+    height: 100,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  carouselItemImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 12,
+  },
+  carouselItemName: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '500',
+    marginTop: 6,
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+  paginationDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+    marginHorizontal: 4,
   },
 });
