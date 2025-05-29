@@ -16,12 +16,13 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { OPENAI_API_KEY } from '@env';
 import { BlurView } from 'expo-blur';
+import axios from 'axios';
 
 const IMAGE_MAX_DIMENSION = 512;
 // const ITEM_IMAGE_SIZE = 100; // No longer explicitly needed here, defined in styles
 
 export default function OutfitCreationPage() {
-  const { user, selectedOutfitItem, clearSelectedOutfitItem } = useGlobalContext();
+  const { user, selectedOutfitItem, clearSelectedOutfitItem, setUser } = useGlobalContext();
   const router = useRouter();
 
   const [outfitItems, setOutfitItems] = useState([]);
@@ -200,13 +201,132 @@ export default function OutfitCreationPage() {
       const json = await response.json();
       if (!response.ok) throw new Error(json.error?.message || 'Image edit failed.');
 
+      let finalGeneratedImageUrl;
+      let isBase64 = false;
+
       if (json.data?.[0]?.b64_json) {
-        setGeneratedImageUrl(`data:image/png;base64,${json.data[0].b64_json}`);
+        const base64Image = json.data[0].b64_json;
+        finalGeneratedImageUrl = `data:image/png;base64,${base64Image}`;
+        isBase64 = true;
+        setGeneratedImageUrl(finalGeneratedImageUrl);
       } else if (json.data?.[0]?.url) {
-        setGeneratedImageUrl(json.data[0].url);
+        finalGeneratedImageUrl = json.data[0].url;
+        setGeneratedImageUrl(finalGeneratedImageUrl);
       } else {
         throw new Error("No image data returned.");
       }
+
+      // ---- Appwrite Upload and Backend Call START ----
+      if (finalGeneratedImageUrl) {
+        let imageFileUriForAppwrite;
+        let imageFileSize;
+
+        if (isBase64) {
+          const base64Code = finalGeneratedImageUrl.split("data:image/png;base64,")[1];
+          const tempFilename = FileSystem.cacheDirectory + `${ID.unique()}.png`;
+          await FileSystem.writeAsStringAsync(tempFilename, base64Code, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+          imageFileUriForAppwrite = tempFilename;
+          const fileInfo = await FileSystem.getInfoAsync(tempFilename);
+          if (!fileInfo.exists) {
+            throw new Error("Failed to create temporary file for upload.");
+          }
+          imageFileSize = fileInfo.size;
+        } else { // It's a URL
+          const downloadedUri = await downloadImage(finalGeneratedImageUrl);
+          imageFileUriForAppwrite = downloadedUri;
+          const fileInfo = await FileSystem.getInfoAsync(downloadedUri);
+          if (!fileInfo.exists) {
+            throw new Error("Failed to download image for upload.");
+          }
+          imageFileSize = fileInfo.size;
+        }
+
+        const client = new Client()
+          .setEndpoint('https://fra.cloud.appwrite.io/v1')
+          .setProject('682371f4001597e0b4a7');
+        const storage = new Storage(client);
+
+        const appwritePayload = {
+            uri: imageFileUriForAppwrite,
+            name: `${ID.unique()}.png`,
+            type: 'image/png',
+            size: imageFileSize,
+        };
+
+        console.log("Attempting to upload to Appwrite:", appwritePayload);
+
+        storage.createFile(
+          '6823720b001cdc257539', // BUCKET_ID
+          ID.unique(), // FILE_ID
+          appwritePayload
+        ).then(async function (response) {
+          const imageID = response.$id;
+
+          if (!user || !user._id) {
+            try {
+              const storedUser = await AsyncStorage.getItem('user');
+              if (storedUser) {
+                const parsedUser = JSON.parse(storedUser);
+                if (parsedUser && parsedUser._id) {
+                   const userID = parsedUser._id;
+                   const outfitId = 'custom'; // Use 'custom' for created outfits
+                   
+                   axios.put('https://47f1-109-245-193-150.ngrok-free.app/createdImage', {
+                       userID, imageID, outfitId
+                   })
+                   .then(backendResponse => {
+                    AsyncStorage.setItem('user', JSON.stringify(backendResponse.data));
+                    setUser(backendResponse.data);
+                    Alert.alert("Success", "Custom outfit saved!");
+                   })
+                   .catch(backendError => {
+                       console.log("Backend update error (fallback user ID):", backendError.response ? backendError.response.data : backendError.message);
+                       console.log(backendError);
+                       Alert.alert("Error", "Failed to save outfit data to backend.");
+                   });
+                   return; // Exit after attempting with fallback
+                }
+              }
+            } catch (e) {
+              console.error("Error fetching user from AsyncStorage for fallback:", e);
+            }
+            // If fallback also fails or user._id wasn't there initially
+            Alert.alert("Error", "Critical: User ID not found. Cannot save image details.");
+            return;
+          }
+          
+          const userID = user._id;
+          const outfitId = 'custom'; // Use 'custom' for created outfits
+
+          console.log("Sending data to backend:", { userID, imageID, outfitId });
+
+          axios.put('https://47f1-109-245-193-150.ngrok-free.app/createdImage', {
+            userID,
+            imageID,
+            outfitId
+          })
+          .then(backendResponse => {
+            console.log("Backend update success:", backendResponse.data);
+            Alert.alert("Success", "Custom outfit saved!");
+            AsyncStorage.setItem('user', JSON.stringify(backendResponse.data));
+            setUser(backendResponse.data);
+          })
+          .catch(backendError => {
+            console.log("Backend update error:", backendError.response ? backendError.response.data : backendError.message);
+            console.log(backendError);
+            Alert.alert("Error", "Failed to save outfit data to backend.");
+          });
+
+        }).catch(function (appwriteError) {
+          console.log("Appwrite upload error (detailed):", appwriteError);
+          console.log(appwriteError);
+          Alert.alert("Upload Error", `Failed to upload generated image: ${appwriteError.message}`);
+        });
+      }
+      // ---- Appwrite Upload and Backend Call END ----
+
     } catch (error) {
       console.error("Apply outfit error:", error);
       setErrorMsg(error.message);
