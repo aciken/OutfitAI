@@ -18,6 +18,7 @@ import axios from 'axios';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useGoogleAuth } from '../utiils/googleAuth';
 
 // Temporarily comment out AsyncStorage if not installed
 // import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -27,8 +28,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 export default function Signin() {
   const { login, setError, setIsAuthenticated, setUser, isAuthenticated } = useGlobalContext();
-  // Remove GlobalContext reference temporarily
-  // const { setUser } = useGlobalContext();
+  const { signInWithGoogle } = useGoogleAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const router = useRouter();
@@ -69,7 +69,7 @@ export default function Signin() {
 
 
     console.log(email, password);
-      axios.post('https://47f1-109-245-193-150.ngrok-free.app/signin', { email, password })
+      axios.post('https://fc21-109-245-207-216.ngrok-free.app/signin', { email, password })
       .then((response) => {
         if(response.status === 200) {
           setUser(response.data);
@@ -89,6 +89,18 @@ export default function Signin() {
         console.log(error);
       })
 
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      const userData = await signInWithGoogle();
+      if (userData) {
+        router.replace('/main/home');
+      }
+    } catch (error) {
+      console.error('Error signing in with Google:', error);
+      Alert.alert('Error', 'Failed to sign in with Google');
+    }
   };
 
   return (
@@ -188,6 +200,7 @@ export default function Signin() {
             {/* Continue with Google */}
             <TouchableOpacity 
               className="bg-[#2A1B3E] py-3 rounded-full mb-6 flex-row justify-center items-center border border-[rgba(192,126,255,0.15)]"
+              onPress={handleGoogleSignIn}
             >
               <Ionicons name="logo-google" size={18} color="#C07EFF" style={{ marginRight: 8 }} />
               <Text className="text-white text-center text-base">

@@ -59,6 +59,8 @@ const OCCASION_OPTIONS = [
   { id: 'loungewear', name: 'Loungewear', icon: 'home-outline' },
   { id: 'weekend', name: 'Weekend', icon: 'calendar-outline' },
   { id: 'sport_activity', name: 'Sport Activity', icon: 'basketball-outline' },
+  { id: 'business_formal', name: 'Business Formal', icon: 'business-outline' },
+  { id: 'wedding_guest', name: 'Wedding Guest', icon: 'rose-outline' },
 ];
 
 // Helper function to shuffle an array (Fisher-Yates)
@@ -377,6 +379,20 @@ export default function Home() {
       return;
     }
 
+    // Map occasion IDs to relevant keywords for better matching
+    const occasionKeywordMap = {
+      'casual_day': ['casual', 'everyday', 'relaxed', 'comfort', 'loungewear', 'casual day'],
+      'work': ['work', 'office', 'business', 'professional', 'business casual', 'formal'],
+      'evening_out': ['evening', 'party', 'stylish', 'chic', 'evening out'],
+      'special_event': ['event', 'formal', 'elegant', 'party', 'special event', 'wedding', 'business formal'],
+      'vacation': ['vacation', 'summer', 'bohemian', 'light', 'casual'],
+      'loungewear': ['loungewear', 'comfort', 'casual', 'relaxed', 'everyday'],
+      'weekend': ['weekend', 'casual', 'relaxed', 'comfort'],
+      'sport_activity': ['sport', 'sporty', 'athletic', 'workout', 'active', 'sport activity'],
+      'business_formal': ['business formal', 'formal', 'business', 'suit', 'professional', 'work', 'office'],
+      'wedding_guest': ['wedding guest', 'wedding', 'formal', 'elegant', 'event', 'special event']
+    };
+
     const filtered = originalCards.filter(card => {
       // Keyword search (text input)
       const keywordMatch = query ? (
@@ -385,15 +401,18 @@ export default function Home() {
         (card.itemKeywords && card.itemKeywords.some(k => k.toLowerCase().includes(query)))
       ) : true; // If no query, keyword match is true by default
 
-      // Occasion filter
+      // Occasion filter - improved logic with keyword mapping
       const occasionMatch = occasionsSelected ? 
-        Array.from(selectedOccasions).some(occasionId => 
-          (card.keywords && card.keywords.some(k => k.toLowerCase().includes(occasionId.toLowerCase()))) ||
-          (card.itemKeywords && card.itemKeywords.some(k => k.toLowerCase().includes(occasionId.toLowerCase())))
-        ) 
+        Array.from(selectedOccasions).some(occasionId => {
+          const occasionKeywords = occasionKeywordMap[occasionId] || [occasionId];
+          return occasionKeywords.some(occasionKeyword => 
+            (card.keywords && card.keywords.some(k => k.toLowerCase().includes(occasionKeyword.toLowerCase()))) ||
+            (card.itemKeywords && card.itemKeywords.some(k => k.toLowerCase().includes(occasionKeyword.toLowerCase())))
+          );
+        })
         : true; // If no occasions selected, occasion match is true
       
-      // Gender filter
+      // Gender filter - improved logic
       const genderMatch = genderSelected ?
         (card.keywords && card.keywords.some(k => k.toLowerCase() === selectedGender.toLowerCase())) ||
         (card.itemKeywords && card.itemKeywords.some(k => k.toLowerCase() === selectedGender.toLowerCase()))
@@ -1053,8 +1072,15 @@ export default function Home() {
                     <View style={{ marginTop: 20 }}>
                       <Text style={styles.sectionTitle}>Popular Searches</Text>
                       <View style={styles.searchTagsContainer}>
-                        {['Summer Outfits', 'Casual Style', 'Formal Wear', 'Street Fashion', 'Minimalist', 'Vintage'].map((tag, index) => (
-                          <TouchableOpacity key={index} style={styles.searchTag}>
+                        {['casual', 'formal', 'sporty', 'business', 'summer', 'elegant', 'streetwear', 'comfortable'].map((tag, index) => (
+                          <TouchableOpacity 
+                            key={index} 
+                            style={styles.searchTag}
+                            onPress={() => {
+                              setSearchQuery(tag);
+                              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                            }}
+                          >
                             <Text style={styles.searchTagText}>{tag}</Text>
                           </TouchableOpacity>
                         ))}
@@ -1063,11 +1089,18 @@ export default function Home() {
 
                     {/* Recent Searches */}
                     <View style={{ marginTop: 20, marginBottom: 20 }}>
-                      <Text style={styles.sectionTitle}>Recent Searches</Text>
+                      <Text style={styles.sectionTitle}>Item Categories</Text>
                       <View style={styles.recentSearchesContainer}>
-                        {['Blue Denim Jacket', 'White Sneakers', 'Black Dress', 'Leather Boots'].map((search, index) => (
-                          <TouchableOpacity key={index} style={styles.recentSearchItem}>
-                            <Ionicons name="time-outline" size={18} color="#A0A0A0" style={{ marginRight: 8 }} />
+                        {['hoodie', 'dress', 'jeans', 'sneakers', 'suit', 'heels', 'polo', 'shorts'].map((search, index) => (
+                          <TouchableOpacity 
+                            key={index} 
+                            style={styles.recentSearchItem}
+                            onPress={() => {
+                              setSearchQuery(search);
+                              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                            }}
+                          >
+                            <Ionicons name="search-outline" size={18} color="#A0A0A0" style={{ marginRight: 8 }} />
                             <Text style={styles.recentSearchText}>{search}</Text>
                           </TouchableOpacity>
                         ))}

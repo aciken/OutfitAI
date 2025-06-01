@@ -177,18 +177,75 @@ export default function OutfitCreationPage() {
 
       for (let i = 0; i < outfitItems.length; i++) {
         const item = outfitItems[i];
-        if (item.source?.uri) {
-          try {
-            const itemFileUri = await imageToPngBuffer(item.source.uri);
+        try {
+          let itemFileUri;
+          
+          console.log(`Processing item ${i}:`, { 
+            label: item.label, 
+            isAsset: item.isAsset,
+            sourceType: typeof item.source,
+            hasUri: !!item.source?.uri 
+          });
+          
+          // Handle asset items (from app assets) vs camera/gallery items
+          if (item.source?.uri) {
+            // Camera/gallery item - has uri
+            console.log(`Item ${i}: Processing as camera/gallery item`);
+            itemFileUri = await imageToPngBuffer(item.source.uri);
+          } else if (item.source && typeof item.source === 'number') {
+            // Asset item - source is a require() call (number)
+            console.log(`Item ${i}: Processing as asset item (require)`);
+            try {
+              const assetUri = Image.resolveAssetSource(item.source).uri;
+              console.log(`Item ${i}: Resolved asset URI:`, assetUri);
+              if (assetUri) {
+                // Download the asset to a local file so we can process it
+                const localAssetUri = await downloadImage(assetUri);
+                console.log(`Item ${i}: Downloaded to local URI:`, localAssetUri);
+                itemFileUri = await imageToPngBuffer(localAssetUri);
+              } else {
+                throw new Error(`Could not resolve asset for item: ${item.label || 'Unknown'}`);
+              }
+            } catch (assetError) {
+              console.error(`Error resolving asset for item ${i}:`, assetError);
+              throw assetError;
+            }
+          } else if (item.isAsset && item.source && typeof item.source === 'object') {
+            // Handle case where asset might be an object but still from require()
+            console.log(`Item ${i}: Processing as asset object`);
+            try {
+              const assetUri = Image.resolveAssetSource(item.source).uri;
+              console.log(`Item ${i}: Resolved asset object URI:`, assetUri);
+              if (assetUri) {
+                const localAssetUri = await downloadImage(assetUri);
+                itemFileUri = await imageToPngBuffer(localAssetUri);
+              } else {
+                throw new Error(`Could not resolve asset object for item: ${item.label || 'Unknown'}`);
+              }
+            } catch (assetObjError) {
+              console.error(`Error resolving asset object for item ${i}:`, assetObjError);
+              throw assetObjError;
+            }
+          } else if (item.source && item.source.uri) {
+            // Handle case where source might be { uri: ... } but uri is asset
+            console.log(`Item ${i}: Processing as source with uri`);
+            itemFileUri = await imageToPngBuffer(item.source.uri);
+          } else {
+            console.error(`Item ${i}: Invalid source format`, item.source);
+            throw new Error(`Invalid source format for item: ${item.label || 'Unknown'}`);
+          }
+          
+          if (itemFileUri) {
+            console.log(`Item ${i}: Successfully processed, adding to form data`);
             formData.append('image[]', {
               uri: itemFileUri,
               name: `item_${i}.png`,
               type: 'image/png',
             });
-          } catch (manipulationError) {
-            console.error(`Error processing item image:`, manipulationError);
-            setErrorMsg(`Failed to process item: ${item.label || 'Unknown'}.`);
           }
+        } catch (manipulationError) {
+          console.error(`Error processing item image:`, manipulationError);
+          setErrorMsg(`Failed to process item: ${item.label || 'Unknown'}.`);
         }
       }
 
@@ -273,7 +330,7 @@ export default function OutfitCreationPage() {
                    const userID = parsedUser._id;
                    const outfitId = 'custom'; // Use 'custom' for created outfits
                    
-                   axios.put('https://47f1-109-245-193-150.ngrok-free.app/createdImage', {
+                   axios.put('https://fc21-109-245-207-216.ngrok-free.app/createdImage', {
                        userID, imageID, outfitId
                    })
                    .then(backendResponse => {
@@ -302,7 +359,7 @@ export default function OutfitCreationPage() {
 
           console.log("Sending data to backend:", { userID, imageID, outfitId });
 
-          axios.put('https://47f1-109-245-193-150.ngrok-free.app/createdImage', {
+          axios.put('https://fc21-109-245-207-216.ngrok-free.app/createdImage', {
             userID,
             imageID,
             outfitId

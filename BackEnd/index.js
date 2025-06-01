@@ -10,7 +10,7 @@ const Signin = require('./Auth/signin');
 const Verify = require('./Auth/verify');
 const createdImage = require('./Image/createdImage');
 const newImage = require('./Image/newImage');
-
+const Google = require('./Auth/google');
 
 app.get('/', (req, res) => {
     res.send('Hello World!');
@@ -22,7 +22,8 @@ app.get('/', (req, res) => {
   app.put('/verify', Verify);
   app.put('/createdImage', createdImage);
   app.put('/newImage', newImage);
-  
+  app.put('/google', Google);
+
   app.listen(port, () => {
     console.log(`App listening at http://localhost:${port}`);
   });

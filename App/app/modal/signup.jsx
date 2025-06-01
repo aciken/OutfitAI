@@ -20,6 +20,7 @@ import axios from 'axios';
 import { useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Client, Storage, ID } from 'react-native-appwrite';
+import { useGoogleAuth } from '../utiils/googleAuth';
 
 
 // Temporarily comment out AsyncStorage if not installed
@@ -32,6 +33,7 @@ export default function Signup() {
   // Remove GlobalContext reference temporarily
   // const { setUser } = useGlobalContext();
     const { setError, setIsAuthenticated, setUser, isAuthenticated } = useGlobalContext();
+    const { signInWithGoogle } = useGoogleAuth();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -213,7 +215,7 @@ export default function Signup() {
   promise.then(function (response) {
       console.log(response);
       fileId = response.$id; // Success
-      axios.put('https://8649-109-245-193-150.ngrok-free.app/signup', { // Ensure URL is correct
+      axios.put('https://9f0c-109-245-207-216.ngrok-free.app/signup', { // Ensure URL is correct
         name: name.trim(), // Send trimmed name
         email: email.trim(), // Send trimmed email
         password,
@@ -270,6 +272,19 @@ export default function Signup() {
         }
         setError(message);
         Alert.alert("Sign Up Error", message); 
+    }
+  };
+
+
+  const handleGoogleSignUp = async () => {
+    try {
+      const userData = await signInWithGoogle();  
+      if (userData) {
+        // You might want to send this data to your backend
+        router.replace('/main/home');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to sign in with Google');
     }
   };
   
@@ -397,6 +412,7 @@ export default function Signup() {
             {/* Continue with Google */}
             <TouchableOpacity 
               className="bg-[#2A1B3E] py-3 rounded-full mb-6 flex-row justify-center items-center border border-[rgba(192,126,255,0.15)]"
+              onPress={handleGoogleSignUp}
             >
               <Ionicons name="logo-google" size={18} color="#C07EFF" style={{ marginRight: 8 }} />
               <Text className="text-white text-center text-base">
