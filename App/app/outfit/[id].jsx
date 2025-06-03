@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View, Text, Image, ScrollView, StyleSheet, SafeAreaView,
   TouchableOpacity, ActivityIndicator, Platform, Alert
@@ -19,12 +19,39 @@ import axios from 'axios';
 
 const IMAGE_MAX_DIMENSION = 512;
 
+// Appwrite configuration for outfit items
+const APPWRITE_ENDPOINT = 'https://fra.cloud.appwrite.io/v1';
+const APPWRITE_PROJECT_ID = '682371f4001597e0b4a7';
+const APPWRITE_OUTFIT_BUCKET_ID = '683ef4f30035c008b96e'; // For outfit items
+
+// Helper function to get Appwrite image URL for outfit items
+const getAppwriteItemImageUrl = (fileId) => {
+  try {
+    if (!fileId || fileId.trim() === '') {
+      console.error('Error getting Appwrite item image URL: fileId is missing or empty');
+      return null;
+    }
+
+    const client = new Client()
+      .setEndpoint(APPWRITE_ENDPOINT)
+      .setProject(APPWRITE_PROJECT_ID);
+    const storage = new Storage(client);
+    
+    // Use getFileDownload for outfit items
+    const result = storage.getFileDownload(APPWRITE_OUTFIT_BUCKET_ID, fileId);
+    console.log(`Generated Appwrite URL for item fileId ${fileId}:`, result.href);
+    return result.href;
+  } catch (error) {
+    console.error('Error getting Appwrite item image URL:', error);
+    return null;
+  }
+};
+
 export default function OutfitDetailsPage() {
   const { user, setUser } = useGlobalContext();
   const router = useRouter();
   const params = useLocalSearchParams();
   const { id } = params;
-  let items = [];
 
   const [appwriteImage, setAppwriteImage] = useState(null);
   const [displayImageUri, setDisplayImageUri] = useState(null);
@@ -32,17 +59,75 @@ export default function OutfitDetailsPage() {
   const [generatedImageUrl, setGeneratedImageUrl] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [isUploadingBaseImage, setIsUploadingBaseImage] = useState(false);
+  
+  // State for processed outfit items
+  const [processedItems, setProcessedItems] = useState([]);
+  const [isLoadingItems, setIsLoadingItems] = useState(false);
 
+  // Parse items using useMemo to prevent infinite re-renders
+  const items = useMemo(() => {
+    try {
+      if (params.items) {
+        const parsed = JSON.parse(params.items);
+        console.log('Parsed items from params:', parsed);
+        return parsed;
+      }
+      return [];
+    } catch (e) {
+      console.error("Failed to parse items:", e);
+      setErrorMsg("Failed to load outfit items.");
+      return [];
+    }
+  }, [params.items]);
 
+  // Process raw Appwrite file IDs into display-ready items
+  useEffect(() => {
+    const processOutfitItems = async () => {
+      if (!items || items.length === 0) {
+        console.log('No items to process');
+        setProcessedItems([]);
+        return;
+      }
 
-  try {
-    if (params.items) items = JSON.parse(params.items);
-  } catch (e) {
-    console.error("Failed to parse items:", e);
-    setErrorMsg("Failed to load outfit items.");
-  }
+      console.log('Processing outfit items:', items);
+      setIsLoadingItems(true);
 
+      try {
+        // Check if items are already processed (have source property) or are raw file IDs
+        const isRawFileIds = typeof items[0] === 'string';
+        
+        if (isRawFileIds) {
+          // Process raw Appwrite file IDs
+          console.log('Processing raw Appwrite file IDs:', items);
+          const processedItemsData = items.map((fileId, index) => {
+            const imageUrl = getAppwriteItemImageUrl(fileId);
+            return {
+              id: fileId,
+              source: imageUrl ? { uri: imageUrl } : null,
+              label: `Item ${index + 1}`,
+              name: `Item ${index + 1}`,
+              category: 'Clothing'
+            };
+          }).filter(item => item.source !== null);
+          
+          console.log('Processed items from file IDs:', processedItemsData);
+          setProcessedItems(processedItemsData);
+        } else {
+          // Items are already processed (from predefined outfits)
+          console.log('Using pre-processed items:', items);
+          setProcessedItems(items);
+        }
+      } catch (error) {
+        console.error('Error processing outfit items:', error);
+        setErrorMsg('Failed to load outfit items');
+        setProcessedItems([]);
+      } finally {
+        setIsLoadingItems(false);
+      }
+    };
 
+    processOutfitItems();
+  }, [items]); // Now depends on the memoized items
 
   useEffect(() => {
     const loadOutfitImage = async () => {
@@ -131,98 +216,8 @@ export default function OutfitDetailsPage() {
       }
     };
 
-
-
     loadOutfitImage();
   }, [user]);
-
-  // useEffect(() => {
-  //   const loadOutfitImage = async () => {
-  //     console.log("Loading outfit image for outfit ID:", params.id);
-  //     let imageSetFromCreated = false;
-  //     try {
-  //       const storedUserString = await AsyncStorage.getItem('user');
-  //       console.log("Stored user string:", storedUserString);
-  //       if (storedUserString) {
-  //         const parsedUser = JSON.parse(storedUserString);
-  //         console.log("Parsed user:", parsedUser);
-  //         console.log('params.id', params.id)
-  //         console.log(parsedUser, parsedUser.createdImages, parsedUser.createdImages > 0, params.id)
-  //         if (parsedUser && parsedUser.createdImages && parsedUser.createdImages.length > 0 && params.id) {
-  //           const foundImage = parsedUser.createdImages.find(img => img.outfitId === params.id);
-  //           if (foundImage && foundImage.imageId) {
-  //             console.log("Found image in AsyncStorage:", foundImage);
-  //             try {
-  //               const client = new Client()
-  //                 .setEndpoint('https://fra.cloud.appwrite.io/v1')
-  //                 .setProject('682371f4001597e0b4a7');
-  //               const storage = new Storage(client);
-  //               const result = storage.getFileDownload(
-  //                 '6823720b001cdc257539', // Assuming same bucket ID
-  //                 foundImage.imageId
-  //               );
-  //               setGeneratedImageUrl(result.href); // Display as the main generated/preview image
-  //               setDisplayImageUri(result.href);   // Also set this to ensure consistency
-  //               console.log("Loaded previously generated image for outfit from AsyncStorage user:", result.href);
-  //               imageSetFromCreated = true;
-  //             } catch (error) {
-  //               console.error("Error loading previously generated image from Appwrite (AsyncStorage user):", error);
-  //               setErrorMsg("Failed to load previous outfit image.");
-  //             }
-  //           }
-  //         }
-  //       }
-  //     } catch (e) {
-  //       console.error("Error reading user from AsyncStorage in loadOutfitImage:", e);
-  //       // Continue to fallback if AsyncStorage read fails
-  //     }
-
-  //     if (!imageSetFromCreated) {
-  //       // Fallback to fetching the default user image if no specific outfit image was found/loaded
-  //       fetchUserImage();
-  //     }
-  //   };
-
-  //   const fetchUserImage = async () => {
-  //     try {
-  //       const storedUser = await AsyncStorage.getItem('user');
-  //       if (storedUser) {
-  //         const parsedUser = JSON.parse(storedUser);
-  //         if (parsedUser?.fileId) {
-  //           const client = new Client()
-  //             .setEndpoint('https://fra.cloud.appwrite.io/v1')
-  //             .setProject('682371f4001597e0b4a7');
-  //           const storage = new Storage(client);
-  //           const result = storage.getFileDownload(
-  //             '6823720b001cdc257539',
-  //             parsedUser.fileId,
-  //           );
-  //           setAppwriteImage(result);
-  //           setDisplayImageUri(result.href);
-  //           console.log(result);
-  //         }
-  //       }
-  //     } catch (error) {
-  //       console.error("Error loading image:", error);
-  //       setErrorMsg("Failed to load image.");
-  //     }
-  //   };
-
-  //   loadOutfitImage(); // Call the new orchestrating function
-
-  //   (async () => {
-  //     if (Platform.OS !== 'web') {
-  //       const libraryStatus = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  //       if (libraryStatus.status !== 'granted') {
-  //         Alert.alert('Permission Denied', 'Camera roll access is needed to select images.');
-  //       }
-  //       const cameraStatus = await ImagePicker.requestCameraPermissionsAsync();
-  //       if (cameraStatus.status !== 'granted') {
-  //         Alert.alert('Permission Denied', 'Camera access is needed to take photos.');
-  //       }
-  //     }
-  //   })();
-  // }, [user]);
 
   const handleChangeDisplayImage = async () => {
     Alert.alert(
@@ -363,8 +358,8 @@ export default function OutfitDetailsPage() {
         type: 'image/png',
       });
 
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i];
+      for (let i = 0; i < processedItems.length; i++) {
+        const item = processedItems[i];
         let imageUriToProcess = null;
 
         if (typeof item.source === 'number') {
@@ -584,11 +579,11 @@ export default function OutfitDetailsPage() {
             </View>
           </TouchableOpacity>
 
-          {items.length > 0 && (
+          {processedItems.length > 0 && (
             <View style={styles.itemsSectionContainer}>
               <Text style={styles.itemsTitle}>Outfit Items</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {items.map((item, index) => (
+                {processedItems.map((item, index) => (
                   <View key={index} style={styles.itemCard}>
                     <Image source={item.source} style={styles.itemImageInCard} />
                   </View>

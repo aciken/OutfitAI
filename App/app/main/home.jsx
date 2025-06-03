@@ -883,25 +883,14 @@ export default function Home() {
               const mongoOutfit = item.mongoData;
               
               if (mongoOutfit) {
-                // For MongoDB outfits, create items for navigation using individual item file IDs
-                const itemsForNavigation = mongoOutfit.items.map((itemFileId, index) => {
-                  const itemImageUrl = getAppwriteOutfitImageUrl(itemFileId);
-                  return {
-                    source: itemImageUrl ? { uri: itemImageUrl } : null,
-                    label: `Item ${index + 1}`,
-                    id: itemFileId,
-                    name: `Item ${index + 1}`,
-                    category: 'Unknown'
-                  };
-                }).filter(item => item.source !== null);
-                
-                console.log(`Navigation items for outfit ${mongoOutfit.name}:`, itemsForNavigation);
+                // For MongoDB outfits, send the raw item IDs and let the detail page handle Appwrite URLs
+                console.log(`Navigation for outfit ${mongoOutfit.name} with items:`, mongoOutfit.items);
                 
                 router.push({
                   pathname: `/outfit/${mongoOutfit.name}`,
                   params: { 
                     id: mongoOutfit.name,
-                    items: JSON.stringify(itemsForNavigation),
+                    items: JSON.stringify(mongoOutfit.items), // Send raw Appwrite file IDs
                     outfitName: mongoOutfit.name || 'Custom Outfit'
                   },
                 });
