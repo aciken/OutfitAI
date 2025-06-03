@@ -57,30 +57,43 @@ export default function OutfitDetailsPage() {
           const parsedUser = JSON.parse(storedUserString);
           console.log("Parsed user:", parsedUser);
           console.log('params.id', params.id)
-          console.log(parsedUser, parsedUser.createdImages, parsedUser.createdImages > 0, params.id)
           if (parsedUser && parsedUser.createdImages && parsedUser.createdImages.length > 0 && params.id) {
-            const foundImage = parsedUser.createdImages.find(img => img.outfitId === params.id);
-            if (foundImage && foundImage.imageId) {
-              console.log("Found image in AsyncStorage:", foundImage);
-              try {
-                const client = new Client()
-                  .setEndpoint('https://fra.cloud.appwrite.io/v1')
-                  .setProject('682371f4001597e0b4a7');
-                const storage = new Storage(client);
-                const result = storage.getFileDownload(
-                  '6823720b001cdc257539', // Assuming same bucket ID
-                  foundImage.imageId
-                );
-                setGeneratedImageUrl(result.href); // Display as the main generated/preview image
-                setDisplayImageUri(result.href);   // Also set this to ensure consistency
-                console.log("Loaded previously generated image for outfit from AsyncStorage user:", result.href);
-                imageSetFromCreated = true;
-              } catch (error) {
-                console.error("Error loading previously generated image from Appwrite (AsyncStorage user):", error);
-                setErrorMsg("Failed to load previous outfit image.");
+            const matchingImages = parsedUser.createdImages.filter(img => img.outfitId === params.id);
+            
+            if (matchingImages.length > 0) {
+              const foundImage = matchingImages[matchingImages.length - 1];
+              console.log("Found image(s) in AsyncStorage, selecting the last one:", foundImage);
+              
+              if (foundImage && foundImage.imageId) {
+                try {
+                  const client = new Client()
+                    .setEndpoint('https://fra.cloud.appwrite.io/v1')
+                    .setProject('682371f4001597e0b4a7');
+                  const storage = new Storage(client);
+                  const result = storage.getFileDownload(
+                    '6823720b001cdc257539', // Assuming same bucket ID
+                    foundImage.imageId
+                  );
+                  setGeneratedImageUrl(result.href); // Display as the main generated/preview image
+                  setDisplayImageUri(result.href);   // Also set this to ensure consistency
+                  console.log("Loaded previously generated image for outfit from AsyncStorage user (last one):", result.href);
+                  imageSetFromCreated = true;
+                } catch (error) {
+                  console.error("Error loading previously generated image from Appwrite (AsyncStorage user):", error);
+                  setErrorMsg("Failed to load previous outfit image.");
+                }
               }
+            } else {
+              console.log("No images found for outfit ID:", params.id, "in parsedUser.createdImages");
             }
-          } else {}
+          } else {
+            console.log("Conditions not met to search for created images: ", {
+              hasParsedUser: !!parsedUser,
+              hasCreatedImages: parsedUser && !!parsedUser.createdImages,
+              createdImagesLength: parsedUser && parsedUser.createdImages ? parsedUser.createdImages.length : 0,
+              hasParamsId: !!params.id
+            });
+          }
         }
       } catch (e) {
         console.error("Error reading user from AsyncStorage in loadOutfitImage:", e);
@@ -340,7 +353,7 @@ export default function OutfitDetailsPage() {
 
       const formData = new FormData();
       formData.append('model', 'gpt-image-1');
-      formData.append('prompt', 'Dress the person in the main image using the provided outfit item images. Ensure the outfit looks natural and cohesive. Full body of the person must be visible. Without making the person look weird or deformed, make the person look good in the outfit, without making even a slight change in the persons face, reapat you CANT MAKE ANY CHANGES TO THE FACE IT NEEDS TO LOOK EXACTLY LIKE IN THE PHOTO, same with the new clothes that person wears.');
+      formData.append('prompt', 'Dress the person in the main image using the provided outfit item images. Ensure the outfit looks natural and cohesive. Full body of the person must be visible. Without making the person look weird or deformed, make the person look good in the outfit, without making even a slight change in the persons face, reapat you CANT MAKE ANY CHANGES TO THE FACE IT NEEDS TO LOOK EXACTLY LIKE IN THE PHOTO, same with the new clothes that person wears. If persons full body is not visible, change the position of the person in the image so that the full body is visible.');
       formData.append('size', '1024x1024');
       formData.append('n', '1');
       formData.append('quality', 'medium');
@@ -472,7 +485,7 @@ export default function OutfitDetailsPage() {
                    const userID = parsedUser._id;
                    const outfitId = params.id; // id from useLocalSearchParams
                    
-                   axios.put('https://fc21-109-245-207-216.ngrok-free.app/createdImage', {
+                   axios.put('https://1403-109-245-207-216.ngrok-free.app/createdImage', {
                        userID, imageID, outfitId
                    })
                    .then(backendResponse => {
@@ -500,7 +513,7 @@ export default function OutfitDetailsPage() {
 
           console.log("Sending data to backend:", { userID, imageID, outfitId });
 
-          axios.put('https://fc21-109-245-207-216.ngrok-free.app/createdImage', {
+          axios.put('https://1403-109-245-207-216.ngrok-free.app/createdImage', {
             userID,
             imageID,
             outfitId

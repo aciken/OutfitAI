@@ -7,6 +7,8 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useGlobalContext } from './context/GlobalProvider';
 import { useRouter } from 'expo-router';
+import { Video } from 'expo-av';
+import IndexVideo from '../assets/IndexVideo.mp4';
 
 // Get screen dimensions for responsive sizing
 const { width, height } = Dimensions.get('window');
@@ -30,9 +32,9 @@ export default function WelcomePage() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
   // State to track if we have a photo to display
-  const [hasPhoto, setHasPhoto] = useState(false);
+  const [hasPhoto, setHasPhoto] = useState(true);
   // You can replace this with your actual photo URL or require statement
-  const photoSource = null;
+  const photoSource = IndexVideo;
 
   useEffect(() => {
     Animated.parallel([
@@ -76,14 +78,17 @@ export default function WelcomePage() {
         {/* Photo Section - Will be empty if no photo */}
         <View className="items-center mt-12 mb-4">
           {hasPhoto ? (
-            <Image
-              source={photoSource}
+            <Video
+              source={IndexVideo}
               style={{
                 width: width * 0.85,
                 height: width * 1.2,
                 borderRadius: 20,
               }}
               resizeMode="cover"
+              isLooping={true}
+              shouldPlay={true}
+              isMuted={true}
             />
           ) : (
             // Empty view when no photo is available
