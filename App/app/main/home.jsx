@@ -187,6 +187,9 @@ export default function Home() {
   const [mongoOutfits, setMongoOutfits] = useState([]);
   const [isLoadingOutfits, setIsLoadingOutfits] = useState(true);
   
+  // State for AsyncStorage user data (separate from context user)
+  const [asyncStorageUser, setAsyncStorageUser] = useState(null);
+  
   // State for search
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -235,10 +238,14 @@ export default function Home() {
   useEffect(() => {
     const loadCreatedOutfitIds = async () => {
       let ids = new Set();
+      let asyncUser = null;
+      
       try {
         const storedUserString = await AsyncStorage.getItem('user');
         if (storedUserString) {
           const parsedUser = JSON.parse(storedUserString);
+          asyncUser = parsedUser; // Store the complete user data
+          
           if (parsedUser && parsedUser.createdImages && parsedUser.createdImages.length > 0) {
             parsedUser.createdImages.forEach(img => ids.add(img.outfitId));
             console.log("Home: Loaded createdOutfitIds from AsyncStorage");
@@ -246,18 +253,27 @@ export default function Home() {
         }
       } catch (e) {
         console.error("Home: Failed to load user from AsyncStorage for checkmarks:", e);
-        // Optionally, could fallback to context user here if AsyncStorage fails
-        // For now, if AsyncStorage fails, it might mean no checkmarks or checkmarks based on context user if implemented below
       }
 
-      // Fallback or primary load from context if AsyncStorage didn't populate (or as an additional check)
-      // This logic ensures that if AsyncStorage is empty/fails, context can still provide data.
-      // And if both have data, AsyncStorage is preferred by the order of operations.
+      // Fallback or primary load from context if AsyncStorage didn't populate
       if (ids.size === 0 && user && user.createdImages && user.createdImages.length > 0) {
          console.log("Home: Loading createdOutfitIds from GlobalContext as fallback or primary if AsyncStorage empty");
          user.createdImages.forEach(img => ids.add(img.outfitId));
+         // If AsyncStorage was empty, use context user as fallback
+         if (!asyncUser) {
+           asyncUser = user;
+         }
       }
       
+      console.log('📦 Final createdOutfitIds loaded:', Array.from(ids));
+      console.log('👤 AsyncStorage user data:', {
+        userExists: !!asyncUser,
+        createdImagesExists: !!asyncUser?.createdImages,
+        createdImagesLength: asyncUser?.createdImages?.length || 0,
+        createdImagesData: asyncUser?.createdImages || []
+      });
+      
+      setAsyncStorageUser(asyncUser); // Store the AsyncStorage user data
       setCreatedOutfitIds(ids);
     };
 
@@ -560,9 +576,22 @@ export default function Home() {
       let generatedOutfitMatch = true;
       if (card.type === 'outfit') { // Ensure this logic only applies to outfit cards
         if (generatedFilterStatus === 'generated') {
-          generatedOutfitMatch = createdOutfitIds.has(card.id);
+          // For MongoDB outfits, check if createdImages has an item with outfitId matching the outfit name
+          // For predefined outfits, use the existing createdOutfitIds logic
+          if (card.mongoData) {
+            console.log(card.mongoData.name, asyncStorageUser?.createdImages)
+            generatedOutfitMatch = asyncStorageUser?.createdImages?.some(img => img.outfitId === card.mongoData.name) || false;
+          } else {
+            generatedOutfitMatch = createdOutfitIds.has(card.id);
+          }
         } else if (generatedFilterStatus === 'not_generated') {
-          generatedOutfitMatch = !createdOutfitIds.has(card.id);
+          // For MongoDB outfits, check if createdImages does NOT have an item with outfitId matching the outfit name
+          // For predefined outfits, use the existing createdOutfitIds logic
+          if (card.mongoData) {
+            generatedOutfitMatch = !(asyncStorageUser?.createdImages?.some(img => img.outfitId === card.mongoData.name) || false);
+          } else {
+            generatedOutfitMatch = !createdOutfitIds.has(card.id);
+          }
         }
       }
 
@@ -791,7 +820,36 @@ export default function Home() {
             })}
           </View>
           {/* Checkmark for created outfits using createdOutfitIds state */}
-          {createdOutfitIds.has(item.id) && (
+          {(() => {
+            // Debug logging for checkmark logic
+            if (item.mongoData) {
+              console.log('🔍 Checking MongoDB outfit for checkmark:', {
+                outfitName: item.mongoData.name,
+                outfitId: item.id,
+                asyncUserExists: !!asyncStorageUser,
+                createdImagesExists: !!asyncStorageUser?.createdImages,
+                createdImagesLength: asyncStorageUser?.createdImages?.length || 0,
+                createdImages: asyncStorageUser?.createdImages || []
+              });
+              
+              if (asyncStorageUser?.createdImages) {
+                console.log('🎯 CreatedImages details:', asyncStorageUser.createdImages.map(img => ({
+                  outfitId: img.outfitId,
+                  matches: img.outfitId === item.mongoData.name
+                })));
+                
+                const isMatched = asyncStorageUser.createdImages.some(img => img.outfitId === item.mongoData.name);
+                console.log(`✅ Outfit "${item.mongoData.name}" match result:`, isMatched);
+                return isMatched;
+              }
+              return false;
+            } else {
+              // For predefined outfits
+              const isMatched = createdOutfitIds.has(item.id);
+              console.log(`🏷️ Predefined outfit "${item.id}" match result:`, isMatched);
+              return isMatched;
+            }
+          })() && (
             <View style={styles.checkmarkContainer}>
               <Ionicons name="checkmark-circle" size={24} color="#8A2BE2" />
             </View>
@@ -840,8 +898,9 @@ export default function Home() {
                 console.log(`Navigation items for outfit ${mongoOutfit.name}:`, itemsForNavigation);
                 
                 router.push({
-                  pathname: `/outfit/${item.id}`,
+                  pathname: `/outfit/${mongoOutfit.name}`,
                   params: { 
+                    id: mongoOutfit.name,
                     items: JSON.stringify(itemsForNavigation),
                     outfitName: mongoOutfit.name || 'Custom Outfit'
                   },
@@ -856,7 +915,6 @@ export default function Home() {
                   });
                 } else {
                   console.warn(`No details found for outfit ID: ${item.id}`);
-                  // Optionally, show an alert to the user
                 }
               }
             } else if (item.type === 'create') {
@@ -1831,8 +1889,8 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   genderOptionText: {
-    color: '#E0E0E0', // Lighter text for unselected
-    fontSize: 15, // Slightly larger
+    color: '#E0E0E0',
+    fontSize: 15,
     fontWeight: '500',
   },
   genderOptionTextSelected: {
