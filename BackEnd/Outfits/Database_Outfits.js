@@ -1,6 +1,9 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
 
+// Create a separate connection for Outfits database
+let outfitsConnection = null;
+
 // Define the Outfit Schema
 const outfitSchema = new mongoose.Schema({
   name: {
@@ -21,11 +24,8 @@ const outfitSchema = new mongoose.Schema({
   timestamps: true // This adds createdAt and updatedAt fields automatically
 });
 
-// Create the Outfit model
-const Outfit = mongoose.model('Outfit', outfitSchema);
-
-// Database connection function
-const connectToDatabase = async () => {
+// Database connection function for Outfits only
+const connectToOutfitsDatabase = async () => {
   try {
     const mongoUri = process.env.DATABASE_OUTFITS;
     
@@ -33,9 +33,26 @@ const connectToDatabase = async () => {
       throw new Error('DATABASE_OUTFITS environment variable is not set');
     }
 
-    console.log('Connecting to MongoDB...');
-    await mongoose.connect(mongoUri);
-    console.log('✅ Successfully connected to MongoDB (Outfits Database)');
+    console.log('MongoDB URI for Outfits:', mongoUri);
+    console.log('Connecting to MongoDB Atlas for Outfits...');
+    
+    // Create a separate connection
+    outfitsConnection = mongoose.createConnection(mongoUri);
+    
+    outfitsConnection.on('connected', () => {
+      console.log('✅ Successfully connected to MongoDB Atlas (Outfits Database)');
+      console.log('📊 Outfits Database name:', outfitsConnection.db.databaseName);
+    });
+
+    outfitsConnection.on('error', (error) => {
+      console.error('❌ Outfits MongoDB connection error:', error.message);
+    });
+
+    // Wait for connection to be established
+    await new Promise((resolve, reject) => {
+      outfitsConnection.once('open', resolve);
+      outfitsConnection.once('error', reject);
+    });
     
   } catch (error) {
     console.error('❌ MongoDB connection error:', error.message);
@@ -43,95 +60,66 @@ const connectToDatabase = async () => {
   }
 };
 
-// Function to get all outfits
-const getAllOutfits = async () => {
+// Function to get all outfits (Express route handler)
+const getAllOutfits = async (req, res) => {
   try {
-    console.log('Fetching all outfits from database...');
+    console.log('🔍 DATABASE_OUTFITS env var:', process.env.DATABASE_OUTFITS);
+    
+    // Ensure we're connected to the Outfits database
+    if (!outfitsConnection || outfitsConnection.readyState !== 1) {
+      console.log('Outfits database not connected, connecting now...');
+      await connectToOutfitsDatabase();
+    } else {
+      console.log("✅ Connected to Outfits database");
+    }
+
+    console.log('📊 Outfits database name:', outfitsConnection.db.databaseName);
+    console.log('🔗 Outfits connection state:', outfitsConnection.readyState);
+    
+    // Create the model on the specific connection
+    const Outfit = outfitsConnection.model('Outfit', outfitSchema, 'Outfits');
+    
+    // Let's try to list all collections first
+    console.log('📂 Listing all collections in Outfits database...');
+    const collections = await outfitsConnection.db.listCollections().toArray();
+    console.log('📂 Available collections in Outfits DB:', collections.map(c => c.name));
+    
+    console.log('🔍 Fetching all outfits from "Outfits" collection...');
     const outfits = await Outfit.find({});
     
-    console.log(`📦 Found ${outfits.length} outfits in database:`);
-    outfits.forEach((outfit, index) => {
-      console.log(`${index + 1}. ${outfit.name} (${outfit.keywords.length} keywords, ${outfit.items.length} items)`);
-    });
+    console.log(`📦 Found ${outfits.length} outfits in database`);
     
-    return outfits;
-  } catch (error) {
-    console.error('❌ Error fetching outfits:', error.message);
-    throw error;
-  }
-};
-
-// Function to get a specific outfit by ID
-const getOutfitById = async (outfitId) => {
-  try {
-    console.log(`Fetching outfit with ID: ${outfitId}`);
-    const outfit = await Outfit.findById(outfitId);
-    
-    if (!outfit) {
-      console.log(`❌ No outfit found with ID: ${outfitId}`);
-      return null;
+    if (outfits.length === 0) {
+      console.log('❌ No outfits found. Let me try a different approach...');
+      
+      // Try using the native MongoDB driver
+      const collection = outfitsConnection.db.collection('Outfits');
+      const nativeResult = await collection.find({}).toArray();
+      console.log(`🔍 Native query result: ${nativeResult.length} documents`);
+      
+      if (nativeResult.length > 0) {
+        console.log('📋 Sample document from native query:', nativeResult[0]);
+      }
+    } else {
+      outfits.forEach((outfit, index) => {
+        console.log(`${index + 1}. ${outfit.name} (${outfit.keywords?.length || 0} keywords, ${outfit.items?.length || 0} items)`);
+      });
     }
     
-    console.log(`✅ Found outfit: ${outfit.name}`);
-    return outfit;
+    // Return the outfits as JSON response
+    res.status(200).json(outfits);
   } catch (error) {
-    console.error('❌ Error fetching outfit by ID:', error.message);
-    throw error;
-  }
-};
-
-// Function to get outfits by keyword
-const getOutfitsByKeyword = async (keyword) => {
-  try {
-    console.log(`Searching for outfits with keyword: ${keyword}`);
-    const outfits = await Outfit.find({ 
-      keywords: { $regex: keyword, $options: 'i' } // Case-insensitive search
+    console.error('❌ Error fetching outfits:', error.message);
+    res.status(500).json({ 
+      error: 'Failed to fetch outfits', 
+      message: error.message 
     });
-    
-    console.log(`📦 Found ${outfits.length} outfits matching keyword "${keyword}"`);
-    return outfits;
-  } catch (error) {
-    console.error('❌ Error searching outfits by keyword:', error.message);
-    throw error;
   }
 };
 
-// Function to add a new outfit (bonus functionality)
-const addOutfit = async (outfitData) => {
-  try {
-    console.log(`Adding new outfit: ${outfitData.name}`);
-    const newOutfit = new Outfit(outfitData);
-    const savedOutfit = await newOutfit.save();
-    
-    console.log(`✅ Successfully added outfit: ${savedOutfit.name} (ID: ${savedOutfit._id})`);
-    return savedOutfit;
-  } catch (error) {
-    console.error('❌ Error adding outfit:', error.message);
-    throw error;
-  }
-};
-
-// Main function to initialize and test the database connection
-const initializeDatabase = async () => {
-  try {
-    await connectToDatabase();
-    const outfits = await getAllOutfits();
-    return outfits;
-  } catch (error) {
-    console.error('❌ Failed to initialize database:', error.message);
-    throw error;
-  }
-};
-
-// Export all functions
+// Export only getAllOutfits
 module.exports = {
-  connectToDatabase,
-  getAllOutfits,
-  getOutfitById,
-  getOutfitsByKeyword,
-  addOutfit,
-  initializeDatabase,
-  Outfit // Export the model in case you need it elsewhere
+  getAllOutfits
 };
 
 // If this file is run directly, test the connection and fetch outfits
@@ -142,7 +130,7 @@ if (require.main === module) {
       console.log(`Total outfits in database: ${outfits.length}`);
       
       // Close the connection when done
-      mongoose.connection.close();
+      outfitsConnection.close();
     })
     .catch((error) => {
       console.error('\n💥 Database test failed:', error.message);

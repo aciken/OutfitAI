@@ -15,27 +15,33 @@ import {
   Modal,
   TouchableWithoutFeedback,
   ScrollView,
-  Platform
+  Platform,
+  ActivityIndicator
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { BlurView } from 'expo-blur';
-// Import data from the new apparelData.js file
+// Import data from the new apparelData.js file (keeping as fallback)
 import { predefinedOutfits, getOutfitDetailsForNavigation, allOutfitItems } from '../data/apparelData';
 import PlusIconImage from '../../assets/PlusIcon2.png'; // Keep this as it's UI specific
 import { useGlobalContext } from '../context/GlobalProvider'; // Added import
 import AsyncStorage from '@react-native-async-storage/async-storage'; // Added AsyncStorage
+import { Client, Storage } from 'react-native-appwrite'; // Added Appwrite imports
+import axios from 'axios'; // Added axios for API calls
 // import HangerIconImage from '../../assets/HangerIcon.png'; // This seems unused, removing unless specified
 
 // Create an animated version of FlatList
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
-// Remove individual image imports as they are now handled in apparelData.js
-// import HoodieImage from '../../assets/outfits/hoodie1.png';
-// import PantsImage from '../../assets/outfits/pants1.png';
-// ... and so on for all other outfit item and mannequin images
+// Appwrite configuration
+const APPWRITE_ENDPOINT = 'https://fra.cloud.appwrite.io/v1';
+const APPWRITE_PROJECT_ID = '682371f4001597e0b4a7';
+const APPWRITE_OUTFIT_BUCKET_ID = '683ef7880025791e9d93'; // For outfit images
+
+// Backend URL
+const BACKEND_URL = 'https://1403-109-245-207-216.ngrok-free.app';
 
 // Get screen dimensions for responsive sizing
 const { width, height } = Dimensions.get('window');
@@ -76,8 +82,47 @@ const shuffleArray = (array) => {
   return newArray;
 };
 
+// Helper function to get Appwrite image URL for outfits
+const getAppwriteOutfitImageUrl = (fileId) => {
+  try {
+    if (!fileId || fileId.trim() === '') {
+      console.error('Error getting Appwrite image URL: fileId is missing or empty');
+      return null;
+    }
+
+    const client = new Client()
+      .setEndpoint(APPWRITE_ENDPOINT)
+      .setProject(APPWRITE_PROJECT_ID);
+    const storage = new Storage(client);
+    
+    // Use getFilePreview instead of getFileDownload for better public access
+    // Preview method is usually more permissive and works without authentication
+    const result = storage.getFileDownload(
+      APPWRITE_OUTFIT_BUCKET_ID, 
+      fileId,
+      400, // width
+      400, // height
+      'center', // gravity
+      80, // quality
+      0, // border width
+      '', // border color
+      0, // border radius
+      1, // opacity
+      0, // rotation
+      '#FFFFFF', // background color
+      'jpg' // output format
+    );
+    
+    console.log(`Generated Appwrite preview URL for outfit fileId ${fileId}:`, result.href);
+    return result.href;
+  } catch (error) {
+    console.error('Error getting Appwrite outfit image URL:', error);
+    return null;
+  }
+};
+
 // Helper function to build the cards array
-const buildCardsArray = (outfitsToMap) => {
+const buildCardsArray = (outfitsToMap, isMongoData = false) => {
   return [
     {
       id: 'create',
@@ -85,19 +130,48 @@ const buildCardsArray = (outfitsToMap) => {
       title: 'Create your outfit',
       keywords: ['create', 'new', 'custom', 'design']
     },
-    ...outfitsToMap.map(outfit => ({
-      id: outfit.id,
-      type: 'outfit',
-      items: [{ source: outfit.previewImage, height: 300 }],
-      keywords: outfit.keywords || [],
-      itemKeywords: outfit.items.reduce((acc, itemRef) => {
-        const itemDetail = allOutfitItems.find(i => i.id === itemRef.itemId);
-        if (itemDetail && itemDetail.keywords) {
-          return acc.concat(itemDetail.keywords);
+    ...outfitsToMap.map(outfit => {
+      if (isMongoData) {
+        // Handle MongoDB outfits with Appwrite images
+        console.log('Processing MongoDB outfit:', outfit.name, 'File ID:', outfit.file);
+        
+        const imageUrl = outfit.file ? getAppwriteOutfitImageUrl(outfit.file) : null;
+        
+        if (!imageUrl) {
+          console.warn(`No valid image URL for MongoDB outfit: ${outfit.name || outfit.id}, fileId: ${outfit.file}`);
+          return null;
         }
-        return acc;
-      }, [])
-    }))
+        
+        return {
+          id: outfit._id || outfit.id || outfit.name,
+          type: 'outfit',
+          items: [{ 
+            source: { uri: imageUrl },
+            height: 300 
+          }],
+          keywords: outfit.keywords || [],
+          mongoData: outfit,
+          itemKeywords: []
+        };
+      } else {
+        // Handle predefined outfits from apparelData (fallback)
+        console.log('Processing predefined outfit:', outfit.name || outfit.id);
+        
+        return {
+          id: outfit.id,
+          type: 'outfit',
+          items: [{ source: outfit.previewImage, height: 300 }],
+          keywords: outfit.keywords || [],
+          itemKeywords: outfit.items.reduce((acc, itemRef) => {
+            const itemDetail = allOutfitItems.find(i => i.id === itemRef.itemId);
+            if (itemDetail && itemDetail.keywords) {
+              return acc.concat(itemDetail.keywords);
+            }
+            return acc;
+          }, [])
+        };
+      }
+    }).filter(outfit => outfit !== null)
   ];
 };
 
@@ -108,6 +182,10 @@ export default function Home() {
   const [showScrollToStart, setShowScrollToStart] = useState(false);
   const { user } = useGlobalContext(); // Get user from context
   const [createdOutfitIds, setCreatedOutfitIds] = useState(new Set());
+  
+  // State for MongoDB outfits
+  const [mongoOutfits, setMongoOutfits] = useState([]);
+  const [isLoadingOutfits, setIsLoadingOutfits] = useState(true);
   
   // State for search
   const [searchQuery, setSearchQuery] = useState('');
@@ -186,12 +264,72 @@ export default function Home() {
     loadCreatedOutfitIds();
   }, [user]); // Re-run if user context changes (e.g., login/logout)
 
+  // Fetch outfits from MongoDB and log the results
   useEffect(() => {
-    const shuffledOutfits = shuffleArray(predefinedOutfits); // Shuffle on initial load
-    const initialCardsData = buildCardsArray(shuffledOutfits);
-    setOriginalCards(initialCardsData);
-    setCurrentCards(initialCardsData);
+    const fetchOutfitsFromMongoDB = async () => {
+      try {
+        setIsLoadingOutfits(true);
+        console.log('Fetching outfits from MongoDB using axios...');
+        const response = await axios.get(`${BACKEND_URL}/getAllOutfits`);
+        console.log('✅ Successfully fetched outfits from MongoDB:');
+        console.log('📦 Full response data:', response.data);
+        console.log('📊 Number of outfits:', response.data.length);
+        
+        // Log each outfit individually for better readability
+        response.data.forEach((outfit, index) => {
+          console.log(`🎽 Outfit ${index + 1}:`, {
+            name: outfit.name,
+            file: outfit.file,
+            keywords: outfit.keywords,
+            items: outfit.items,
+            _id: outfit._id
+          });
+        });
+        
+        // Store the fetched outfits
+        setMongoOutfits(response.data);
+        
+      } catch (error) {
+        console.error('❌ Error fetching outfits from MongoDB:', error.message);
+        if (error.response) {
+          console.error('Response status:', error.response.status);
+          console.error('Response data:', error.response.data);
+        } else if (error.request) {
+          console.error('No response received:', error.request);
+        }
+        // Set empty array so it falls back to apparelData
+        setMongoOutfits([]);
+      } finally {
+        setIsLoadingOutfits(false);
+      }
+    };
+    
+    fetchOutfitsFromMongoDB();
   }, []);
+
+  // Update cards when outfits are loaded
+  useEffect(() => {
+    if (!isLoadingOutfits) {
+      let outfitsToUse;
+      let isMongoData = false;
+      
+      if (mongoOutfits.length > 0) {
+        console.log('Using MongoDB outfits for cards');
+        outfitsToUse = shuffleArray(mongoOutfits);
+        isMongoData = true;
+      } else {
+        console.log('Using apparelData outfits as fallback');
+        outfitsToUse = shuffleArray(predefinedOutfits);
+        isMongoData = false;
+      }
+      
+      const initialCardsData = buildCardsArray(outfitsToUse, isMongoData);
+      setOriginalCards(initialCardsData);
+      setCurrentCards(initialCardsData);
+      
+      console.log(`Built ${initialCardsData.length} cards (including create card)`);
+    }
+  }, [mongoOutfits, isLoadingOutfits]);
 
   // Add scroll offset for more granular animation control
   const scrollX = React.useRef(new Animated.Value(0)).current;
@@ -497,8 +635,11 @@ export default function Home() {
         easing: Easing.in(Easing.ease),
       })
     ]).start(() => {
-      const shuffledOutfits = shuffleArray(predefinedOutfits);
-      const newCardData = buildCardsArray(shuffledOutfits);
+      // Use MongoDB outfits if available, otherwise use predefined outfits
+      const outfitsToUse = mongoOutfits.length > 0 ? mongoOutfits : predefinedOutfits;
+      const isMongoData = mongoOutfits.length > 0;
+      const shuffledOutfits = shuffleArray(outfitsToUse);
+      const newCardData = buildCardsArray(shuffledOutfits, isMongoData);
 
       setOriginalCards(newCardData);
       setCurrentCards(newCardData);
@@ -622,13 +763,13 @@ export default function Home() {
       cardContent = (
         <View className="flex-1 justify-center items-center w-full">
           <View className="p-4 justify-center items-center">
-            {/* This now directly uses the preview image from the mapped card item */}
+            {/* This now uses either MongoDB outfit images or predefined images */}
             {item.items.map((itemData, imgIndex) => {
               const rotation = imgIndex % 2 === 0 ? '-1.5deg' : '1.5deg'; // Kept for consistency if needed
               return (
                 <View key={`${item.id}-preview-${imgIndex}`} className="items-center mb-2">
                   <Image
-                    source={itemData.source} // This is outfit.previewImage
+                    source={itemData.source} // This could be Appwrite URL or local image
                     className="rounded-lg"
                     style={{
                       width: CARD_WIDTH * 0.8,
@@ -640,6 +781,9 @@ export default function Home() {
                       transform: [{ rotate: rotation }],
                     }}
                     resizeMode="contain"
+                    onError={(error) => {
+                      console.log('Image load error for outfit:', item.id, error);
+                    }}
                   />
                   {/* No individual labels for preview images on the card */}
                 </View>
@@ -677,27 +821,54 @@ export default function Home() {
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             if (item.type === 'outfit') {
-              // Fetch detailed items for navigation using the new helper
-              const detailedItemsForNav = getOutfitDetailsForNavigation(item.id);
-              if (detailedItemsForNav) {
+              // Check if this is a MongoDB outfit or predefined outfit
+              const mongoOutfit = item.mongoData;
+              
+              if (mongoOutfit) {
+                // For MongoDB outfits, create items for navigation using individual item file IDs
+                const itemsForNavigation = mongoOutfit.items.map((itemFileId, index) => {
+                  const itemImageUrl = getAppwriteOutfitImageUrl(itemFileId);
+                  return {
+                    source: itemImageUrl ? { uri: itemImageUrl } : null,
+                    label: `Item ${index + 1}`,
+                    id: itemFileId,
+                    name: `Item ${index + 1}`,
+                    category: 'Unknown'
+                  };
+                }).filter(item => item.source !== null);
+                
+                console.log(`Navigation items for outfit ${mongoOutfit.name}:`, itemsForNavigation);
+                
                 router.push({
                   pathname: `/outfit/${item.id}`,
-                  params: { items: JSON.stringify(detailedItemsForNav) },
+                  params: { 
+                    items: JSON.stringify(itemsForNavigation),
+                    outfitName: mongoOutfit.name || 'Custom Outfit'
+                  },
                 });
               } else {
-                console.warn(`No details found for outfit ID: ${item.id}`);
-                // Optionally, show an alert to the user
+                // For predefined outfits, use existing logic
+                const detailedItemsForNav = getOutfitDetailsForNavigation(item.id);
+                if (detailedItemsForNav) {
+                  router.push({
+                    pathname: `/outfit/${item.id}`,
+                    params: { items: JSON.stringify(detailedItemsForNav) },
+                  });
+                } else {
+                  console.warn(`No details found for outfit ID: ${item.id}`);
+                  // Optionally, show an alert to the user
+                }
               }
-            }   else if (item.type === 'create') {
-    // Navigate to the outfit creation page
-    router.push('/outfit/create');
-  } else {
-    flatListRef.current?.scrollToIndex({
-      index,
-      animated: true,
-      viewPosition: 0.5,
-    });
-  }
+            } else if (item.type === 'create') {
+              // Navigate to the outfit creation page
+              router.push('/outfit/create');
+            } else {
+              flatListRef.current?.scrollToIndex({
+                index,
+                animated: true,
+                viewPosition: 0.5,
+              });
+            }
           }}
         >
           {cardContent}
@@ -724,6 +895,22 @@ export default function Home() {
       </Animated.View>
     );
   };
+
+  // Add loading indicator
+  if (isLoadingOutfits) {
+    return (
+      <SafeAreaView className="flex-1 bg-[#1A0D2E]">
+        <StatusBar barStyle="light-content" />
+        <View className="flex-1 justify-center items-center">
+          <ActivityIndicator size="large" color="#C07EFF" />
+          <Text className="text-white text-lg mt-4">Loading outfits...</Text>
+          <Text className="text-gray-300 text-sm mt-2 text-center px-8">
+            Fetching your personalized outfits from the database
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-[#1A0D2E]">
