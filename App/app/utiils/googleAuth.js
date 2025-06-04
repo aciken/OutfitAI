@@ -4,6 +4,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import axios from 'axios';
 import { router } from 'expo-router';
+import Purchases from 'react-native-purchases';
+import {useState, useEffect} from 'react';
+
 
 // Initialize WebBrowser for auth
 WebBrowser.maybeCompleteAuthSession();
@@ -11,6 +14,26 @@ WebBrowser.maybeCompleteAuthSession();
 // Replace these with your client IDs
 const WEB_CLIENT_ID = '968750704939-5cmi5jbo6ovgkhrcu8kjpsnt24ui6etg.apps.googleusercontent.com';
 const IOS_CLIENT_ID = '968750704939-j03bl08isntslagkkqj6bks0q451vs1o.apps.googleusercontent.com'; // Add this after creating iOS client ID
+
+    const [isPro, setIsPro] = useState(false);
+
+
+useEffect(() => {
+  const setupPurchases = async () => {
+      try {
+          if(Platform.OS === 'ios') {
+              await Purchases.configure({ apiKey: 'appl_TjfDUbftKJDEbZZrxvTNHKhUQzc'});
+          } else {
+              await Purchases.configure({ apiKey: 'appl_TjfDUbftKJDEbZZrxvTNHKhUQzc' });
+          }
+          const customerInfo = await Purchases.getCustomerInfo();
+          setIsPro(customerInfo.entitlements.all.Pro?.isActive ?? false);
+      } catch (error) {
+          console.error('Error setting up purchases:', error);
+      }
+  };
+  setupPurchases();
+}, []);
 
 export const useGoogleAuth = () => {
   const [request, response, promptAsync] = Google.useAuthRequest({
@@ -66,7 +89,7 @@ export const useGoogleAuth = () => {
           console.log('User data:', userData);
 
           // Send user data to your backend
-          const response = await axios.put('https://1403-109-245-207-216.ngrok-free.app/google', {
+          const response = await axios.put('https://6130-109-245-207-216.ngrok-free.app/google', {
             id: userData.id,
             email: userData.email,
             name: userData.name,

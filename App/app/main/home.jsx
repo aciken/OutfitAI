@@ -24,12 +24,13 @@ import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { BlurView } from 'expo-blur';
 // Import data from the new apparelData.js file (keeping as fallback)
-import { predefinedOutfits, getOutfitDetailsForNavigation, allOutfitItems } from '../data/apparelData';
+// import { predefinedOutfits, getOutfitDetailsForNavigation, allOutfitItems } from '../data/apparelData';
 import PlusIconImage from '../../assets/PlusIcon2.png'; // Keep this as it's UI specific
 import { useGlobalContext } from '../context/GlobalProvider'; // Added import
 import AsyncStorage from '@react-native-async-storage/async-storage'; // Added AsyncStorage
 import { Client, Storage } from 'react-native-appwrite'; // Added Appwrite imports
 import axios from 'axios'; // Added axios for API calls
+
 // import HangerIconImage from '../../assets/HangerIcon.png'; // This seems unused, removing unless specified
 
 // Create an animated version of FlatList
@@ -41,7 +42,7 @@ const APPWRITE_PROJECT_ID = '682371f4001597e0b4a7';
 const APPWRITE_OUTFIT_BUCKET_ID = '683ef7880025791e9d93'; // For outfit images
 
 // Backend URL
-const BACKEND_URL = 'https://1403-109-245-207-216.ngrok-free.app';
+const BACKEND_URL = 'https://6130-109-245-207-216.ngrok-free.app';
 
 // Get screen dimensions for responsive sizing
 const { width, height } = Dimensions.get('window');
@@ -82,6 +83,8 @@ const shuffleArray = (array) => {
   return newArray;
 };
 
+
+
 // Helper function to get Appwrite image URL for outfits
 const getAppwriteOutfitImageUrl = (fileId) => {
   try {
@@ -113,7 +116,6 @@ const getAppwriteOutfitImageUrl = (fileId) => {
       'jpg' // output format
     );
     
-    console.log(`Generated Appwrite preview URL for outfit fileId ${fileId}:`, result.href);
     return result.href;
   } catch (error) {
     console.error('Error getting Appwrite outfit image URL:', error);
@@ -133,7 +135,6 @@ const buildCardsArray = (outfitsToMap, isMongoData = false) => {
     ...outfitsToMap.map(outfit => {
       if (isMongoData) {
         // Handle MongoDB outfits with Appwrite images
-        console.log('Processing MongoDB outfit:', outfit.name, 'File ID:', outfit.file);
         
         const imageUrl = outfit.file ? getAppwriteOutfitImageUrl(outfit.file) : null;
         
@@ -155,7 +156,6 @@ const buildCardsArray = (outfitsToMap, isMongoData = false) => {
         };
       } else {
         // Handle predefined outfits from apparelData (fallback)
-        console.log('Processing predefined outfit:', outfit.name || outfit.id);
         
         return {
           id: outfit.id,
@@ -180,7 +180,7 @@ export default function Home() {
   const [activeCardIndex, setActiveCardIndex] = useState(0);
   const [prevActiveIndex, setPrevActiveIndex] = useState(0);
   const [showScrollToStart, setShowScrollToStart] = useState(false);
-  const { user } = useGlobalContext(); // Get user from context
+  const { user, isPro } = useGlobalContext(); // Get user from context
   const [createdOutfitIds, setCreatedOutfitIds] = useState(new Set());
   
   // State for MongoDB outfits
@@ -236,6 +236,14 @@ export default function Home() {
   });
 
   useEffect(() => {
+    if (isPro) {
+      console.log('isPro:', isPro);
+    } else {
+      router.push('/utiils/Paywall')
+    }
+  }, [isPro]);
+
+  useEffect(() => {
     const loadCreatedOutfitIds = async () => {
       let ids = new Set();
       let asyncUser = null;
@@ -248,16 +256,13 @@ export default function Home() {
           
           if (parsedUser && parsedUser.createdImages && parsedUser.createdImages.length > 0) {
             parsedUser.createdImages.forEach(img => ids.add(img.outfitId));
-            console.log("Home: Loaded createdOutfitIds from AsyncStorage");
           }
         }
       } catch (e) {
-        console.error("Home: Failed to load user from AsyncStorage for checkmarks:", e);
       }
 
       // Fallback or primary load from context if AsyncStorage didn't populate
       if (ids.size === 0 && user && user.createdImages && user.createdImages.length > 0) {
-         console.log("Home: Loading createdOutfitIds from GlobalContext as fallback or primary if AsyncStorage empty");
          user.createdImages.forEach(img => ids.add(img.outfitId));
          // If AsyncStorage was empty, use context user as fallback
          if (!asyncUser) {
@@ -265,13 +270,7 @@ export default function Home() {
          }
       }
       
-      console.log('📦 Final createdOutfitIds loaded:', Array.from(ids));
-      console.log('👤 AsyncStorage user data:', {
-        userExists: !!asyncUser,
-        createdImagesExists: !!asyncUser?.createdImages,
-        createdImagesLength: asyncUser?.createdImages?.length || 0,
-        createdImagesData: asyncUser?.createdImages || []
-      });
+
       
       setAsyncStorageUser(asyncUser); // Store the AsyncStorage user data
       setCreatedOutfitIds(ids);
@@ -823,30 +822,18 @@ export default function Home() {
           {(() => {
             // Debug logging for checkmark logic
             if (item.mongoData) {
-              console.log('🔍 Checking MongoDB outfit for checkmark:', {
-                outfitName: item.mongoData.name,
-                outfitId: item.id,
-                asyncUserExists: !!asyncStorageUser,
-                createdImagesExists: !!asyncStorageUser?.createdImages,
-                createdImagesLength: asyncStorageUser?.createdImages?.length || 0,
-                createdImages: asyncStorageUser?.createdImages || []
-              });
+
               
               if (asyncStorageUser?.createdImages) {
-                console.log('🎯 CreatedImages details:', asyncStorageUser.createdImages.map(img => ({
-                  outfitId: img.outfitId,
-                  matches: img.outfitId === item.mongoData.name
-                })));
+
                 
                 const isMatched = asyncStorageUser.createdImages.some(img => img.outfitId === item.mongoData.name);
-                console.log(`✅ Outfit "${item.mongoData.name}" match result:`, isMatched);
                 return isMatched;
               }
               return false;
             } else {
               // For predefined outfits
               const isMatched = createdOutfitIds.has(item.id);
-              console.log(`🏷️ Predefined outfit "${item.id}" match result:`, isMatched);
               return isMatched;
             }
           })() && (
@@ -884,7 +871,6 @@ export default function Home() {
               
               if (mongoOutfit) {
                 // For MongoDB outfits, send the raw item IDs and let the detail page handle Appwrite URLs
-                console.log(`Navigation for outfit ${mongoOutfit.name} with items:`, mongoOutfit.items);
                 
                 router.push({
                   pathname: `/outfit/${mongoOutfit.name}`,
@@ -979,7 +965,7 @@ export default function Home() {
           style={{ 
             elevation: 3,
           }}
-          onPress={() => console.log('Upgrade pressed')}
+          onPress={() => router.push('/utiils/Paywall')}
           activeOpacity={0.7}
         >
           <View 
@@ -1216,7 +1202,6 @@ export default function Home() {
       >
         <TouchableOpacity
           onPress={() => {
-            console.log("History button pressed!"); // Add log for debugging
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
             router.push('/main/history'); 
           }}

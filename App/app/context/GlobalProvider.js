@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import axios from 'axios';
 import { Platform } from 'react-native'
-
+import Purchases from 'react-native-purchases';
 
 const GlobalContext = createContext();
 export const useGlobalContext = () => useContext(GlobalContext);
@@ -14,6 +14,29 @@ export const GlobalProvider = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [error, setError] = useState(null);
     const [selectedOutfitItem, setSelectedOutfitItem] = useState(null);
+    const [isPro, setIsPro] = useState(false);
+
+
+    useEffect(() => {
+        const setupPurchases = async () => {
+            try {
+                if(Platform.OS === 'ios') {
+                    await Purchases.configure({ apiKey: 'appl_BBKtIOshyacowLQiHPNHOQNtcYF'});
+                } else {
+                    await Purchases.configure({ apiKey: 'appl_BBKtIOshyacowLQiHPNHOQNtcYF' });
+                }
+                console.log('Purchases configured');
+                const customerInfo = await Purchases.getCustomerInfo();
+                console.log('Customer info:', customerInfo);
+                setIsPro(customerInfo.entitlements.all.Pro?.isActive ?? false);
+            } catch (error) {
+                console.error('Error setting up purchases:', error);
+            }
+        };
+
+        setupPurchases();
+    }, []);
+
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -78,7 +101,9 @@ export const GlobalProvider = ({ children }) => {
             signup,
             selectedOutfitItem,
             addSelectedOutfitItem,
-            clearSelectedOutfitItem
+            clearSelectedOutfitItem,
+            isPro,
+            setIsPro
         }}>
             {children}
         </GlobalContext.Provider>

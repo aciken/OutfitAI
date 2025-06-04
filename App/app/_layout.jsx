@@ -52,6 +52,12 @@ export default function RootLayout() {
                         headerShown: false,
                     }}
                 />
+                <Stack.Screen
+                    name="utiils/Paywall"
+                    options={{
+                        headerShown: false,
+                    }}
+                />
             </Stack>
         </GlobalProvider>
     </GestureHandlerRootView>

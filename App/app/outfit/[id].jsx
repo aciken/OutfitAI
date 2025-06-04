@@ -480,7 +480,7 @@ export default function OutfitDetailsPage() {
                    const userID = parsedUser._id;
                    const outfitId = params.id; // id from useLocalSearchParams
                    
-                   axios.put('https://1403-109-245-207-216.ngrok-free.app/createdImage', {
+                   axios.put('https://6130-109-245-207-216.ngrok-free.app/createdImage', {
                        userID, imageID, outfitId
                    })
                    .then(backendResponse => {
@@ -508,7 +508,7 @@ export default function OutfitDetailsPage() {
 
           console.log("Sending data to backend:", { userID, imageID, outfitId });
 
-          axios.put('https://1403-109-245-207-216.ngrok-free.app/createdImage', {
+          axios.put('https://6130-109-245-207-216.ngrok-free.app/createdImage', {
             userID,
             imageID,
             outfitId
