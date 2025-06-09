@@ -42,7 +42,7 @@ const APPWRITE_PROJECT_ID = '682371f4001597e0b4a7';
 const APPWRITE_OUTFIT_BUCKET_ID = '683ef7880025791e9d93'; // For outfit images
 
 // Backend URL
-const BACKEND_URL = 'https://6130-109-245-207-216.ngrok-free.app';
+const BACKEND_URL = 'https://18c9-109-245-204-138.ngrok-free.app';
 
 // Get screen dimensions for responsive sizing
 const { width, height } = Dimensions.get('window');
@@ -235,13 +235,13 @@ export default function Home() {
     extrapolate: 'clamp',
   });
 
-  useEffect(() => {
-    if (isPro) {
-      console.log('isPro:', isPro);
-    } else {
-      router.push('/utiils/Paywall')
-    }
-  }, [isPro]);
+  // useEffect(() => {
+  //   if (isPro) {
+  //     console.log('isPro:', isPro);
+  //   } else {
+  //     router.push('/utiils/Paywall')
+  //   }
+  // }, [isPro]);
 
   useEffect(() => {
     const loadCreatedOutfitIds = async () => {

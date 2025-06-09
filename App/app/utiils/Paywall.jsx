@@ -31,10 +31,15 @@ export default function Paywall() {
     }
   };
 
+  const handleCloseButton = () => {
+    router.back();
+  }
+
   return (
     <RevenueCatUI.Paywall 
       onPurchaseCompleted={handlePurchaseCompleted}
       onRestoreCompleted={handleRestoreCompleted}
+      onDismiss={handleCloseButton}
     />
   );
 }

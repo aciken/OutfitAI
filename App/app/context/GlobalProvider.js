@@ -26,33 +26,42 @@ export const GlobalProvider = ({ children }) => {
                     await Purchases.configure({ apiKey: 'appl_BBKtIOshyacowLQiHPNHOQNtcYF' });
                 }
                 console.log('Purchases configured');
-                const customerInfo = await Purchases.getCustomerInfo();
-                console.log('Customer info:', customerInfo);
-                setIsPro(customerInfo.entitlements.all.Pro?.isActive ?? false);
+                
+                try {
+                    const customerInfo = await Purchases.getCustomerInfo();
+                    console.log('Customer info:', customerInfo);
+                    setIsPro(customerInfo.entitlements.all.Pro?.isActive ?? false);
+                } catch (customerInfoError) {
+                    console.error('Error getting customer info:', customerInfoError);
+                    setIsPro(false);
+                }
             } catch (error) {
                 console.error('Error setting up purchases:', error);
+                // Always set isPro to false if setup fails
+                setIsPro(false);
             }
         };
 
+        // Always call setupPurchases to ensure consistent hook execution
         setupPurchases();
     }, []);
 
 
-    useEffect(() => {
-        const checkAuth = async () => {
-            const token = await AsyncStorage.getItem('token');
-            if (token) {
-                setIsAuthenticated(true);
-                setUser(JSON.parse(token));
-            } else {
-                setIsAuthenticated(false);
-                setUser(null);
-            }
-        };
-        checkAuth();
+    // useEffect(() => {
+    //     const checkAuth = async () => {
+    //         const token = await AsyncStorage.getItem('user');
+    //         if (token) {
+    //             setIsAuthenticated(true);
+    //             setUser(JSON.parse(token));
+    //         } else {
+    //             setIsAuthenticated(false);
+    //             setUser(null);
+    //         }
+    //     };
+    //     checkAuth();
 
 
-    }, []);
+    // }, []);
 
     const login = async (email, password) => {
         try {
