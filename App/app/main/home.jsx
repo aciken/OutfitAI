@@ -1727,7 +1727,7 @@ const styles = StyleSheet.create({
     backdropFilter: 'blur(30px)',
     borderRadius: 32,
     paddingVertical: 16,
-    paddingHorizontal: 28,
+    paddingHorizontal: 42,
     borderWidth: 0.5,
     borderColor: 'rgba(255, 255, 255, 0.2)',
     shadowColor: 'rgba(138, 43, 226, 0.3)',
