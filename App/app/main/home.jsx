@@ -1468,7 +1468,7 @@ export default function Home() {
             </BlurView>
           </Animated.View>
           
-          {/* Footer Actions - ensure styles are correct */}
+          {/* Footer Actions - Three glassy bubbly buttons */}
           <Animated.View style={[
             styles.footerActionsContainer,
             {
@@ -1483,12 +1483,48 @@ export default function Home() {
               opacity: modalAnimation
             }
           ]}>
-            <TouchableOpacity onPress={handleClearSearch} activeOpacity={0.6}>
-              <Text style={styles.clearAllText}>Clear all</Text>
+            {/* Clear All Button - Left */}
+            <TouchableOpacity 
+              style={styles.glassyClearButton} 
+              activeOpacity={0.7} 
+              onPress={handleClearSearch}
+            >
+              <Ionicons name="refresh" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+              <Text style={styles.glassyClearButtonText}>Clear</Text>
+              
+              {/* Active Filters Count Bubble */}
+              {(() => {
+                const activeFiltersCount = 
+                  (searchQuery.length > 0 ? 1 : 0) +
+                  (selectedOccasions.size > 0 ? 1 : 0) +
+                  (selectedGender !== null ? 1 : 0) +
+                  (generatedFilterStatus !== 'all' ? 1 : 0);
+                
+                return activeFiltersCount > 0 ? (
+                  <View style={styles.filterCountBubble}>
+                    <Text style={styles.filterCountText}>{activeFiltersCount}</Text>
+                  </View>
+                ) : null;
+              })()}
             </TouchableOpacity>
-            <TouchableOpacity style={styles.searchModalButton} activeOpacity={0.8} onPress={handleSearch}>
-              <Ionicons name="search" size={18} color="#FFF" style={{ marginRight: 8 }} />
-              <Text style={styles.searchModalButtonText}>Search</Text>
+
+            {/* Search Button - Center (Bigger and Purple) */}
+            <TouchableOpacity 
+              style={styles.glassySearchButton} 
+              activeOpacity={0.8} 
+              onPress={handleSearch}
+            >
+              <Ionicons name="search" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+              <Text style={styles.glassySearchButtonText}>Search</Text>
+            </TouchableOpacity>
+
+            {/* Close Button - Right */}
+            <TouchableOpacity 
+              style={styles.glassyCloseButton} 
+              activeOpacity={0.7} 
+              onPress={handleCloseSearchModal}
+            >
+              <Ionicons name="close" size={16} color="#FFFFFF" />
             </TouchableOpacity>
           </Animated.View>
         </View>
@@ -1667,29 +1703,102 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  clearAllText: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    fontWeight: '500',
-    textDecorationLine: 'underline',
-  },
-  searchModalButton: {
-    backgroundColor: '#7B2CBF',
+  // True Frosted Glass Close Button (Right)
+  glassyCloseButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    backdropFilter: 'blur(25px)',
+    borderRadius: 28,
     paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 25,
+    paddingHorizontal: 18,
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    shadowColor: 'rgba(0, 0, 0, 0.15)',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 10,
+    overflow: 'visible',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  // True Frosted Glass Search Button (Center - Purple)
+  glassySearchButton: {
+    backgroundColor: 'rgba(138, 43, 226, 0.65)',
+    backdropFilter: 'blur(30px)',
+    borderRadius: 32,
+    paddingVertical: 16,
+    paddingHorizontal: 28,
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    shadowColor: 'rgba(138, 43, 226, 0.3)',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.4,
+    shadowRadius: 25,
+    elevation: 15,
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 3,
+    overflow: 'hidden',
   },
-  searchModalButtonText: {
-    fontSize: 16,
+  glassySearchButtonText: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  // True Frosted Glass Clear Button (Left)
+  glassyClearButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    backdropFilter: 'blur(25px)',
+    borderRadius: 28,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    shadowColor: 'rgba(0, 0, 0, 0.15)',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    overflow: 'visible',
+    position: 'relative',
+  },
+  glassyClearButtonText: {
+    fontSize: 14,
     fontWeight: '600',
     color: '#FFFFFF',
+    textShadowColor: 'rgba(0, 0, 0, 0.25)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  // Filter Count Bubble
+  filterCountBubble: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: '#8A2BE2',
+    borderRadius: 12,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 6,
+  },
+  filterCountText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    lineHeight: 16,
   },
   sectionTitle: {
     fontSize: 16,
