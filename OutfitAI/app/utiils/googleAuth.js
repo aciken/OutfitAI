@@ -89,7 +89,7 @@ export const useGoogleAuth = () => {
           console.log('User data:', userData);
 
           // Send user data to your backend
-          const response = await axios.put('https://106d-109-245-204-138.ngrok-free.app/google', {
+          const response = await axios.put('https://e724-109-245-204-138.ngrok-free.app/google', {
             id: userData.id,
             email: userData.email,
             name: userData.name,
