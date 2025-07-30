@@ -42,7 +42,7 @@ const APPWRITE_PROJECT_ID = '682371f4001597e0b4a7';
 const APPWRITE_OUTFIT_BUCKET_ID = '683ef7880025791e9d93'; // For outfit images
 
 // Backend URL
-const BACKEND_URL = 'https://e724-109-245-204-138.ngrok-free.app';
+const BACKEND_URL = 'https://2518-109-245-204-138.ngrok-free.app';
 
 // Get screen dimensions for responsive sizing
 const { width, height } = Dimensions.get('window');
@@ -56,6 +56,8 @@ const INACTIVE_SCALE = 0.90; // Adjusted for a noticeable but not too drastic sc
 
 // Define selectable options for Occasion (STYLE_OPTIONS removed)
 // const STYLE_OPTIONS = [...]; // Removed
+
+
 
 const OCCASION_OPTIONS = [
   { id: 'casual_day', name: 'Casual Day', icon: 'sunny-outline' },
@@ -180,7 +182,7 @@ export default function Home() {
   const [activeCardIndex, setActiveCardIndex] = useState(0);
   const [prevActiveIndex, setPrevActiveIndex] = useState(0);
   const [showScrollToStart, setShowScrollToStart] = useState(false);
-  const { user, isPro } = useGlobalContext(); // Get user from context
+  const { user, isPro, setIsPro } = useGlobalContext(); // Get user from context
   const [createdOutfitIds, setCreatedOutfitIds] = useState(new Set());
   
   // State for MongoDB outfits
@@ -242,6 +244,8 @@ export default function Home() {
   //     router.push('/utiils/Paywall')
   //   }
   // }, [isPro]);
+
+  
 
   useEffect(() => {
     const loadCreatedOutfitIds = async () => {
@@ -751,24 +755,32 @@ export default function Home() {
     if (item.type === 'create') {
       cardClasses = "h-[400px] rounded-2xl justify-center items-center overflow-hidden";
       cardStyle = {
-        borderColor: '#A020F0',
-        borderWidth: 1.5,
+        borderColor: 'rgba(192, 126, 255, 0.15)', // More subtle border color
+        borderWidth: 1, // Thinner border
         shadowColor: '#000000',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 5,
-        elevation: 8,
+        shadowOpacity: 0.15, // Reduced shadow opacity
+        shadowRadius: 8,
+        elevation: 5,
       };
       cardContent = (
         <>
+          <BlurView
+            intensity={40}
+            tint="dark"
+            style={StyleSheet.absoluteFill}
+          />
           <LinearGradient
-            colors={['#301A4A', '#200F3A']}
+            colors={['rgba(48, 26, 74, 0.6)', 'rgba(32, 15, 58, 0.6)']}
             style={StyleSheet.absoluteFill}
           />
           <View style={{
             width: 120, height: 120, marginBottom: 24,
-            shadowColor: '#A020F0', shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 0.75, shadowRadius: 15, elevation: 10,
+            shadowColor: '#A020F0', 
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: 0.5, // Reduced glow
+            shadowRadius: 12, 
+            elevation: 8,
           }}>
             <Image source={PlusIconImage} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
           </View>

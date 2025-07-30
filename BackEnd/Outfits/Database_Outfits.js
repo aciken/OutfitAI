@@ -24,6 +24,12 @@ const outfitSchema = new mongoose.Schema({
   timestamps: true // This adds createdAt and updatedAt fields automatically
 });
 
+// Define the Item Schema (flexible schema for items collection)
+const itemSchema = new mongoose.Schema({}, { 
+  strict: false, // This allows any fields to be stored
+  timestamps: true // This adds createdAt and updatedAt fields automatically
+});
+
 // Database connection function for Outfits only
 const connectToOutfitsDatabase = async () => {
   try {
@@ -117,9 +123,68 @@ const getAllOutfits = async (req, res) => {
   }
 };
 
-// Export only getAllOutfits
+// Function to get all items (Express route handler)
+const getAllItems = async (req, res) => {
+  try {
+    console.log('🔍 DATABASE_OUTFITS env var:', process.env.DATABASE_OUTFITS);
+    
+    // Ensure we're connected to the Outfits database
+    if (!outfitsConnection || outfitsConnection.readyState !== 1) {
+      console.log('Outfits database not connected, connecting now...');
+      await connectToOutfitsDatabase();
+    } else {
+      console.log("✅ Connected to Outfits database");
+    }
+
+    console.log('📊 Outfits database name:', outfitsConnection.db.databaseName);
+    console.log('🔗 Outfits connection state:', outfitsConnection.readyState);
+    
+    // Create the model on the specific connection
+    const Item = outfitsConnection.model('Item', itemSchema, 'Items');
+    
+    // Let's try to list all collections first
+    console.log('📂 Listing all collections in Outfits database...');
+    const collections = await outfitsConnection.db.listCollections().toArray();
+    console.log('📂 Available collections in Outfits DB:', collections.map(c => c.name));
+    
+    console.log('🔍 Fetching all items from "Items" collection...');
+    const items = await Item.find({});
+    
+    console.log(`📦 Found ${items.length} items in database`);
+    
+    if (items.length === 0) {
+      console.log('❌ No items found. Let me try a different approach...');
+      
+      // Try using the native MongoDB driver
+      const collection = outfitsConnection.db.collection('Items');
+      const nativeResult = await collection.find({}).toArray();
+      console.log(`🔍 Native query result: ${nativeResult.length} documents`);
+      
+      if (nativeResult.length > 0) {
+        console.log('📋 Sample document from native query:', nativeResult[0]);
+      }
+    } else {
+      items.forEach((item, index) => {
+        console.log(`${index + 1}. Item ID: ${item._id}`);
+        console.log(`   Fields: ${Object.keys(item.toObject()).filter(key => !key.startsWith('_') && key !== 'createdAt' && key !== 'updatedAt').join(', ')}`);
+      });
+    }
+    
+    // Return the items as JSON response
+    res.status(200).json(items);
+  } catch (error) {
+    console.error('❌ Error fetching items:', error.message);
+    res.status(500).json({ 
+      error: 'Failed to fetch items', 
+      message: error.message 
+    });
+  }
+};
+
+// Export both getAllOutfits and getAllItems
 module.exports = {
-  getAllOutfits
+  getAllOutfits,
+  getAllItems
 };
 
 // If this file is run directly, test the connection and fetch outfits

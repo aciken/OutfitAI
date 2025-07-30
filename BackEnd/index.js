@@ -25,6 +25,7 @@ app.get('/', (req, res) => {
   app.put('/newImage', newImage);
   app.put('/google', Google);
   app.get('/getAllOutfits', outfit.getAllOutfits);
+  app.get('/getAllItems', outfit.getAllItems);
   
 
   app.listen(port, () => {

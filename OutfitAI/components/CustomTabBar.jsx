@@ -109,7 +109,13 @@ const CustomTabBar = () => {
         <TabButton
           key={tab.name}
           tab={tab}
-          onPress={() => router.push(`/(tabs)/${tab.name}`)}
+          onPress={() => {
+            if (tab.name === 'home') {
+              router.push('/main/home');
+            } else if (tab.name === 'profile') {
+              router.push('/main/history');
+            }
+          }}
           isActive={activeIndex === index}
         />
       ))}

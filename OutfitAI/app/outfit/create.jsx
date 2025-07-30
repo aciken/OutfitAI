@@ -330,7 +330,7 @@ export default function OutfitCreationPage() {
                    const userID = parsedUser._id;
                    const outfitId = 'custom'; // Use 'custom' for created outfits
                    
-                   axios.put('https://e724-109-245-204-138.ngrok-free.app/createdImage', {
+                   axios.put('https://252b-109-245-207-138.ngrok-free.app/createdImage', {
                        userID, imageID, outfitId
                    })
                    .then(backendResponse => {
@@ -359,7 +359,7 @@ export default function OutfitCreationPage() {
 
           console.log("Sending data to backend:", { userID, imageID, outfitId });
 
-          axios.put('https://e724-109-245-204-138.ngrok-free.app/createdImage', {
+          axios.put('https://252b-109-245-207-138.ngrok-free.app/createdImage', {
             userID,
             imageID,
             outfitId
