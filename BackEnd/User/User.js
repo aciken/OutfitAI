@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv').config();
 
-mongoose.connect('mongodb://localhost:27017/OutfitAI')
+mongoose.connect(process.env.DATABASE_OUTFITS)
     .then(() => console.log('mongodb://localhost:27017/OutfitAI'))
     .catch(err => console.log(err));
 

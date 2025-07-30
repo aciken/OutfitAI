@@ -27,7 +27,6 @@ app.get('/', (req, res) => {
   app.get('/getAllOutfits', outfit.getAllOutfits);
   app.get('/getAllItems', outfit.getAllItems);
   
-
   app.listen(port, () => {
     console.log(`App listening at http://localhost:${port}`);
   });
